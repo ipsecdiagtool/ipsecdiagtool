@@ -34,11 +34,13 @@ public class PacketAnalyzer {
                     System.out.println(
                             "ESP Packet - Time:" + new Date(packet.getCaptureHeader().timestampInMillis())
                     );
+                    System.out.println(espHeader.Sequence() + " "+ espHeader.SPI());
+                    //TODO: here
                 }
             }
         };
 
-        pcap.loop(100, jpacketHandler, "read");
+        pcap.loop(2, jpacketHandler, "read");
 
         //Debug info for headers:
         System.out.println(JRegistry.toDebugString());
