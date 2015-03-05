@@ -6,9 +6,12 @@ import org.jnetpcap.packet.JRegistry;
 import org.jnetpcap.packet.RegistryHeaderErrors;
 import org.jnetpcap.packet.annotate.Bind;
 import org.jnetpcap.packet.annotate.Field;
+import org.jnetpcap.packet.annotate.Header;
 import org.jnetpcap.protocol.network.Ip4;
 
+@Header(length=32)
 public class ESPHeader extends JHeader {
+
     static {
         try {
             JRegistry.register(ESPHeader.class);

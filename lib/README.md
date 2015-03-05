@@ -8,3 +8,7 @@ required libraries automatically.
 ##Temporary List of Libraries used:
  + **JNetPcap** http://jnetpcap.com/download
 
+##Notes:
+The jnetpcap.jar must support the installed native .so files on Linux to work properly
+otherwise you may get error: "size of array must be max_id_count size".
+**TODO:** check versions, add link for correct version.
