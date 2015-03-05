@@ -2,27 +2,22 @@ package ch.hsr.ipsecdiagtool;
 
 import ch.hsr.ipsecdiagtool.headers.ESPHeader;
 import org.jnetpcap.Pcap;
-import org.jnetpcap.packet.JRegistry;
 import org.jnetpcap.packet.PcapPacket;
 import org.jnetpcap.packet.PcapPacketHandler;
-import org.jnetpcap.protocol.lan.Ethernet;
-import org.jnetpcap.protocol.network.Ip4;
 
 import java.util.Date;
 
 public class PacketAnalyzer {
+    final ESPHeader espHeader = new ESPHeader();
+    StringBuilder errorBuffer = new StringBuilder();
 
-    public static void readfile(String filename) {
-        final ESPHeader espHeader = new ESPHeader();
-        final Ip4 ipv4 = new Ip4();
-        final Ethernet ethernet = new Ethernet();
-        StringBuilder errbuf = new StringBuilder(); // For any error msgs
+    public void analyzePcapFile(String filename) {
 
-        Pcap pcap = Pcap.openOffline(filename, errbuf);
+        Pcap pcap = Pcap.openOffline(filename, errorBuffer);
 
         if (pcap == null) {
             System.err.printf("Error while opening device for capture: "
-                    + errbuf.toString());
+                    + errorBuffer.toString());
             return;
         }
 
@@ -31,19 +26,16 @@ public class PacketAnalyzer {
 
                 //Ignore non-ESP packets
                 if(packet.hasHeader(espHeader)){
-                    System.out.println(
-                            "ESP Packet - Time:" + new Date(packet.getCaptureHeader().timestampInMillis())
-                    );
-                    System.out.println(espHeader.Sequence() + " "+ espHeader.SPI());
-                    //TODO: here
+                    System.out.println("ESP-Packet from "+ new Date(packet.getCaptureHeader().timestampInMillis())
+                            +" Sequence-NR."+espHeader.Sequence()+" SPI."+espHeader.SPI());
                 }
             }
         };
 
-        pcap.loop(2, jpacketHandler, "read");
+        pcap.loop(100, jpacketHandler, null);
 
-        //Debug info for headers:
-        System.out.println(JRegistry.toDebugString());
+        //Print JRegistery (shows all registered protocols)
+        //System.out.println(JRegistry.toDebugString());
         pcap.close();
     }
 }
