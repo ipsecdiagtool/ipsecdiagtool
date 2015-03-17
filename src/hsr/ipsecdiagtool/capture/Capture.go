@@ -7,8 +7,8 @@ import (
 	"code.google.com/p/gopacket/pcap"
 )
 
+//LiveCapture captures all tcp & port 80 packets on eth0.
 func LiveCapture() {
-	//Capturing via gopacket-pcap on eth0
 	if handle, err := pcap.OpenLive("eth0", 1600, true, 0); err != nil {
 		panic(err)
 	} else if err := handle.SetBPFFilter("tcp and port 80"); err != nil {
@@ -22,7 +22,8 @@ func LiveCapture() {
 	}
 }
 
-//ReadPcapFile iterates
+//ReadPcapFile iterates over all packets in a .pcap-file and counts them.
+//Returns the total number  of packets and outputs the layers of all IPSecESP-Type packets.
 func ReadPcapFile(filepath string) int{
 	var counter = 0
 	if handle, err := pcap.OpenOffline(filepath); err != nil {

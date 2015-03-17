@@ -14,3 +14,11 @@ func main() {
 	//capture.LiveCapture()
 	capture.ReadPcapFile("/home/parallels/Desktop/capture.pcap")
 }
+
+/*
+	##Temporary Notes:##
+	+ local godocs can be compiled and accessed via: godoc -http=:6060
+	+ Functions starting with big letters are public, small letters private
+	+ Ints can be converted to string via. +trconv.Itoa
+
+ */
