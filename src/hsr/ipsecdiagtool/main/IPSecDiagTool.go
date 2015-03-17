@@ -10,5 +10,7 @@ import (
 
 func main() {
 	fmt.Printf("Hello, IPSec.\n")
-	capture.Capture()
+	capture.LiveCapture()
+
+	//capture.ReadPcapFile("usr/Desktop/test.pcap")
 }

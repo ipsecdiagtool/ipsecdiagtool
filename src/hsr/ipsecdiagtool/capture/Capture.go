@@ -7,12 +7,23 @@ import (
 	"code.google.com/p/gopacket/pcap"
 )
 
-func Capture() {
-
+func LiveCapture() {
 	//Capturing via gopacket-pcap on eth0
 	if handle, err := pcap.OpenLive("eth0", 1600, true, 0); err != nil {
 		panic(err)
 	} else if err := handle.SetBPFFilter("tcp and port 80"); err != nil {
+		panic(err)
+	} else {
+		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+		for packet := range packetSource.Packets() {
+			//Handling packets here
+			fmt.Println(packet.Dump())
+		}
+	}
+}
+
+func ReadPcapFile(filepath string) {
+	if handle, err := pcap.OpenOffline(filepath); err != nil {
 		panic(err)
 	} else {
 		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
