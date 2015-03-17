@@ -22,7 +22,9 @@ func LiveCapture() {
 	}
 }
 
-func ReadPcapFile(filepath string) {
+//ReadPcapFile iterates
+func ReadPcapFile(filepath string) int{
+	var counter = 0
 	if handle, err := pcap.OpenOffline(filepath); err != nil {
 		panic(err)
 	} else {
@@ -34,6 +36,8 @@ func ReadPcapFile(filepath string) {
 			var layers []gopacket.Layer
 			layers = append(layers, packet.Layers()...) //Three dots to signify that we're combing two a slices.
 
+			counter++
+
 			//Filtering out only IPSecESP packets.
 			if len(layers) == 3  {
 				if layers[2].LayerType().String() == "IPSecESP"{
@@ -43,4 +47,5 @@ func ReadPcapFile(filepath string) {
 			}
 		}
 	}
+	return counter
 }
