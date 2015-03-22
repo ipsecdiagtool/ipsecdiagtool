@@ -9,7 +9,7 @@ import (
 	"golang.org/x/net/ipv4"
 )
 
-//Analyze computes the ideal MTU for a conntection between to computers.
+//Analyze computes the ideal MTU for a connection between two computers.
 func Analyze(){
 	defer util.Run()()
 	log.Println("Analyzing MTU..")

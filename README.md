@@ -1,5 +1,7 @@
 # IPSecDiagTool
 
+[![GoDoc](https://godoc.org/github.com/IPSecDiagTool/IPSecDiagTool?status.svg)](https://godoc.org/github.com/IPSecDiagTool/IPSecDiagTool)
+
 **YouTrack-Server:** http://sinv-56053.edu.hsr.ch
 
 ##Project structure
