@@ -18,12 +18,11 @@ func Analyze(){
 	//TODO:
 	//-Record packet
 	//-Loop several times to find ideal MTU
-
 }
 
 //sendPacket generates & sends a packet of arbitrary size to a specific destination.
 //The size specified should be larger then 40bytes.
-func sendPacket(sourceIP string, destinationIP string, size int){
+func sendPacket(sourceIP string, destinationIP string, size int) []byte {
 	var payloadSize int
 	if size < 40 {
 		log.Println("Unable to create a packet smaller then 40bytes.")
@@ -108,6 +107,7 @@ func sendPacket(sourceIP string, destinationIP string, size int){
 	err = rawConn.WriteTo(ipHeader, tcpPayloadBuf.Bytes(), nil)
 
 	log.Println("Packet with length", (len(tcpPayloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
+	return append(tcpPayloadBuf.Bytes(), ipHeaderBuf.Bytes()...)
 }
 
 //generatePayload generates a payload of the given size (bytes).
