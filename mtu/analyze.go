@@ -83,9 +83,27 @@ func buildPacket(sourceIP string, destinationIP string){
 	}
 
 	tcpPayloadBuf := gopacket.NewSerializeBuffer()
-	payload := gopacket.Payload([]byte("Hello IPSec"))
+
+	//Influence the payload size
+	payload := gopacket.Payload([]byte("Hello IPSec Hello IPSec Hello IPSec Hello IPSec"))
 	err = gopacket.SerializeLayers(tcpPayloadBuf, opts, &tcp, payload)
 	if err != nil {
 		panic(err)
 	}
+
+	//Send packet
+	var packetConn net.PacketConn
+	var rawConn *ipv4.RawConn
+	packetConn, err = net.ListenPacket("ip4:tcp", sourceIP)
+	if err != nil {
+		panic(err)
+	}
+	rawConn, err = ipv4.NewRawConn(packetConn)
+	if err != nil {
+		panic(err)
+	}
+
+	err = rawConn.WriteTo(ipHeader, tcpPayloadBuf.Bytes(), nil)
+
+	log.Println("Packet with length", (len(tcpPayloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
 }
