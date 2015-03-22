@@ -9,16 +9,29 @@ import (
 	"golang.org/x/net/ipv4"
 )
 
-
+//Analyze computes the ideal MTU for a conntection between to computers.
 func Analyze(){
 	defer util.Run()()
 	log.Println("Analyzing MTU..")
-	buildPacket("127.0.0.1","127.0.0.1")
+	sendPacket("127.0.0.1","127.0.0.1", 80)
 
+	//TODO:
+	//-Record packet
+	//-Loop several times to find ideal MTU
 
 }
 
-func buildPacket(sourceIP string, destinationIP string){
+//sendPacket generates & sends a packet of arbitrary size to a specific destination.
+//The size specified should be larger then 40bytes.
+func sendPacket(sourceIP string, destinationIP string, size int){
+	var payloadSize int
+	if size < 40 {
+		log.Println("Unable to create a packet smaller then 40bytes.")
+		payloadSize = 0
+	} else {
+		payloadSize = size-40
+	}
+
 	var srcIP = net.ParseIP(sourceIP)
 	var dstIP = net.ParseIP(destinationIP)
 
@@ -46,19 +59,8 @@ func buildPacket(sourceIP string, destinationIP string){
 	tcp := layers.TCP{
 		SrcPort: srcPort,
 		DstPort: dstPort,
-		Window:  1505,
-		Urgent:  0,
-		Seq:     11050,
-		Ack:     0,
-		ACK:     false,
-		SYN:     false,
-		FIN:     false,
-		RST:     false,
-		URG:     false,
-		ECE:     false,
-		CWR:     false,
-		NS:      false,
-		PSH:     false,
+		Seq:     0x539, //Hex 1337
+		Window: 1337,
 	}
 
 	opts := gopacket.SerializeOptions{
@@ -85,7 +87,7 @@ func buildPacket(sourceIP string, destinationIP string){
 	tcpPayloadBuf := gopacket.NewSerializeBuffer()
 
 	//Influence the payload size
-	payload := gopacket.Payload([]byte("Hello IPSec Hello IPSec Hello IPSec Hello IPSec"))
+	payload := gopacket.Payload(generatePayload(payloadSize))
 	err = gopacket.SerializeLayers(tcpPayloadBuf, opts, &tcp, payload)
 	if err != nil {
 		panic(err)
@@ -94,7 +96,7 @@ func buildPacket(sourceIP string, destinationIP string){
 	//Send packet
 	var packetConn net.PacketConn
 	var rawConn *ipv4.RawConn
-	packetConn, err = net.ListenPacket("ip4:tcp", sourceIP)
+	packetConn, err = net.ListenPacket("ip4:tcp", destinationIP)
 	if err != nil {
 		panic(err)
 	}
@@ -106,4 +108,17 @@ func buildPacket(sourceIP string, destinationIP string){
 	err = rawConn.WriteTo(ipHeader, tcpPayloadBuf.Bytes(), nil)
 
 	log.Println("Packet with length", (len(tcpPayloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
+}
+
+//generatePayload generates a payload of the given size (bytes).
+//If the payload is longer then 11 bytes the first eleven bytes are used to spell "Hello IPsec".
+func generatePayload(size int) []byte {
+	var payload []byte
+	if size > 11 {
+		payload = make([]byte, size-11)
+		payload = append([]byte("Hello IPSec"), payload...)
+	} else {
+		payload = make([]byte, size)
+	}
+	return payload
 }
