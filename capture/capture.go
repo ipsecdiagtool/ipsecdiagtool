@@ -8,20 +8,22 @@ import (
 	"log"
 )
 
+//TODO: Code here is no longer required for MTU-analyzer. Code is left as an example
+//TODO: for now. But should be removed in the future.
+
 //LiveCapture captures all packets on any interface for an unlimited duration.
 //Packets can be filtered by a BPF filter string. (E.g. tcp port 22)
 func LiveCapture(bpfFilter string) {
 	log.Println("Waiting for packet")
-	if handle, err := pcap.OpenLive("any", 3000, true, 100); err != nil {
+	if handle, err := pcap.OpenLive("any", 1500, true, 100); err != nil {
 		panic(err)
-		//https://www.wireshark.org/tools/string-cf.html
 	} else if err := handle.SetBPFFilter(bpfFilter); err != nil {
 		panic(err)
 	} else {
 		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 		for packet := range packetSource.Packets() {
 			//Handling packets here
-			//log.Println(packet.Dump())
+			log.Println(packet.Dump())
 			log.Println("Received packet with size", packet.Metadata().Length)
 		}
 	}

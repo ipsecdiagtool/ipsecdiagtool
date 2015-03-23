@@ -7,7 +7,6 @@ import (
 	"code.google.com/p/gopacket/layers"
 	"code.google.com/p/gopacket"
 	"golang.org/x/net/ipv4"
-	"github.com/ipsecdiagtool/ipsecdiagtool/capture"
 	"time"
 	"strconv"
 )
@@ -22,7 +21,7 @@ func Analyze(){
 	var sourceIP = "127.0.0.1"
 
 	//Capture all traffic via goroutine in separate thread
-	go capture.LiveCapture("tcp port "+strconv.Itoa(destinationPort))
+	go StartCapture("tcp port "+strconv.Itoa(destinationPort))
 
 	//TODO: remove later
 	//Temporary delay to wait until the filter is properly setup.
@@ -42,11 +41,11 @@ func Analyze(){
 func sendPacket(sourceIP string, destinationIP string, destinationPort int, size int) []byte {
 
 	var payloadSize int
-	if size < 40 {
+	if size < 44 {
 		log.Println("Unable to create a packet smaller then 40bytes.")
 		payloadSize = 0
 	} else {
-		payloadSize = size-40
+		payloadSize = size-44
 	}
 
 	var srcIP = net.ParseIP(sourceIP)
@@ -134,7 +133,7 @@ func generatePayload(size int) []byte {
 	var payload []byte
 	if size > 11 {
 		payload = make([]byte, size-11)
-		payload = append([]byte("Hello IPSec"), payload...)
+		payload = append([]byte("Hello IPSec/END"), payload...)
 	} else {
 		payload = make([]byte, size)
 	}
