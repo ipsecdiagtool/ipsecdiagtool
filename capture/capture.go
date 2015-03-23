@@ -8,10 +8,14 @@ import (
 	"log"
 )
 
-//LiveCapture captures all tcp & port 80 packets on eth0.
-func LiveCapture() {
+//LiveCapture captures all packets on any interface for an unlimited duration.
+//Packets can be filtered by a BPF filter string. (E.g. tcp port 22)
+func LiveCapture(bpfFilter string) {
 	log.Println("Waiting for packet")
 	if handle, err := pcap.OpenLive("any", 1600, true, 100); err != nil {
+		panic(err)
+		//https://www.wireshark.org/tools/string-cf.html
+	} else if err := handle.SetBPFFilter(bpfFilter); err != nil {
 		panic(err)
 	} else {
 		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())

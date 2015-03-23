@@ -8,6 +8,7 @@ import (
 	"code.google.com/p/gopacket"
 	"golang.org/x/net/ipv4"
 	"github.com/ipsecdiagtool/ipsecdiagtool/capture"
+	"time"
 )
 
 //Analyze computes the ideal MTU for a connection between two computers.
@@ -19,7 +20,7 @@ func Analyze(){
 	go sendPacket("127.0.0.1","127.0.0.1", 80)
 
 	//Capture all traffic
-	capture.LiveCapture()
+	capture.LiveCapture("tcp port 22")
 
 	//TODO:
 	//-Record packet
@@ -29,6 +30,10 @@ func Analyze(){
 //sendPacket generates & sends a packet of arbitrary size to a specific destination.
 //The size specified should be larger then 40bytes.
 func sendPacket(sourceIP string, destinationIP string, size int) []byte {
+
+	//Temporary delay to wait until the filter is properly setup.
+	time.Sleep(100 * time.Millisecond)
+
 	var payloadSize int
 	if size < 40 {
 		log.Println("Unable to create a packet smaller then 40bytes.")
