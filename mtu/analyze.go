@@ -9,12 +9,19 @@ import (
 	"golang.org/x/net/ipv4"
 	"time"
 	"strconv"
+	"math/rand"
 )
+
+var ApplicationID int
 
 //Analyze computes the ideal MTU for a connection between two computers.
 func Analyze(){
 	defer util.Run()()
 	log.Println("Analyzing MTU..")
+
+	//Temp: Setup APP-ID:
+	rand.Seed(time.Now().UnixNano()) //Seed is required otherwise we always get the same number
+	ApplicationID = rand.Intn(100000)
 
 	var destinationPort = 22
 	var destinationIP = "127.0.0.1"
@@ -133,7 +140,7 @@ func generatePayload(size int) []byte {
 	var payload []byte
 	if size > 11 {
 		payload = make([]byte, size-11)
-		payload = append([]byte("Hello IPSec/END"), payload...)
+		payload = append([]byte(strconv.Itoa(ApplicationID)+",find MTU,"), payload...)
 	} else {
 		payload = make([]byte, size)
 	}

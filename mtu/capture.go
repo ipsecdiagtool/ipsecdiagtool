@@ -6,6 +6,7 @@ import (
 	"code.google.com/p/gopacket/pcap"
 	"log"
 	"strings"
+	"strconv"
 )
 
 //StartCapture captures all packets on any interface for an unlimited duration.
@@ -19,26 +20,44 @@ func StartCapture(bpfFilter string) {
 		panic(err)
 	} else {
 		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+
 		for packet := range packetSource.Packets() {
-			//Handling packets here
-			//log.Println(packet.Dump())
+			log.Println("Received packet with length", packet.Metadata().Length, "bytes.")
 			analyzePayload(packet)
-			log.Println("Received packet with size", packet.Metadata().Length)
 		}
 	}
 }
 
+//TODO: refactor to test properly
 //analyzePayload detects where the packet is a valid IPSecDiagTool
 //MTU-Detection packet.
 func analyzePayload(packet gopacket.Packet) bool{
 	s := string(packet.TransportLayer().LayerPayload()[:])
 
 	//Cutting off the filler material
-	arr := strings.Split(s, "/END")
-	log.Println("Packet contains instructions:",arr[0])
+	arr := strings.Split(s, ",")
 	if len(arr) > 1{
+		//TODO: add error stream
+		remoteApp, _ := strconv.Atoi(arr[0])
+
+		//Check that packet is not from this application
+		if ApplicationID == remoteApp {
+			log.Println("Packet is from us.. ignoring.")
+			return false
+		}
+
+		log.Println("Packet comming from AppID:", remoteApp)
+		log.Println("Packet contains instructions:", arr[1])
+
 		return true
 	} else {
 		return false
 	}
 }
+
+/*
+	Proposed structure for instructions in payload
+	 1. AppID
+	 2. task
+	 3 ..
+*/
