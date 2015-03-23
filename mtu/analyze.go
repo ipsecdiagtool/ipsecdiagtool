@@ -7,13 +7,19 @@ import (
 	"code.google.com/p/gopacket/layers"
 	"code.google.com/p/gopacket"
 	"golang.org/x/net/ipv4"
+	"github.com/ipsecdiagtool/ipsecdiagtool/capture"
 )
 
 //Analyze computes the ideal MTU for a connection between two computers.
 func Analyze(){
 	defer util.Run()()
 	log.Println("Analyzing MTU..")
-	sendPacket("127.0.0.1","127.0.0.1", 80)
+
+	//Send packet via goroutine in separate thread
+	go sendPacket("127.0.0.1","127.0.0.1", 80)
+
+	//Capture all traffic
+	capture.LiveCapture()
 
 	//TODO:
 	//-Record packet

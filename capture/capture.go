@@ -5,19 +5,19 @@ import (
 	"fmt"
 	"code.google.com/p/gopacket"
 	"code.google.com/p/gopacket/pcap"
+	"log"
 )
 
 //LiveCapture captures all tcp & port 80 packets on eth0.
 func LiveCapture() {
-	if handle, err := pcap.OpenLive("eth0", 1600, true, 0); err != nil {
-		panic(err)
-	} else if err := handle.SetBPFFilter("tcp and port 80"); err != nil {
+	log.Println("Waiting for packet")
+	if handle, err := pcap.OpenLive("any", 1600, true, 100); err != nil {
 		panic(err)
 	} else {
 		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 		for packet := range packetSource.Packets() {
 			//Handling packets here
-			fmt.Println(packet.Dump())
+			log.Println(packet.Dump())
 		}
 	}
 }
