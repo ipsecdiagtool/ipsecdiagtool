@@ -5,9 +5,6 @@ import (
 	"fmt"
 
 	//Our packages
-	//"hsr/ipsecdiagtool/capture"
-	//"hsr/ipsecdiagtool/send"
-	//"github.com/ipsecdiagtool/ipsecdiagtool/capture"
 	"github.com/ipsecdiagtool/ipsecdiagtool/mtu"
 	"github.com/ipsecdiagtool/ipsecdiagtool/packetloss"
 )
@@ -17,17 +14,14 @@ func main() {
 
 	//capture.LiveCapture("")
 	//capture.ReadPcapFile("/home/parallels/Desktop/capture.pcap")
-	//send.Run()
 
 	packetloss.Detect()
+
 	mtu.Analyze()
-	fmt.Println("End")
+
+	//Keep main open forever
+	//http://stackoverflow.com/questions/9543835/how-best-do-i-keep-a-long-running-go-program-running
+	//might be the better solution, but for now scanln is enough.
+	fmt.Println("Press any key to exit IPSecDiagTool")
+	fmt.Scanln()
 }
-
-/*
-	##Temporary Notes:##
-	+ local godocs can be compiled and accessed via: godoc -http=:6060
-	+ Functions starting with big letters are public, small letters private
-	+ Ints can be converted to string via. +strconv.Itoa
-
- */

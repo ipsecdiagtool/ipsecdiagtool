@@ -21,11 +21,16 @@ func Analyze(){
 	var destinationIP = "127.0.0.1"
 	var sourceIP = "127.0.0.1"
 
+	//Capture all traffic via goroutine in separate thread
+	go capture.LiveCapture("tcp port "+strconv.Itoa(destinationPort))
+
+	//TODO: remove later
+	//Temporary delay to wait until the filter is properly setup.
+	time.Sleep(1000 * time.Millisecond)
+
 	//Send packet via goroutine in separate thread
 	go sendPacket(sourceIP, destinationIP, destinationPort, 120)
 
-	//Capture all traffic
-	capture.LiveCapture("tcp port "+strconv.Itoa(destinationPort))
 
 	//TODO:
 	//-Record packet
@@ -35,9 +40,6 @@ func Analyze(){
 //sendPacket generates & sends a packet of arbitrary size to a specific destination.
 //The size specified should be larger then 40bytes.
 func sendPacket(sourceIP string, destinationIP string, destinationPort int, size int) []byte {
-
-	//Temporary delay to wait until the filter is properly setup.
-	time.Sleep(100 * time.Millisecond)
 
 	var payloadSize int
 	if size < 40 {
