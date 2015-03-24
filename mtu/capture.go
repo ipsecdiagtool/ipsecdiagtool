@@ -9,9 +9,9 @@ import (
 	"strconv"
 )
 
-//StartCapture captures all packets on any interface for an unlimited duration.
+//startCapture captures all packets on any interface for an unlimited duration.
 //Packets can be filtered by a BPF filter string. (E.g. tcp port 22)
-func StartCapture(bpfFilter string) {
+func startCapture(bpfFilter string) {
 	log.Println("Waiting for MTU-Analyzer packet")
 	if handle, err := pcap.OpenLive("any", 3000, true, 100); err != nil {
 		panic(err)
@@ -23,52 +23,29 @@ func StartCapture(bpfFilter string) {
 
 		for packet := range packetSource.Packets() {
 			log.Println("Received packet with length", packet.Metadata().Length, "bytes.")
-
-			//Check if packet is not from ourselves, then handle response.
-			if analyzePayload(packet) {
-				composeResponse(packet)
-			}
+			handlePacket(packet)
 		}
 	}
 }
 
-//TODO: refactor to test properly
-//analyzePayload detects where the packet is a valid IPSecDiagTool
-//MTU-Detection packet.
-func analyzePayload(packet gopacket.Packet) bool{
+func handlePacket(packet gopacket.Packet){
 	s := string(packet.TransportLayer().LayerPayload()[:])
 
 	//Cutting off the filler material
 	arr := strings.Split(s, ",")
-	if len(arr) > 1{
-		//TODO: add error stream
-		remoteApp, _ := strconv.Atoi(arr[0])
-
-		//Check that packet is not from this application
-		if appID == remoteApp {
-			log.Println("Packet is from us.. ignoring.")
-			return false
+	if len(arr) > 1 {
+		remoteAppID, err := strconv.Atoi(arr[0])
+		if err != nil {
+			panic(err)
 		}
 
-		log.Println("Packet comming from AppID:", remoteApp)
-		log.Println("Packet contains instructions:", arr[1])
-
-		return true
-	} else {
-		return false
+		//Check that packet is not from this application
+		if appID == remoteAppID {
+			log.Println("Packet is from us.. ignoring.")
+		} else if arr[1] == "OK" {
+			sendIncreasedMTU(packet)
+		} else if arr[1] == "MTU?"{
+			sendOKResponse(packet)
+		}
 	}
 }
-
-func composeResponse(packet gopacket.Packet) {
-	//TODO: determine source automatically
-	var source = "127.0.0.1"
-	var destination = "127.0.0.1"
-	sendPacket(source, destination, 22, 200, "OK")
-}
-
-/*
-	Proposed structure for instructions in payload
-	 1. AppID
-	 2. task
-	 3 ..
-*/

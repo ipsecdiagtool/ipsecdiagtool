@@ -9,6 +9,18 @@ import (
 	"strconv"
 )
 
+
+func sendIncreasedMTU(packet gopacket.Packet) {
+	currentMTU += incStep
+	sendPacket(srcIP, destIP, destPort, currentMTU, "MTU?")
+}
+
+func sendOKResponse(packet gopacket.Packet) {
+	//TODO: determine destination from received packet.
+	var destination = "127.0.0.1"
+	sendPacket(srcIP, destination, 22, 200, "OK")
+}
+
 //sendPacket generates & sends a packet of arbitrary size to a specific destination.
 //The size specified should be larger then 40bytes.
 func sendPacket(sourceIP string, destinationIP string, destinationPort int, size int, message string) []byte {
@@ -99,7 +111,6 @@ func sendPacket(sourceIP string, destinationIP string, destinationPort int, size
 	log.Println("Packet with length", (len(tcpPayloadBuf.Bytes())+len(ipHeaderBuf.Bytes())), "sent.")
 	return append(tcpPayloadBuf.Bytes(), ipHeaderBuf.Bytes()...)
 }
-
 
 //generatePayload generates a payload of the given size (bytes).
 //If the payload is longer then 11 bytes the first eleven bytes are used to spell "Hello IPsec".
