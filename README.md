@@ -1,6 +1,7 @@
 # IPSecDiagTool
 
 [![GoDoc](https://godoc.org/github.com/IPSecDiagTool/IPSecDiagTool?status.svg)](https://godoc.org/github.com/IPSecDiagTool/IPSecDiagTool)
+[![Build Status](https://drone.io/github.com/IPSecDiagTool/IPSecDiagTool/status.png)](https://drone.io/github.com/IPSecDiagTool/IPSecDiagTool/latest)
 
 **YouTrack-Server:** http://sinv-56053.edu.hsr.ch
 

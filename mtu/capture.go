@@ -52,6 +52,7 @@ func handlePacket(packet gopacket.Packet){
 	}
 }
 
+//TODO: maybe throw error when packet without IP layer..
 func getIP(packet gopacket.Packet) net.IP {
 	ipLayer := packet.Layer(layers.LayerTypeIPv4)
 	// Get IP data from this layer
