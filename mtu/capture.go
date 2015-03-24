@@ -23,7 +23,11 @@ func StartCapture(bpfFilter string) {
 
 		for packet := range packetSource.Packets() {
 			log.Println("Received packet with length", packet.Metadata().Length, "bytes.")
-			analyzePayload(packet)
+
+			//Check if packet is not from ourselves, then handle response.
+			if analyzePayload(packet) {
+				composeResponse(packet)
+			}
 		}
 	}
 }
@@ -53,6 +57,13 @@ func analyzePayload(packet gopacket.Packet) bool{
 	} else {
 		return false
 	}
+}
+
+func composeResponse(packet gopacket.Packet) {
+	//TODO: determine source automatically
+	var source = "127.0.0.1"
+	var destination = "127.0.0.1"
+	sendPacket(source, destination, 22, 200, "OK")
 }
 
 /*

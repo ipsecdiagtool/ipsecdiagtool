@@ -35,7 +35,7 @@ func Analyze(){
 	time.Sleep(1000 * time.Millisecond)
 
 	//Send packet via goroutine in separate thread
-	go sendPacket(sourceIP, destinationIP, destinationPort, 120)
+	go sendPacket(sourceIP, destinationIP, destinationPort, 120, "MTU?")
 
 
 	//TODO:
@@ -45,7 +45,7 @@ func Analyze(){
 
 //sendPacket generates & sends a packet of arbitrary size to a specific destination.
 //The size specified should be larger then 40bytes.
-func sendPacket(sourceIP string, destinationIP string, destinationPort int, size int) []byte {
+func sendPacket(sourceIP string, destinationIP string, destinationPort int, size int, message string) []byte {
 
 	var payloadSize int
 	if size < 40 {
@@ -110,7 +110,7 @@ func sendPacket(sourceIP string, destinationIP string, destinationPort int, size
 	tcpPayloadBuf := gopacket.NewSerializeBuffer()
 
 	//Influence the payload size
-	payload := gopacket.Payload(generatePayload(payloadSize, strconv.Itoa(ApplicationID)+",MTU?,"))
+	payload := gopacket.Payload(generatePayload(payloadSize, strconv.Itoa(ApplicationID)+","+message+","))
 	err = gopacket.SerializeLayers(tcpPayloadBuf, opts, &tcp, payload)
 	if err != nil {
 		panic(err)
