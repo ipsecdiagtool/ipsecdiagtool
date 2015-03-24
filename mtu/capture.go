@@ -7,6 +7,8 @@ import (
 	"log"
 	"strings"
 	"strconv"
+	"code.google.com/p/gopacket/layers"
+	"net"
 )
 
 //startCapture captures all packets on any interface for an unlimited duration.
@@ -48,4 +50,11 @@ func handlePacket(packet gopacket.Packet){
 			sendOKResponse(packet)
 		}
 	}
+}
+
+func getIP(packet gopacket.Packet) net.IP {
+	ipLayer := packet.Layer(layers.LayerTypeIPv4)
+	// Get IP data from this layer
+	ip, _ := ipLayer.(*layers.IPv4)
+	return ip.SrcIP
 }

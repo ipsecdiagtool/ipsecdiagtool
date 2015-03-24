@@ -6,12 +6,13 @@ import (
 	"time"
 	"strconv"
 	"math/rand"
+	"net"
 )
 
 //Package setup
 var appID int
-var srcIP string
-var destIP string
+var srcIP net.IP
+var destIP net.IP
 var destPort int
 var incStep int
 
@@ -31,8 +32,8 @@ func Setup(applicationID int, sourceIP string, destinationIP string, destination
 	} else {
 		appID = applicationID
 	}
-	srcIP = sourceIP
-	destIP = destinationIP
+	srcIP = net.ParseIP(sourceIP)
+	destIP = net.ParseIP(destinationIP)
 	destPort = destinationPort
 	incStep = incrementationStep
 	currentMTU = 500 //Starting MTU
@@ -62,7 +63,7 @@ func Analyze() {
 
 //setDefaultValues is run when the user doesn't configure the MTU package via Setup().
 func setDefaultValues() {
-	if srcIP == "" {
+	if destPort == 0 {
 		Setup(0, "127.0.0.1","127.0.0.1",22, 100)
 		log.Println("Setting default values, because Analyze() was called before or without Setup()")
 	}

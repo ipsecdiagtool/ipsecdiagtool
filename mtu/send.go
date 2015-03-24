@@ -7,23 +7,23 @@ import (
 	"code.google.com/p/gopacket"
 	"golang.org/x/net/ipv4"
 	"strconv"
+	"time"
 )
 
-
 func sendIncreasedMTU(packet gopacket.Packet) {
+	//TODO: slow down the response speed.
+	time.Sleep(1000 * time.Millisecond)
 	currentMTU += incStep
 	sendPacket(srcIP, destIP, destPort, currentMTU, "MTU?")
 }
 
 func sendOKResponse(packet gopacket.Packet) {
-	//TODO: determine destination from received packet.
-	var destination = "127.0.0.1"
-	sendPacket(srcIP, destination, 22, 200, "OK")
+	sendPacket(srcIP, getIP(packet), 22, 200, "OK")
 }
 
 //sendPacket generates & sends a packet of arbitrary size to a specific destination.
 //The size specified should be larger then 40bytes.
-func sendPacket(sourceIP string, destinationIP string, destinationPort int, size int, message string) []byte {
+func sendPacket(srcIP net.IP, dstIP net.IP, destinationPort int, size int, message string) []byte {
 
 	var payloadSize int
 	if size < 40 {
@@ -32,9 +32,6 @@ func sendPacket(sourceIP string, destinationIP string, destinationPort int, size
 	} else {
 		payloadSize = size-40
 	}
-
-	var srcIP = net.ParseIP(sourceIP)
-	var dstIP = net.ParseIP(destinationIP)
 
 	if srcIP == nil || dstIP == nil {
 		log.Println("Invalid IP")
@@ -97,7 +94,8 @@ func sendPacket(sourceIP string, destinationIP string, destinationPort int, size
 	//Send packet
 	var packetConn net.PacketConn
 	var rawConn *ipv4.RawConn
-	packetConn, err = net.ListenPacket("ip4:tcp", destinationIP)
+
+	packetConn, err = net.ListenPacket("ip4:tcp", dstIP.String())
 	if err != nil {
 		panic(err)
 	}
