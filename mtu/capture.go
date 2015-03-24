@@ -45,7 +45,7 @@ func analyzePayload(packet gopacket.Packet) bool{
 		remoteApp, _ := strconv.Atoi(arr[0])
 
 		//Check that packet is not from this application
-		if ApplicationID == remoteApp {
+		if appID == remoteApp {
 			log.Println("Packet is from us.. ignoring.")
 			return false
 		}
