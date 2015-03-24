@@ -48,11 +48,11 @@ func Analyze(){
 func sendPacket(sourceIP string, destinationIP string, destinationPort int, size int) []byte {
 
 	var payloadSize int
-	if size < 44 {
+	if size < 40 {
 		log.Println("Unable to create a packet smaller then 40bytes.")
 		payloadSize = 0
 	} else {
-		payloadSize = size-44
+		payloadSize = size-40
 	}
 
 	var srcIP = net.ParseIP(sourceIP)
@@ -110,7 +110,7 @@ func sendPacket(sourceIP string, destinationIP string, destinationPort int, size
 	tcpPayloadBuf := gopacket.NewSerializeBuffer()
 
 	//Influence the payload size
-	payload := gopacket.Payload(generatePayload(payloadSize))
+	payload := gopacket.Payload(generatePayload(payloadSize, strconv.Itoa(ApplicationID)+",MTU?,"))
 	err = gopacket.SerializeLayers(tcpPayloadBuf, opts, &tcp, payload)
 	if err != nil {
 		panic(err)
@@ -136,12 +136,13 @@ func sendPacket(sourceIP string, destinationIP string, destinationPort int, size
 
 //generatePayload generates a payload of the given size (bytes).
 //If the payload is longer then 11 bytes the first eleven bytes are used to spell "Hello IPsec".
-func generatePayload(size int) []byte {
+func generatePayload(size int, message string) []byte {
 	var payload []byte
-	if size > 11 {
-		payload = make([]byte, size-11)
-		payload = append([]byte(strconv.Itoa(ApplicationID)+",find MTU,"), payload...)
+	if size > len(message) {
+		payload = make([]byte, size-len(message))
+		payload = append([]byte(message), payload...)
 	} else {
+		//TODO: Case is probably not relevant. Remove.
 		payload = make([]byte, size)
 	}
 	return payload
