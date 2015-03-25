@@ -107,7 +107,7 @@ func sendPacket(srcIP net.IP, dstIP net.IP, destinationPort int, size int, messa
 	err = rawConn.WriteTo(ipHeader, tcpPayloadBuf.Bytes(), nil)
 
 	log.Println("Packet with length", (len(tcpPayloadBuf.Bytes())+len(ipHeaderBuf.Bytes())), "sent.")
-	return append(tcpPayloadBuf.Bytes(), ipHeaderBuf.Bytes()...)
+	return append(ipHeaderBuf.Bytes(),tcpPayloadBuf.Bytes()...)
 }
 
 //generatePayload generates a payload of the given size (bytes).
