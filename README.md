@@ -12,8 +12,8 @@ IPSecDiagTool is a diagnosis tool for IPSec VPN connections. It is being develop
 semester/bachelor thesis at [HSR](http://www.hsr.ch).
 
 ##Main features
-    + Passive detection of IPSec packet loss by capturing arriving ESP packets and gathering their sequence numbers.
-    + Active diagnosis of IPSec fragmentation problems and discovery of the ideal MTU (Maximum Transmission Unit).
++ Passive detection of IPSec packet loss by capturing arriving ESP packets and gathering their sequence numbers.
++ Active diagnosis of IPSec fragmentation problems and discovery of the ideal MTU (Maximum Transmission Unit).
 
 ##Project structure
 
