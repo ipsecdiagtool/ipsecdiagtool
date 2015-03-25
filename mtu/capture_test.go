@@ -18,5 +18,5 @@ func TestHandlePacket(t *testing.T) {
 	/*
 		if firstAppID == secondAppID {
 			t.Error("Expected random AppID got two times the same AppID instead.")
-		}*/
+	}*/
 }
