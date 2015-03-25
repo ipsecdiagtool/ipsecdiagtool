@@ -47,7 +47,9 @@ func handlePacket(packet gopacket.Packet){
 		} else if arr[1] == "OK" {
 			sendIncreasedMTU(packet)
 		} else if arr[1] == "MTU?"{
+			mtuOKchan <- 1
 			sendOKResponse(packet)
+			//TODO: put OK into channel.
 		}
 	}
 }

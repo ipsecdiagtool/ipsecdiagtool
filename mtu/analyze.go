@@ -18,6 +18,7 @@ var incStep int
 
 //Package internal temp. variables
 var currentMTU int
+var mtuOKchan (chan int)
 
 //Setup configures the MTU-daemon with the necessary information to
 //determine the MTU between two nodes. At some point it will likely get
@@ -48,17 +49,17 @@ func Analyze() {
 	setDefaultValues()
 	log.Println("Analyzing MTU..")
 
+	//Setup a channel for communication with capture
+	mtuOKchan = make(chan int)  // Allocate a channel.
+
 	//Capture all traffic via goroutine in separate thread
 	go startCapture("tcp port " + strconv.Itoa(destPort))
 
 	//Fire first packet to determine MTU. Later this should be done at
 	//certain times or via outside input in form of a cronjob.
 	time.Sleep(1000 * time.Millisecond)
-	go sendPacket(srcIP, destIP, destPort, currentMTU, "MTU?")
+	go findMTU()
 
-	//TODO:
-	//-Record packet
-	//-Loop several times to find ideal MTU
 }
 
 //setDefaultValues is run when the user doesn't configure the MTU package via Setup().
@@ -67,4 +68,29 @@ func setDefaultValues() {
 		Setup(0, "127.0.0.1","127.0.0.1",22, 100)
 		log.Println("Setting default values, because Analyze() was called before or without Setup()")
 	}
+}
+
+func findMTU(){
+	//1. Initiate MTU discovery by sending first packet.
+	sendPacket(srcIP, destIP, destPort, currentMTU, "MTU?")
+
+	//2. Either we get a message from our mtu channel or the timeout channel will message us after 10s.
+	for {
+		//2.1 Setting up the timeout channel
+		//http://blog.golang.org/go-concurrency-patterns-timing-out-and
+		timeout := make(chan bool, 1)
+		go func() {
+			time.Sleep(10 * time.Second)
+			timeout <- true
+		}()
+
+		select {
+			case <-mtuOKchan:
+				log.Println("Main Routine notified about state in subroutine.")
+			case <-timeout:
+				log.Println("Timeout has occured. We've steped over the MTU!")
+				//TODO: break out of loop.
+		}
+	}
+	//3. Report MTU
 }
