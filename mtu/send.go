@@ -1,21 +1,13 @@
 package mtu
 
 import (
-	"log"
-	"net"
 	"code.google.com/p/gopacket/layers"
 	"code.google.com/p/gopacket"
 	"golang.org/x/net/ipv4"
 	"strconv"
-	"time"
+	"log"
+	"net"
 )
-
-func sendIncreasedMTU(packet gopacket.Packet) {
-	//TODO: slow down the response speed.
-	time.Sleep(1000 * time.Millisecond)
-	currentMTU += incStep
-	sendPacket(srcIP, destIP, destPort, currentMTU, "MTU?")
-}
 
 func sendOKResponse(packet gopacket.Packet) {
 	sendPacket(srcIP, getIP(packet), 22, 200, "OK")

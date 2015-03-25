@@ -4,10 +4,10 @@ import (
 	//Google packages
 	"code.google.com/p/gopacket"
 	"code.google.com/p/gopacket/pcap"
+	"code.google.com/p/gopacket/layers"
 	"log"
 	"strings"
 	"strconv"
-	"code.google.com/p/gopacket/layers"
 	"net"
 )
 
@@ -30,6 +30,10 @@ func startCapture(bpfFilter string) {
 	}
 }
 
+//handlePacket decides if a packet contains a valid IPSecDiagTool-MTU instruction
+//and if the packet is from itself or the neighbouring node. If the packet is
+//not from itself it either responds with a OK or sends an internal message
+//to the findMTU goroutine that it has received an OK.
 func handlePacket(packet gopacket.Packet){
 	s := string(packet.TransportLayer().LayerPayload()[:])
 
@@ -43,13 +47,11 @@ func handlePacket(packet gopacket.Packet){
 
 		//Check that packet is not from this application
 		if appID == remoteAppID {
-			log.Println("Packet is from us.. ignoring.")
+			//log.Println("Packet is from us.. ignoring.")
 		} else if arr[1] == "OK" {
-			sendIncreasedMTU(packet)
-		} else if arr[1] == "MTU?"{
 			mtuOKchan <- 1
+		} else if arr[1] == "MTU?"{
 			sendOKResponse(packet)
-			//TODO: put OK into channel.
 		}
 	}
 }

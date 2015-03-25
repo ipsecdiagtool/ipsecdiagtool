@@ -2,8 +2,7 @@ package packetloss
 
 import "fmt"
 
-//For Jan.
-
+//Detect, for Jan.
 func Detect() {
 	fmt.Println("detecting packetloss ...")
 }

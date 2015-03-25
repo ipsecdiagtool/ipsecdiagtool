@@ -17,7 +17,7 @@ var destPort int
 var incStep int
 
 //Package internal temp. variables
-var currentMTU int
+var startingMTU int
 var mtuOKchan (chan int)
 
 //Setup configures the MTU-daemon with the necessary information to
@@ -37,7 +37,7 @@ func Setup(applicationID int, sourceIP string, destinationIP string, destination
 	destIP = net.ParseIP(destinationIP)
 	destPort = destinationPort
 	incStep = incrementationStep
-	currentMTU = 500 //Starting MTU
+	startingMTU = 500 //Starting MTU
 }
 
 //Analyze determines the ideal MTU (Maximum Transmission Unit) between two nodes
@@ -70,9 +70,11 @@ func setDefaultValues() {
 	}
 }
 
-func findMTU(){
+func findMTU() int{
+	var goodMTU, nextMTU = 0, startingMTU
+
 	//1. Initiate MTU discovery by sending first packet.
-	sendPacket(srcIP, destIP, destPort, currentMTU, "MTU?")
+	sendPacket(srcIP, destIP, destPort, nextMTU, "MTU?")
 
 	//2. Either we get a message from our mtu channel or the timeout channel will message us after 10s.
 	for {
@@ -87,10 +89,14 @@ func findMTU(){
 		select {
 			case <-mtuOKchan:
 				log.Println("Main Routine notified about state in subroutine.")
+				goodMTU = nextMTU
+				nextMTU += incStep
+				time.Sleep(1000 * time.Millisecond)
+				sendPacket(srcIP, destIP, destPort, nextMTU, "MTU?")
 			case <-timeout:
 				log.Println("Timeout has occured. We've steped over the MTU!")
-				//TODO: break out of loop.
+				log.Println("Last know good MTU:", goodMTU)
+				return goodMTU
 		}
 	}
-	//3. Report MTU
 }
