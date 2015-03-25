@@ -2,9 +2,9 @@ package capture
 
 import (
 	//Google packages
-	"fmt"
 	"code.google.com/p/gopacket"
 	"code.google.com/p/gopacket/pcap"
+	"fmt"
 	"log"
 )
 
@@ -31,7 +31,7 @@ func LiveCapture(bpfFilter string) {
 
 //ReadPcapFile iterates over all packets in a .pcap-file and counts them.
 //Returns the total number  of packets and outputs the layers of all IPSecESP-Type packets.
-func ReadPcapFile(filepath string) int{
+func ReadPcapFile(filepath string) int {
 	var counter = 0
 	if handle, err := pcap.OpenOffline(filepath); err != nil {
 		panic(err)
@@ -47,8 +47,8 @@ func ReadPcapFile(filepath string) int{
 			counter++
 
 			//Filtering out only IPSecESP packets.
-			if len(layers) == 3  {
-				if layers[2].LayerType().String() == "IPSecESP"{
+			if len(layers) == 3 {
+				if layers[2].LayerType().String() == "IPSecESP" {
 					//Printing the layers each packet has
 					fmt.Println(packet.String())
 				}

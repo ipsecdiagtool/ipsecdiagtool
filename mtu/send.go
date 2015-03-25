@@ -1,12 +1,12 @@
 package mtu
 
 import (
-	"code.google.com/p/gopacket/layers"
 	"code.google.com/p/gopacket"
+	"code.google.com/p/gopacket/layers"
 	"golang.org/x/net/ipv4"
-	"strconv"
 	"log"
 	"net"
+	"strconv"
 )
 
 func sendOKResponse(packet gopacket.Packet) {
@@ -22,7 +22,7 @@ func sendPacket(srcIP net.IP, dstIP net.IP, destinationPort int, size int, messa
 		log.Println("Unable to create a packet smaller then 40bytes.")
 		payloadSize = 0
 	} else {
-		payloadSize = size-40
+		payloadSize = size - 40
 	}
 
 	if srcIP == nil || dstIP == nil {
@@ -47,10 +47,10 @@ func sendPacket(srcIP net.IP, dstIP net.IP, destinationPort int, size int, messa
 
 	//TCP Layer
 	tcp := layers.TCP{
-	SrcPort: srcPort,
-	DstPort: dstPort,
-	Seq:     0x539, //Hex 1337
-	Window: 1337,
+		SrcPort: srcPort,
+		DstPort: dstPort,
+		Seq:     0x539, //Hex 1337
+		Window:  1337,
 	}
 
 	opts := gopacket.SerializeOptions{
@@ -98,8 +98,8 @@ func sendPacket(srcIP net.IP, dstIP net.IP, destinationPort int, size int, messa
 
 	err = rawConn.WriteTo(ipHeader, tcpPayloadBuf.Bytes(), nil)
 
-	log.Println("Packet with length", (len(tcpPayloadBuf.Bytes())+len(ipHeaderBuf.Bytes())), "sent.")
-	return append(ipHeaderBuf.Bytes(),tcpPayloadBuf.Bytes()...)
+	log.Println("Packet with length", (len(tcpPayloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
+	return append(ipHeaderBuf.Bytes(), tcpPayloadBuf.Bytes()...)
 }
 
 //generatePayload generates a payload of the given size (bytes).

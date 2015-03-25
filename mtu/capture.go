@@ -3,12 +3,12 @@ package mtu
 import (
 	//Google packages
 	"code.google.com/p/gopacket"
-	"code.google.com/p/gopacket/pcap"
 	"code.google.com/p/gopacket/layers"
+	"code.google.com/p/gopacket/pcap"
 	"log"
-	"strings"
-	"strconv"
 	"net"
+	"strconv"
+	"strings"
 )
 
 //startCapture captures all packets on any interface for an unlimited duration.
@@ -34,7 +34,7 @@ func startCapture(bpfFilter string) {
 //and if the packet is from itself or the neighbouring node. If the packet is
 //not from itself it either responds with a OK or sends an internal message
 //to the findMTU goroutine that it has received an OK.
-func handlePacket(packet gopacket.Packet){
+func handlePacket(packet gopacket.Packet) {
 	s := string(packet.TransportLayer().LayerPayload()[:])
 
 	//Cutting off the filler material
@@ -50,7 +50,7 @@ func handlePacket(packet gopacket.Packet){
 			//log.Println("Packet is from us.. ignoring.")
 		} else if arr[1] == "OK" {
 			mtuOKchan <- 1
-		} else if arr[1] == "MTU?"{
+		} else if arr[1] == "MTU?" {
 			sendOKResponse(packet)
 		}
 	}

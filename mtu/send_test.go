@@ -1,8 +1,8 @@
 package mtu
 
 import (
-	"testing"
 	"net"
+	"testing"
 )
 
 func TestPayloadGeneratorLargerThen11(t *testing.T) {
@@ -39,7 +39,7 @@ func TestSendPacketLarge(t *testing.T) {
 
 func TestSendPacketSmall(t *testing.T) {
 	length := 10
-	expected :=40
+	expected := 40
 	payload := sendPacket(net.ParseIP("127.0.0.1"), net.ParseIP("127.0.0.1"), 22, length, "Hello IPSec")
 	if len(payload) != expected {
 		t.Error("Expected", expected, "bytes of payload, instead got", len(payload), "bytes.")

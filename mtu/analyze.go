@@ -3,10 +3,10 @@ package mtu
 import (
 	"code.google.com/p/gopacket/examples/util"
 	"log"
-	"time"
-	"strconv"
 	"math/rand"
 	"net"
+	"strconv"
+	"time"
 )
 
 //Package setup
@@ -27,7 +27,7 @@ var mtuOKchan (chan int)
 //directly in your application.
 //If you set the application ID 0, a random one will be automatically generated.
 func Setup(applicationID int, sourceIP string, destinationIP string, destinationPort int, incrementationStep int) {
-	if(applicationID == 0){
+	if applicationID == 0 {
 		rand.Seed(time.Now().UnixNano()) //Seed is required otherwise we always get the same number
 		appID = rand.Intn(100000)
 	} else {
@@ -50,7 +50,7 @@ func Analyze() {
 	log.Println("Analyzing MTU..")
 
 	//Setup a channel for communication with capture
-	mtuOKchan = make(chan int)  // Allocate a channel.
+	mtuOKchan = make(chan int) // Allocate a channel.
 
 	//Capture all traffic via goroutine in separate thread
 	go startCapture("tcp port " + strconv.Itoa(destPort))
@@ -65,12 +65,12 @@ func Analyze() {
 //setDefaultValues is run when the user doesn't configure the MTU package via Setup().
 func setDefaultValues() {
 	if destPort == 0 {
-		Setup(0, "127.0.0.1","127.0.0.1",22, 100)
+		Setup(0, "127.0.0.1", "127.0.0.1", 22, 100)
 		log.Println("Setting default values, because Analyze() was called before or without Setup()")
 	}
 }
 
-func findMTU() int{
+func findMTU() int {
 	var goodMTU, nextMTU = 0, startingMTU
 
 	//1. Initiate MTU discovery by sending first packet.
@@ -87,16 +87,16 @@ func findMTU() int{
 		}()
 
 		select {
-			case <-mtuOKchan:
-				log.Println("Main Routine notified about state in subroutine.")
-				goodMTU = nextMTU
-				nextMTU += incStep
-				time.Sleep(1000 * time.Millisecond)
-				sendPacket(srcIP, destIP, destPort, nextMTU, "MTU?")
-			case <-timeout:
-				log.Println("Timeout has occured. We've steped over the MTU!")
-				log.Println("Last know good MTU:", goodMTU)
-				return goodMTU
+		case <-mtuOKchan:
+			log.Println("Main Routine notified about state in subroutine.")
+			goodMTU = nextMTU
+			nextMTU += incStep
+			time.Sleep(1000 * time.Millisecond)
+			sendPacket(srcIP, destIP, destPort, nextMTU, "MTU?")
+		case <-timeout:
+			log.Println("Timeout has occured. We've steped over the MTU!")
+			log.Println("Last know good MTU:", goodMTU)
+			return goodMTU
 		}
 	}
 }
