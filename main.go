@@ -15,9 +15,9 @@ func main() {
 	//capture.LiveCapture("")
 	//capture.ReadPcapFile("/home/parallels/Desktop/capture.pcap")
 
-	packetloss.Detect()
+	go packetloss.Detect()
 
-	mtu.Analyze()
+	go mtu.Analyze()
 
 	//Keep main open forever
 	//http://stackoverflow.com/questions/9543835/how-best-do-i-keep-a-long-running-go-program-running

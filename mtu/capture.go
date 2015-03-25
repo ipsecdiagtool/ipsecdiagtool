@@ -24,7 +24,6 @@ func startCapture(bpfFilter string) {
 		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
 		for packet := range packetSource.Packets() {
-			log.Println("Received packet with length", packet.Metadata().Length, "bytes.")
 			handlePacket(packet)
 		}
 	}
@@ -49,8 +48,10 @@ func handlePacket(packet gopacket.Packet) {
 		if appID == remoteAppID {
 			//log.Println("Packet is from us.. ignoring.")
 		} else if arr[1] == "OK" {
+			log.Println("Received OK-packet with length", packet.Metadata().Length, "bytes.")
 			mtuOKchan <- 1
 		} else if arr[1] == "MTU?" {
+			log.Println("Received MTU?-packet with length", packet.Metadata().Length, "bytes.")
 			sendOKResponse(packet)
 		}
 	}
