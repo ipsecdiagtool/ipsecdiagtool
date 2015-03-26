@@ -1,6 +1,7 @@
 package packetloss
 
 import (
+		"strings"
         "fmt"
         "log"
         "net"
@@ -9,7 +10,12 @@ import (
         "code.google.com/p/gopacket/pcap"
 )
 
+var elements map[string][]uint32
+
 func Detect() {
+	
+	elements = make(map[string][]uint32)
+	
 	fmt.Println("detecting packetloss ...")
 	
 	iface, err := net.InterfaceByName("any")
@@ -39,6 +45,22 @@ func readIPSec(handle *pcap.Handle, iface *net.Interface, stop chan struct{}) {
 				src, dst := netFlow.Endpoints()
                 ipsec := ipsecLayer.(*layers.IPSecESP)		
 				log.Println("Source: ",src, "Destination: ",dst,"Seqnumber: ",ipsec.Seq)
+				makeEntry(strings.Join([]string{src.String(), dst.String()},","), ipsec.Seq)
              }
         }
+        
+        for k,element := range elements{
+        	fmt.Println(k);
+        	for _,seqnumber := range element{
+        		fmt.Println(seqnumber)
+        	}
+        }
+}
+
+func makeEntry(key string, value uint32){
+	if(elements[key] == nil){
+		elements[key] = []uint32{value}
+	}else{
+		elements[key] = append(elements[key],value)
+	}
 }
