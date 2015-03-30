@@ -37,7 +37,6 @@ IPSecDiagTool is being programmed in Golang. You can pull our code into your own
 running `go get github.com/ipsecdiagtool/ipsecdiagtool/`. Our code is also documented on 
 [Godoc](https://godoc.org/github.com/IPSecDiagTool/IPSecDiagTool).
 
-
 ##License
 The MIT License (MIT)
 
