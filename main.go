@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	//Our packages
-	"github.com/ipsecdiagtool/ipsecdiagtool/mtu"
+	//"github.com/ipsecdiagtool/ipsecdiagtool/mtu"
 	"github.com/ipsecdiagtool/ipsecdiagtool/packetloss"
 )
 
@@ -14,10 +14,10 @@ func main() {
 
 	//capture.LiveCapture("")
 	//capture.ReadPcapFile("/home/parallels/Desktop/capture.pcap")
+ 
+	go packetloss.Detect(32)
 
-	go packetloss.Detect()
-
-	go mtu.Analyze()
+	//go mtu.Analyze()
 
 	//Keep main open forever
 	//http://stackoverflow.com/questions/9543835/how-best-do-i-keep-a-long-running-go-program-running
