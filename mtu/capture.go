@@ -43,9 +43,8 @@ func handlePacket(packet gopacket.Packet) {
 		if err != nil {
 			panic(err)
 		}
-
 		//Check that packet is not from this application
-		if appID == remoteAppID {
+		if conf.ApplicationID == remoteAppID {
 			//log.Println("Packet is from us.. ignoring.")
 		} else if arr[1] == "OK" {
 			log.Println("Received OK-packet with length", packet.Metadata().Length, "bytes.")
@@ -63,4 +62,8 @@ func getIP(packet gopacket.Packet) net.IP {
 	// Get IP data from this layer
 	ip, _ := ipLayer.(*layers.IPv4)
 	return ip.SrcIP
+}
+
+func originalSize(packet gopacket.Packet) int {
+	return len(packet.NetworkLayer().LayerPayload()) + len(packet.NetworkLayer().LayerContents())
 }

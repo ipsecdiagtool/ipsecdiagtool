@@ -23,7 +23,6 @@ func Test1(t *testing.T) {
 		for _, e := range e.maybelostpackets {
 			fmt.Println("MaybeLostPackets: ", e)
 		}
-	}
 	
 	lp := len(esp.elements[con].lostpackets)
 	mlp := len(esp.elements[con].maybelostpackets)

@@ -5,8 +5,10 @@ import (
 )
 
 type EspMap struct {
+
 	windowsize uint32
 	elements   map[Connection]Packets
+
 }
 
 type Connection struct {
@@ -14,15 +16,18 @@ type Connection struct {
 	SPI      uint32
 }
 
+
 type Packets struct {
 	head             uint32
 	lostpackets      []LostPacket
 	maybelostpackets []uint32
+
 }
 
 type LostPacket struct {
 	sequencenumber uint32
 	timestamp      time.Time
+
 }
 
 func NewEspMap(windowsize uint32) *EspMap {
@@ -71,4 +76,5 @@ func CheckForLost(packets Packets, windowsize uint32) Packets {
 	}
 	packets.maybelostpackets = newMaybelost
 	return packets
+
 }

@@ -10,7 +10,7 @@ import (
 )
 
 func sendOKResponse(packet gopacket.Packet) {
-	sendPacket(srcIP, getIP(packet), 22, 200, "OK")
+	sendPacket(net.ParseIP(conf.SourceIP), getIP(packet), conf.Port, originalSize(packet), "OK")
 }
 
 //sendPacket generates & sends a packet of arbitrary size to a specific destination.
@@ -77,7 +77,7 @@ func sendPacket(srcIP net.IP, dstIP net.IP, destinationPort int, size int, messa
 	tcpPayloadBuf := gopacket.NewSerializeBuffer()
 
 	//Influence the payload size
-	payload := gopacket.Payload(generatePayload(payloadSize, strconv.Itoa(appID)+","+message+","))
+	payload := gopacket.Payload(generatePayload(payloadSize, strconv.Itoa(conf.ApplicationID)+","+message+","))
 	err = gopacket.SerializeLayers(tcpPayloadBuf, opts, &tcp, payload)
 	if err != nil {
 		panic(err)
@@ -87,7 +87,7 @@ func sendPacket(srcIP net.IP, dstIP net.IP, destinationPort int, size int, messa
 	var packetConn net.PacketConn
 	var rawConn *ipv4.RawConn
 
-	packetConn, err = net.ListenPacket("ip4:tcp", dstIP.String())
+	packetConn, err = net.ListenPacket("ip4:tcp", srcIP.String())
 	if err != nil {
 		panic(err)
 	}

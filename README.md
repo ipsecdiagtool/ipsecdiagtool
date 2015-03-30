@@ -1,7 +1,7 @@
 # IPSecDiagTool
 
 [![GoDoc](https://godoc.org/github.com/IPSecDiagTool/IPSecDiagTool?status.svg)](https://godoc.org/github.com/IPSecDiagTool/IPSecDiagTool)
-[![Build Status](https://drone.io/github.com/IPSecDiagTool/IPSecDiagTool/status.png)](https://drone.io/github.com/IPSecDiagTool/IPSecDiagTool/latest)
+[![Build Status](http://152.96.56.53:40000/job/IPSecDiagTool%20-%20Application/badge/icon)](http://152.96.56.53:40000/job/IPSecDiagTool%20-%20Application/)
 
 **Go Code Quality:** http://goreportcard.com/report/IPSecDiagTool/IPSecDiagTool
 
@@ -36,6 +36,7 @@ semester/bachelor thesis at [HSR](http://www.hsr.ch).
 IPSecDiagTool is being programmed in Golang. You can pull our code into your own application by
 running `go get github.com/ipsecdiagtool/ipsecdiagtool/`. Our code is also documented on 
 [Godoc](https://godoc.org/github.com/IPSecDiagTool/IPSecDiagTool).
+
 
 ##License
 The MIT License (MIT)

@@ -91,3 +91,4 @@ local.properties
 pkg/
 src/code.google.com/p/gopacket
 send/send.go
+config.json

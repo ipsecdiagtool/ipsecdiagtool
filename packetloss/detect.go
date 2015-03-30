@@ -49,7 +49,9 @@ func readIPSec(handle *pcap.Handle, iface *net.Interface, stop chan struct{}) {
 			log.Println("Source: ", src, "Destination: ", dst, "Seqnumber: ", ipsec.Seq)
 
 			espmap.MakeEntry(Connection{src.String(), dst.String(), ipsec.SPI}, ipsec.Seq)
+
 			//espmap.CheckForLost()
+
 		}
 	}
 /*
