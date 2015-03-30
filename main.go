@@ -6,7 +6,7 @@ import (
 
 	//Our packages
 	"github.com/ipsecdiagtool/ipsecdiagtool/mtu"
-	"github.com/ipsecdiagtool/ipsecdiagtool/packetloss"
+	//"github.com/ipsecdiagtool/ipsecdiagtool/packetloss"
 )
 
 func main() {
@@ -15,7 +15,7 @@ func main() {
 	//capture.LiveCapture("")
 	//capture.ReadPcapFile("/home/parallels/Desktop/capture.pcap")
 
-	go packetloss.Detect()
+	//go packetloss.Detect(512)
 
 	go mtu.Analyze()
 

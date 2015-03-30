@@ -43,7 +43,6 @@ func handlePacket(packet gopacket.Packet) {
 		if err != nil {
 			panic(err)
 		}
-
 		//Check that packet is not from this application
 		if appID == remoteAppID {
 			//log.Println("Packet is from us.. ignoring.")
