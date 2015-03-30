@@ -5,9 +5,8 @@ import (
 )
 
 type EspMap struct {
-	windowsize  int
-	lostpackets map[Connection][]LostPacket
-	elements    map[Connection][]uint32
+	windowsize uint32
+	elements   map[Connection]Packets
 }
 
 type Connection struct {
@@ -15,33 +14,61 @@ type Connection struct {
 	SPI      uint32
 }
 
-type LostPacket struct {
-	conn      Connection
-	lost      uint32
-	timestamp time.Time
+type Packets struct {
+	head             uint32
+	lostpackets      []LostPacket
+	maybelostpackets []uint32
 }
 
-func NewEspMap(windowsize int) *EspMap {
-	return &EspMap{elements: make(map[Connection][]uint32),
-		windowsize: windowsize, lostpackets: make(map[Connection][]LostPacket)}
+type LostPacket struct {
+	sequencenumber uint32
+	timestamp      time.Time
+}
+
+func NewEspMap(windowsize uint32) *EspMap {
+	return &EspMap{elements: make(map[Connection]Packets),
+		windowsize: windowsize} //, lostpackets: make(map[Connection][]LostPacket)}
 }
 
 func (espm EspMap) MakeEntry(key Connection, value uint32) {
-		espm.elements[key] = append(espm.elements[key], value)
-}
+	if espm.elements[key].head == 0 {
+		espm.elements[key] = Packets{head: value}
+	} else {
+		packets := espm.elements[key]
 
-func (espm EspMap) CheckForLost() {
+		if value > packets.head {
 
-	for k, element := range espm.elements {
-		for key, seqnumber := range element {
-
-			if key != 0 {
-				l := seqnumber - element[key-1]
-				if l != 1 {
-					espm.lostpackets[k] = append(espm.lostpackets[k], LostPacket{k, l-1, time.Now().Local()})			
+			if value != packets.head+1 {
+				for i := packets.head + 1; i < value; i++ {
+					packets.maybelostpackets = append(packets.maybelostpackets, i)
 				}
+
+			}
+			packets.head = value
+			
+		} else {
+			if (packets.head - espm.windowsize) < value {
+				for i, v := range packets.maybelostpackets {
+					if v == value {
+						packets.maybelostpackets = append(packets.maybelostpackets[:i], packets.maybelostpackets[i+1:]...)
+					}
+				}
+
 			}
 		}
+		espm.elements[key] = CheckForLost(packets, espm.windowsize)
 	}
+}
 
+func CheckForLost(packets Packets, windowsize uint32) Packets {
+	var newMaybelost []uint32
+	for _, e := range packets.maybelostpackets {
+		if (packets.head > windowsize && packets.head-windowsize >= e) {
+			packets.lostpackets = append(packets.lostpackets, LostPacket{e, time.Now().Local()})
+		} else {
+			newMaybelost = append(newMaybelost, e)
+		}
+	}
+	packets.maybelostpackets = newMaybelost
+	return packets
 }

@@ -11,7 +11,7 @@ import (
 
 var espmap *EspMap
 
-func Detect(windowsize int) {
+func Detect(windowsize uint32) {
 
 	espmap = NewEspMap(windowsize)
 
@@ -23,7 +23,8 @@ func Detect(windowsize int) {
 	}
 
 	//handle, err := pcap.OpenLive("any", 1500, true, 100)
-	handle, err := pcap.OpenOffline("/home/student/TestIpSec_Ping.pcap")
+	//handle, err := pcap.OpenOffline("/home/student/TestIpSec_Ping.pcap")
+	handle, err := pcap.OpenOffline("/home/student/test.pcap")
 	if err != nil {
 		panic(err)
 	}
@@ -48,13 +49,19 @@ func readIPSec(handle *pcap.Handle, iface *net.Interface, stop chan struct{}) {
 			log.Println("Source: ", src, "Destination: ", dst, "Seqnumber: ", ipsec.Seq)
 
 			espmap.MakeEntry(Connection{src.String(), dst.String(), ipsec.SPI}, ipsec.Seq)
+			//espmap.CheckForLost()
 		}
 	}
-
+/*
 	for k, element := range espmap.elements {
 		fmt.Println(k)
 		for _, seqnumber := range element {
 			fmt.Println(seqnumber)
 		}
 	}
+	fmt.Println("Lost Packets: ",len(espmap.lostpackets))
+	for _, element := range espmap.lostpackets {
+		fmt.Println(element)
+	}
+	*/
 }
