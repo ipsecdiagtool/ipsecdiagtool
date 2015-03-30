@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 )
 
+//Config contains the user configurable values for IPSecDiagTool.
+//It contains only primitive datatypes so that it is easily serializable.
 type Config struct {
 	ApplicationID int
 
@@ -15,15 +17,21 @@ type Config struct {
 	DestinationIP string
 	Port int
 	IncrementationStep int
+
+	//Packet loss specific:
+	//add here..
 }
 
+//initalize creates a new config with default values and writes it to disk.
 func initalize() Config{
 	conf := Config{0, "127.0.0.1", "127.0.0.1", 22, 100}
-	write(conf)
+	Write(conf)
 	return conf
 }
 
-func read() Config{
+//Read reads an existing config file and returns it as a config object. If you're loading
+//the configuration for the first time you should use LoadConfig() instead.
+func Read() Config{
 	//TODO: magic constants into one file
 	jsonConfig, err := ioutil.ReadFile("config.json")
 	check(err)
@@ -34,7 +42,8 @@ func read() Config{
 	return conf
 }
 
-func write(conf Config){
+//Write accepts a Config object and writes it to the disk.
+func Write(conf Config){
 	jsonConfig, err := json.MarshalIndent(conf,"", "    ")
 	check(err)
 
@@ -50,7 +59,7 @@ func write(conf Config){
 func LoadConfig() Config{
 	if _, err := os.Stat("config.json"); err == nil {
 		fmt.Println("Existing config found.")
-		return read()
+		return Read()
 	} else {
 		fmt.Println("No config found, running init.")
 		return initalize()
