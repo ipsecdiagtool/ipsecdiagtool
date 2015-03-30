@@ -87,7 +87,7 @@ func sendPacket(srcIP net.IP, dstIP net.IP, destinationPort int, size int, messa
 	var packetConn net.PacketConn
 	var rawConn *ipv4.RawConn
 
-	packetConn, err = net.ListenPacket("ip4:tcp", dstIP.String())
+	packetConn, err = net.ListenPacket("ip4:tcp", srcIP.String())
 	if err != nil {
 		panic(err)
 	}
