@@ -6,8 +6,8 @@ import (
 	"os"
 
 	//Our packages
-	"github.com/ipsecdiagtool/ipsecdiagtool/mtu"
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
+	"github.com/ipsecdiagtool/ipsecdiagtool/mtu"
 	//"github.com/ipsecdiagtool/ipsecdiagtool/packetloss"
 )
 
@@ -25,7 +25,7 @@ func main() {
 
 	Configuration = config.LoadConfig()
 
-	go initMTU()
+	go mtu.Analyze(Configuration)
 
 	//Keep main open forever
 	//http://stackoverflow.com/questions/9543835/how-best-do-i-keep-a-long-running-go-program-running
@@ -37,19 +37,14 @@ func main() {
 //Handle commandline arguments. Arg0 = path where program is running,
 //Arg1+ raw arguments.
 func handleArgs() {
-	if(len(os.Args)>1){
-		if(os.Args[1] == "about"){
-			fmt.Println("IPSecDiagTool is being developed at HSR (Hoschschule für Technik Rapperswil)"+
-			"\n as a semester/bachelor thesis. For more information please visit our repository on"+
-			"\n Github: https://github.com/IPSecDiagTool/IPSecDiagTool")
-		} else if(os.Args[1] == "help"){
+	if len(os.Args) > 1 {
+		if os.Args[1] == "about" {
+			fmt.Println("IPSecDiagTool is being developed at HSR (Hoschschule für Technik Rapperswil)" +
+				"\n as a semester/bachelor thesis. For more information please visit our repository on" +
+				"\n Github: https://github.com/IPSecDiagTool/IPSecDiagTool")
+		} else if os.Args[1] == "help" {
 			//TODO: help infos
 			fmt.Println("TODO: Help.")
 		}
 	}
-}
-
-func initMTU(){
-	mtu.Setup(Configuration.ApplicationID, Configuration.SourceIP, Configuration.DestinationIP, Configuration.Port, Configuration.IncrementationStep)
-	mtu.Analyze()
 }

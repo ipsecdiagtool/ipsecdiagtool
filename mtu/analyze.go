@@ -3,18 +3,11 @@ package mtu
 import (
 	"code.google.com/p/gopacket/examples/util"
 	"log"
-	"math/rand"
 	"net"
 	"strconv"
 	"time"
+	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 )
-
-//Package setup
-var appID int
-var srcIP net.IP
-var destIP net.IP
-var destPort int
-var incStep int
 
 //Package internal temp. variables
 var startingMTU int
@@ -44,32 +37,29 @@ func Setup(applicationID int, sourceIP string, destinationIP string, destination
 //by sending increasingly big packets between them. Analyze determine the MTU
 //by running FindMTU multiple times. However it is not a daemon. Once it has found
 //the ideal MTU it reports it and then closes shop.
-func Analyze() {
+func Analyze(conf config.Config) {
 	defer util.Run()()
-	setDefaultValues()
 	log.Println("Analyzing MTU..")
 
 	//Setup a channel for communication with capture
 	mtuOKchan = make(chan int) // Allocate a channel.
+	appID = conf.ApplicationID
+	srcIP = net.ParseIP(conf.SourceIP)
+	startingMTU = 500
 
 	//Capture all traffic via goroutine in separate thread
-	go startCapture("tcp port " + strconv.Itoa(destPort))
+	go startCapture("tcp port " + strconv.Itoa(conf.Port))
 
 	//Run FindMTU with a large incrementationStep
 	time.Sleep(1000 * time.Millisecond)
-	var roughMTU = FindMTU(srcIP, destIP, destPort, startingMTU, incStep)
+	var roughMTU = FindMTU(
+		net.ParseIP(conf.SourceIP),
+		net.ParseIP(conf.DestinationIP),
+		conf.Port,
+		startingMTU,
+		conf.IncrementationStep)
 
-	//Run FindMTU with a small incrementationStep
-	var exactMTU = FindMTU(srcIP, destIP, destPort, roughMTU, incStep/10)
-	log.Println("Exact MTU found:", exactMTU)
-}
-
-//setDefaultValues is run when the user doesn't configure the MTU package via Setup().
-func setDefaultValues() {
-	if destPort == 0 {
-		Setup(0, "127.0.0.1", "127.0.0.1", 22, 100)
-		log.Println("Setting default values, because Analyze() was called before or without Setup()")
-	}
+	log.Println("MTU found:", roughMTU)
 }
 
 //FindMTU discovers the MTU between two nodes and returns it as an int value. FindMTU currently
