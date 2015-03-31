@@ -10,7 +10,6 @@ import (
 )
 
 //Package internal temp. variables
-var startingMTU int
 var mtuOKchan (chan int)
 var conf config.Config
 
@@ -24,7 +23,6 @@ func Analyze(c config.Config) {
 
 	//Setup a channel for communication with capture
 	mtuOKchan = make(chan int) // Allocate a channel.
-	startingMTU = 500
 	conf = c
 
 	//Capture all traffic via goroutine in separate thread
@@ -34,18 +32,31 @@ func Analyze(c config.Config) {
 	time.Sleep(1000 * time.Millisecond)
 
 	//MTU detection algorithm
-	var detectedMTU = startingMTU
+	var mtu = config.StartingMTU
 	var incStep = conf.IncrementationStep
+	var passed = false
 	for i := 0; i < config.MTUIterations; i++ {
-		detectedMTU = FindMTU(
+		result := FindMTU(
 			net.ParseIP(conf.SourceIP),
 			net.ParseIP(conf.DestinationIP),
 			conf.Port,
-			detectedMTU,
+			mtu,
 			incStep)
+
+		if(result != 0){
+			passed = true
+			mtu = result
+		} else {
+			log.Println("Unable to find MTU on Try:",i)
+		}
+
 		incStep = incStep/2
 	}
-	log.Println("MTU found:", detectedMTU)
+	if(passed){
+		log.Println("MTU sucessfully detected:", mtu)
+	} else {
+		log.Println("Unable to detect MTU within", config.MTUIterations, "tries.")
+	}
 }
 
 //FindMTU discovers the MTU between two nodes and returns it as an int value. FindMTU currently
@@ -75,7 +86,6 @@ func FindMTU(srcIP net.IP, destIP net.IP, destPort int, startMTU int, increment 
 			sendPacket(srcIP, destIP, destPort, nextMTU, "MTU?")
 		case <-timeout:
 			log.Println("Timeout has occured. We've steped over the MTU!")
-			log.Println("Last known good MTU:", goodMTU)
 			return goodMTU
 		}
 	}
