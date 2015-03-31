@@ -51,7 +51,6 @@ func Read() Config {
 	var conf Config
 	err2 := json.Unmarshal(jsonConfig, &conf)
 	check(err2)
-	conf.ApplicationID = setupAppID(conf.ApplicationID)
 
 	//Update config file if outdated
 	if(configOutdated(conf)){
@@ -59,6 +58,8 @@ func Read() Config {
 		conf.CfgVers = configVersion
 		Write(conf)
 	}
+
+	conf.ApplicationID = setupAppID(conf.ApplicationID)
 	return conf
 }
 
