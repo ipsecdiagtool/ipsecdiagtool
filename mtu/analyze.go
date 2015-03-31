@@ -30,11 +30,8 @@ func Analyze(c config.Config) {
 	//Capture all traffic via goroutine in separate thread
 	go startCapture("tcp port " + strconv.Itoa(conf.Port))
 
-	//TODO: may not belong into production code.
-	//Slow down if we're running tests on localhost
-	if(conf.DestinationIP == "127.0.0.1"){
-		time.Sleep(1000 * time.Millisecond)
-	}
+	//TODO: currently required to give capture enough time to boot..
+	time.Sleep(1000 * time.Millisecond)
 
 	//MTU detection algorithm
 	var detectedMTU = startingMTU
