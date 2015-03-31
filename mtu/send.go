@@ -10,7 +10,7 @@ import (
 )
 
 func sendOKResponse(packet gopacket.Packet) {
-	sendPacket(net.ParseIP(conf.SourceIP), getIP(packet), conf.Port, 200, "OK")
+	sendPacket(net.ParseIP(conf.SourceIP), getIP(packet), conf.Port, originalSize(packet), "OK")
 }
 
 //sendPacket generates & sends a packet of arbitrary size to a specific destination.

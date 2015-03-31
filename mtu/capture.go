@@ -64,16 +64,7 @@ func getIP(packet gopacket.Packet) net.IP {
 	return ip.SrcIP
 }
 
-func openPort() {
-	ln, err := net.Listen("tcp", ":35000")
-	if err != nil {
-		// handle error
-	}
-	for {
-		_, err := ln.Accept()
-		if err != nil {
-			// handle error
-		}
-		//Connection could be handled here.
-	}
+func originalSize(packet gopacket.Packet) int {
+	return len(packet.NetworkLayer().LayerPayload())+len(packet.NetworkLayer().LayerContents())
 }
+
