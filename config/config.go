@@ -11,12 +11,14 @@ import (
 
 //Constants & magic values:
 const configFile string = "config.json"
+const configVersion int = 1
 
 
 //Config contains the user configurable values for IPSecDiagTool.
 //It contains only primitive datatypes so that it is easily serializable.
 type Config struct {
 	ApplicationID int
+	Debug bool
 
 	//MTU specific:
 	SourceIP           string
@@ -26,11 +28,14 @@ type Config struct {
 
 	//Packet loss specific:
 	//add here..
+
+	//Used to determine whether configuration needs to be updated.
+	CfgVers int
 }
 
 //initalize creates a new config with default values and writes it to disk.
 func initalize() Config {
-	conf := Config{0, "127.0.0.1", "127.0.0.1", 22, 100}
+	conf := Config{0, false, "127.0.0.1", "127.0.0.1", 22, 100, configVersion}
 	Write(conf)
 	//TODO: perhaps write AppID to file later?
 	conf.ApplicationID = setupAppID(conf.ApplicationID)
@@ -46,8 +51,14 @@ func Read() Config {
 	var conf Config
 	err2 := json.Unmarshal(jsonConfig, &conf)
 	check(err2)
-
 	conf.ApplicationID = setupAppID(conf.ApplicationID)
+
+	//Update config file if outdated
+	if(configOutdated(conf)){
+		fmt.Println("Outdated configuration found, updating it now.")
+		conf.CfgVers = configVersion
+		Write(conf)
+	}
 	return conf
 }
 
@@ -86,6 +97,13 @@ func setupAppID(applicationID int) int {
 	} else {
 		return applicationID
 	}
+}
+
+func configOutdated(c Config) bool{
+	if(c.CfgVers < configVersion){
+		return true
+	}
+	return false
 }
 
 func check(e error) {
