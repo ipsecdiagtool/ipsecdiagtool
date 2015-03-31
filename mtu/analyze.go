@@ -53,7 +53,11 @@ func Analyze(c config.Config) {
 		incStep = incStep/2
 	}
 	if(passed){
-		log.Println("MTU sucessfully detected:", mtu)
+		if(confirmMTU(net.ParseIP(conf.SourceIP),net.ParseIP(conf.DestinationIP), conf.Port, mtu)){
+			log.Println("MTU sucessfully detected:", mtu)
+		} else {
+			log.Println("ERROR: MTU detected as",mtu,"but unable to confirm it.")
+		}
 	} else {
 		log.Println("Unable to detect MTU within", config.MTUIterations, "tries.")
 	}
@@ -88,5 +92,22 @@ func FindMTU(srcIP net.IP, destIP net.IP, destPort int, startMTU int, increment 
 			log.Println("Timeout has occured. We've steped over the MTU!")
 			return goodMTU
 		}
+	}
+}
+
+func confirmMTU(srcIP net.IP, destIP net.IP, destPort int, mtu int) bool {
+	sendPacket(srcIP, destIP, destPort, mtu, "MTU?")
+
+	timeout := make(chan bool, 1)
+	go func() {
+		time.Sleep(10 * time.Second)
+		timeout <- true
+	}()
+
+	select {
+	case <-mtuOKchan:
+		return true
+	case <-timeout:
+		return false
 	}
 }
