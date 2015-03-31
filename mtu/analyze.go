@@ -12,23 +12,23 @@ import (
 //Package internal temp. variables
 var startingMTU int
 var mtuOKchan (chan int)
-var appID int
-var srcIP net.IP
+var conf config.Config
 
 //Analyze determines the ideal MTU (Maximum Transmission Unit) between two nodes
 //by sending increasingly big packets between them. Analyze determine the MTU
 //by running FindMTU multiple times. However it is not a daemon. Once it has found
 //the ideal MTU it reports it and then closes shop.
-func Analyze(conf config.Config) {
+func Analyze(c config.Config) {
 	defer util.Run()()
 	log.Println("Analyzing MTU..")
 
 	//Setup a channel for communication with capture
 	mtuOKchan = make(chan int) // Allocate a channel.
-	appID = conf.ApplicationID
-	srcIP = net.ParseIP(conf.SourceIP)
 	startingMTU = 500
+	conf = c
 
+	//TODO: not sure if a socket needs to be open for us to capture packets.
+	//go openPort()
 	//Capture all traffic via goroutine in separate thread
 	go startCapture("tcp port " + strconv.Itoa(conf.Port))
 
