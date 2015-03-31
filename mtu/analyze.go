@@ -53,7 +53,7 @@ func Analyze(c config.Config) {
 		incStep = incStep/2
 	}
 	if(passed){
-		if(confirmMTU(net.ParseIP(conf.SourceIP),net.ParseIP(conf.DestinationIP), conf.Port, mtu)){
+		if(confirmMTU(net.ParseIP(conf.SourceIP),net.ParseIP(conf.DestinationIP), conf.Port, mtu, config.TimoutInSeconds)){
 			log.Println("MTU sucessfully detected:", mtu)
 		} else {
 			log.Println("ERROR: MTU detected as",mtu,"but unable to confirm it.")
@@ -78,7 +78,7 @@ func FindMTU(srcIP net.IP, destIP net.IP, destPort int, startMTU int, increment 
 		//http://blog.golang.org/go-concurrency-patterns-timing-out-and
 		timeout := make(chan bool, 1)
 		go func() {
-			time.Sleep(10 * time.Second)
+			time.Sleep(config.TimoutInSeconds * time.Second)
 			timeout <- true
 		}()
 
@@ -95,12 +95,12 @@ func FindMTU(srcIP net.IP, destIP net.IP, destPort int, startMTU int, increment 
 	}
 }
 
-func confirmMTU(srcIP net.IP, destIP net.IP, destPort int, mtu int) bool {
+func confirmMTU(srcIP net.IP, destIP net.IP, destPort int, mtu int, timeoutInSeconds time.Duration) bool {
 	sendPacket(srcIP, destIP, destPort, mtu, "MTU?")
 
 	timeout := make(chan bool, 1)
 	go func() {
-		time.Sleep(10 * time.Second)
+		time.Sleep(timeoutInSeconds * time.Second)
 		timeout <- true
 	}()
 

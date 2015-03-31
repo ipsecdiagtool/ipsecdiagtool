@@ -14,6 +14,7 @@ const configFile string = "config.json"
 const configVersion int = 1
 const StartingMTU int = 500
 const MTUIterations int = 3
+const TimoutInSeconds time.Duration = 10
 
 //Config contains the user configurable values for IPSecDiagTool.
 //It contains only primitive datatypes so that it is easily serializable.
