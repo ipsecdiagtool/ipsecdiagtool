@@ -12,6 +12,7 @@ import (
 //Constants & magic values:
 const configFile string = "config.json"
 const configVersion int = 1
+const MTUIterations int = 3
 
 
 //Config contains the user configurable values for IPSecDiagTool.

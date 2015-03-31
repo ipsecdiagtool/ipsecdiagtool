@@ -67,4 +67,3 @@ func getIP(packet gopacket.Packet) net.IP {
 func originalSize(packet gopacket.Packet) int {
 	return len(packet.NetworkLayer().LayerPayload())+len(packet.NetworkLayer().LayerContents())
 }
-

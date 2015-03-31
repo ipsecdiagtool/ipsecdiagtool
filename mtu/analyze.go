@@ -27,21 +27,28 @@ func Analyze(c config.Config) {
 	startingMTU = 500
 	conf = c
 
-	//TODO: not sure if a socket needs to be open for us to capture packets.
-	//go openPort()
 	//Capture all traffic via goroutine in separate thread
 	go startCapture("tcp port " + strconv.Itoa(conf.Port))
 
-	//Run FindMTU with a large incrementationStep
-	time.Sleep(1000 * time.Millisecond)
-	var roughMTU = FindMTU(
-		net.ParseIP(conf.SourceIP),
-		net.ParseIP(conf.DestinationIP),
-		conf.Port,
-		startingMTU,
-		conf.IncrementationStep)
+	//TODO: may not belong into production code.
+	//Slow down if we're running tests on localhost
+	if(conf.DestinationIP == "127.0.0.1"){
+		time.Sleep(1000 * time.Millisecond)
+	}
 
-	log.Println("MTU found:", roughMTU)
+	//MTU detection algorithm
+	var detectedMTU = startingMTU
+	var incStep = conf.IncrementationStep
+	for i := 0; i < config.MTUIterations; i++ {
+		detectedMTU = FindMTU(
+			net.ParseIP(conf.SourceIP),
+			net.ParseIP(conf.DestinationIP),
+			conf.Port,
+			detectedMTU,
+			incStep)
+		incStep = incStep/2
+	}
+	log.Println("MTU found:", detectedMTU)
 }
 
 //FindMTU discovers the MTU between two nodes and returns it as an int value. FindMTU currently
@@ -65,7 +72,6 @@ func FindMTU(srcIP net.IP, destIP net.IP, destPort int, startMTU int, increment 
 
 		select {
 		case <-mtuOKchan:
-			log.Println("Main Routine notified about state in subroutine.")
 			goodMTU = nextMTU
 			nextMTU += increment
 			time.Sleep(1000 * time.Millisecond)
