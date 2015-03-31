@@ -12,26 +12,8 @@ import (
 //Package internal temp. variables
 var startingMTU int
 var mtuOKchan (chan int)
-
-//Setup configures the MTU-daemon with the necessary information to
-//determine the MTU between two nodes. At some point it will likely get
-//it's information automatically from a central config reader within the
-//application. But it's still useful if you want to use the MTU-detection
-//directly in your application.
-//If you set the application ID 0, a random one will be automatically generated.
-func Setup(applicationID int, sourceIP string, destinationIP string, destinationPort int, incrementationStep int) {
-	if applicationID == 0 {
-		rand.Seed(time.Now().UnixNano()) //Seed is required otherwise we always get the same number
-		appID = rand.Intn(100000)
-	} else {
-		appID = applicationID
-	}
-	srcIP = net.ParseIP(sourceIP)
-	destIP = net.ParseIP(destinationIP)
-	destPort = destinationPort
-	incStep = incrementationStep
-	startingMTU = 500 //Starting MTU
-}
+var appID int
+var srcIP net.IP
 
 //Analyze determines the ideal MTU (Maximum Transmission Unit) between two nodes
 //by sending increasingly big packets between them. Analyze determine the MTU
