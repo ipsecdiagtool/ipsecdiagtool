@@ -6,7 +6,7 @@ import (
 )
 
 func TestInitReadWriteCompare(t *testing.T) {
-	initializedConf := initalize()
+	initializedConf := initialize()
 	readConf := Read()
 
 	initializedConf.ApplicationID = 0
@@ -32,7 +32,7 @@ func TestSetupAppID(t *testing.T) {
 }
 
 func TestOutDatedConfigMechanism(t *testing.T) {
-	initializedConf := initalize()
+	initializedConf := initialize()
 	initializedConf.CfgVers = 0
 	Write(initializedConf)
 

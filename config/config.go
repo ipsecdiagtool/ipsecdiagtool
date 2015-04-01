@@ -36,8 +36,8 @@ type Config struct {
 	CfgVers int
 }
 
-//initalize creates a new config with default values and writes it to disk.
-func initalize() Config {
+//initialize creates a new config with default values and writes it to disk.
+func initialize() Config {
 	conf := Config{0, false, "127.0.0.1", "127.0.0.1", 22, 100, 500, 3, configVersion}
 	Write(conf)
 	//TODO: perhaps write AppID to file later?
@@ -81,26 +81,26 @@ func Write(conf Config) {
 //LoadConfig reads an existing config file if it exists. If it doesn't
 //exist a new config, containing default values, is written.
 func LoadConfig() Config {
+	var conf Config
 	if _, err := os.Stat(configFile); err == nil {
 		fmt.Println("Existing config found.")
-		return Read()
+		conf = Read()
 	} else {
 		fmt.Println("No config found, running init.")
-		return initalize()
+		conf = initialize()
 	}
+	return conf
 }
 
 //setupAppID generates a new Application ID if the existing appID equals 0.
 //If the existing ID doesn't equal 0, then it will be returned instead.
 func setupAppID(applicationID int) int {
 	if applicationID == 0 {
-		rand.Seed(time.Now().UnixNano()) //Seed is required otherwise we always get the same number
-		id := rand.Intn(100000)
-		fmt.Println("Application ID generated:", id)
-		return id
-	} else {
-		return applicationID
+		rand.Seed(time.Now().UnixNano())
+		applicationID = rand.Intn(100000)
+		fmt.Println("Application ID generated:", applicationID)
 	}
+	return applicationID
 }
 
 func configOutdated(c Config) bool {
