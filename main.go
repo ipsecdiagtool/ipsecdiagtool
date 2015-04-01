@@ -11,18 +11,18 @@ import (
 	"github.com/ipsecdiagtool/ipsecdiagtool/packetloss"
 )
 
-var Configuration config.Config
+var configuration config.Config
 
 func main() {
-	Configuration = config.LoadConfig()
+	configuration = config.LoadConfig()
 
-	if Configuration.Debug {
+	if configuration.Debug {
 		//Everything we need for testing belongs in here. E.g. if we're testing a new function
 		//we can add it here and set the debug flag in the config to "true". Then we don't
 		//need to mess with the flow of the real application.
 
 		//go packetloss.Detect(512)
-		go mtu.Analyze(Configuration)
+		go mtu.Analyze(configuration)
 	} else {
 		handleArgs()
 	}
@@ -44,13 +44,13 @@ func handleArgs() {
 				"Github: https://github.com/IPSecDiagTool/IPSecDiagTool\n")
 		} else if os.Args[1] == "help" {
 			fmt.Println("IPSecDiagTool Help")
-			fmt.Println("==================\n")
-			fmt.Println("  Commands:")
+			fmt.Println("==================")
+			fmt.Println("\n  Commands:")
 			fmt.Println("   + mtu: Discover the ideal MTU between two nodes.")
 			fmt.Println("   + packetloss: Pssivly listen to incomming traffic and detect packet loss.")
 			fmt.Println("   + about: Learn more about IPSecDiagTool")
 		} else if os.Args[1] == "mtu" {
-			go mtu.Analyze(Configuration)
+			go mtu.Analyze(configuration)
 		} else if os.Args[1] == "packetloss" {
 			go packetloss.Detect(512)
 		}

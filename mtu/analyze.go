@@ -32,10 +32,10 @@ func Analyze(c config.Config) {
 	time.Sleep(1000 * time.Millisecond)
 
 	//MTU detection algorithm
-	var mtu = config.StartingMTU
+	var mtu = c.StartingMTU
 	var incStep = conf.IncrementationStep
 	var passed = false
-	for i := 0; i < config.MTUIterations; i++ {
+	for i := 0; i < c.MTUIterations; i++ {
 		result := FindMTU(
 			net.ParseIP(conf.SourceIP),
 			net.ParseIP(conf.DestinationIP),
@@ -53,13 +53,13 @@ func Analyze(c config.Config) {
 		incStep = incStep / 2
 	}
 	if passed {
-		if confirmMTU(net.ParseIP(conf.SourceIP), net.ParseIP(conf.DestinationIP), conf.Port, mtu, config.TimoutInSeconds) {
+		if confirmMTU(net.ParseIP(conf.SourceIP), net.ParseIP(conf.DestinationIP), conf.Port, mtu, config.Timeout) {
 			log.Println("MTU sucessfully detected:", mtu)
 		} else {
 			log.Println("ERROR: MTU detected as", mtu, "but unable to confirm it.")
 		}
 	} else {
-		log.Println("Unable to detect MTU within", config.MTUIterations, "tries.")
+		log.Println("Unable to detect MTU within", c.MTUIterations, "tries.")
 	}
 }
 
@@ -78,7 +78,7 @@ func FindMTU(srcIP net.IP, destIP net.IP, destPort int, startMTU int, increment 
 		//http://blog.golang.org/go-concurrency-patterns-timing-out-and
 		timeout := make(chan bool, 1)
 		go func() {
-			time.Sleep(config.TimoutInSeconds * time.Second)
+			time.Sleep(config.Timeout * time.Second)
 			timeout <- true
 		}()
 

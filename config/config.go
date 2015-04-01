@@ -9,12 +9,11 @@ import (
 	"time"
 )
 
-//Constants & magic values:
 const configFile string = "config.json"
-const configVersion int = 1
-const StartingMTU int = 500
-const MTUIterations int = 3
-const TimoutInSeconds time.Duration = 10
+const configVersion int = 2
+
+//TimeoutInSeconds defines the amount of time we're waiting for an OK packet.
+const Timeout time.Duration = 10
 
 //Config contains the user configurable values for IPSecDiagTool.
 //It contains only primitive datatypes so that it is easily serializable.
@@ -27,6 +26,8 @@ type Config struct {
 	DestinationIP      string
 	Port               int
 	IncrementationStep int
+	StartingMTU        int
+	MTUIterations      int
 
 	//Packet loss specific:
 	//add here..
@@ -37,7 +38,7 @@ type Config struct {
 
 //initalize creates a new config with default values and writes it to disk.
 func initalize() Config {
-	conf := Config{0, false, "127.0.0.1", "127.0.0.1", 22, 100, configVersion}
+	conf := Config{0, false, "127.0.0.1", "127.0.0.1", 22, 100, 500, 3, configVersion}
 	Write(conf)
 	//TODO: perhaps write AppID to file later?
 	conf.ApplicationID = setupAppID(conf.ApplicationID)
