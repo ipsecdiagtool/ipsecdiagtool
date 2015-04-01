@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"math/rand"
+	"os"
 	"time"
 )
 
@@ -20,7 +20,7 @@ const TimoutInSeconds time.Duration = 10
 //It contains only primitive datatypes so that it is easily serializable.
 type Config struct {
 	ApplicationID int
-	Debug bool
+	Debug         bool
 
 	//MTU specific:
 	SourceIP           string
@@ -55,7 +55,7 @@ func Read() Config {
 	check(err2)
 
 	//Update config file if outdated
-	if(configOutdated(conf)){
+	if configOutdated(conf) {
 		fmt.Println("Outdated configuration found, updating it now.")
 		conf.CfgVers = configVersion
 		Write(conf)
@@ -95,15 +95,15 @@ func setupAppID(applicationID int) int {
 	if applicationID == 0 {
 		rand.Seed(time.Now().UnixNano()) //Seed is required otherwise we always get the same number
 		id := rand.Intn(100000)
-		fmt.Println("Application ID generated:",id)
+		fmt.Println("Application ID generated:", id)
 		return id
 	} else {
 		return applicationID
 	}
 }
 
-func configOutdated(c Config) bool{
-	if(c.CfgVers < configVersion){
+func configOutdated(c Config) bool {
+	if c.CfgVers < configVersion {
 		return true
 	}
 	return false

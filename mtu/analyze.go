@@ -2,11 +2,11 @@ package mtu
 
 import (
 	"code.google.com/p/gopacket/examples/util"
+	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"log"
 	"net"
 	"strconv"
 	"time"
-	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 )
 
 //Package internal temp. variables
@@ -43,20 +43,20 @@ func Analyze(c config.Config) {
 			mtu,
 			incStep)
 
-		if(result != 0){
+		if result != 0 {
 			passed = true
 			mtu = result
 		} else {
-			log.Println("Unable to find MTU on Try:",i)
+			log.Println("Unable to find MTU on Try:", i)
 		}
 
-		incStep = incStep/2
+		incStep = incStep / 2
 	}
-	if(passed){
-		if(confirmMTU(net.ParseIP(conf.SourceIP),net.ParseIP(conf.DestinationIP), conf.Port, mtu, config.TimoutInSeconds)){
+	if passed {
+		if confirmMTU(net.ParseIP(conf.SourceIP), net.ParseIP(conf.DestinationIP), conf.Port, mtu, config.TimoutInSeconds) {
 			log.Println("MTU sucessfully detected:", mtu)
 		} else {
-			log.Println("ERROR: MTU detected as",mtu,"but unable to confirm it.")
+			log.Println("ERROR: MTU detected as", mtu, "but unable to confirm it.")
 		}
 	} else {
 		log.Println("Unable to detect MTU within", config.MTUIterations, "tries.")
