@@ -23,12 +23,13 @@ func Test1(t *testing.T) {
 		for _, e := range e.maybelostpackets {
 			fmt.Println("MaybeLostPackets: ", e)
 		}
-	
-	lp := len(esp.elements[con].lostpackets)
-	mlp := len(esp.elements[con].maybelostpackets)
-	
-	if lp != 0 || mlp != 1 {
-		t.Error("Expected lostpackets 0 but it's: ", len(esp.elements[con].lostpackets), "and maybelostpackets 1 but it's:", len(esp.elements[con].maybelostpackets))
+
+		lp := len(esp.elements[con].lostpackets)
+		mlp := len(esp.elements[con].maybelostpackets)
+
+		if lp != 0 || mlp != 1 {
+			t.Error("Expected lostpackets 0 but it's: ", len(esp.elements[con].lostpackets), "and maybelostpackets 1 but it's:", len(esp.elements[con].maybelostpackets))
+		}
 	}
 }
 
