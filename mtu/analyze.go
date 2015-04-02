@@ -4,7 +4,6 @@ import (
 	"code.google.com/p/gopacket/examples/util"
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"log"
-	"net"
 	"strconv"
 	"time"
 )
@@ -37,8 +36,8 @@ func Analyze(c config.Config) {
 	var passed = false
 	for i := 0; i < c.MTUIterations; i++ {
 		result := FindMTU(
-			net.ParseIP(conf.SourceIP),
-			net.ParseIP(conf.DestinationIP),
+			conf.SourceIP,
+			conf.DestinationIP,
 			conf.Port,
 			mtu,
 			incStep)
@@ -53,7 +52,7 @@ func Analyze(c config.Config) {
 		incStep = incStep / 2
 	}
 	if passed {
-		if confirmMTU(net.ParseIP(conf.SourceIP), net.ParseIP(conf.DestinationIP), conf.Port, mtu, config.Timeout) {
+		if confirmMTU(conf.SourceIP, conf.DestinationIP, conf.Port, mtu, config.Timeout) {
 			log.Println("MTU sucessfully detected:", mtu)
 		} else {
 			log.Println("ERROR: MTU detected as", mtu, "but unable to confirm it.")
@@ -66,7 +65,7 @@ func Analyze(c config.Config) {
 //FindMTU discovers the MTU between two nodes and returns it as an int value. FindMTU currently
 //increases the packet size until it runs into a timeout. Once it runs into the timeout it returns
 //the last known as good MTU.
-func FindMTU(srcIP net.IP, destIP net.IP, destPort int, startMTU int, increment int) int {
+func FindMTU(srcIP string, destIP string, destPort int, startMTU int, increment int) int {
 	var goodMTU, nextMTU = 0, startMTU
 
 	//1. Initiate MTU discovery by sending first packet.
@@ -95,7 +94,7 @@ func FindMTU(srcIP net.IP, destIP net.IP, destPort int, startMTU int, increment 
 	}
 }
 
-func confirmMTU(srcIP net.IP, destIP net.IP, destPort int, mtu int, timeoutInSeconds time.Duration) bool {
+func confirmMTU(srcIP string, destIP string, destPort int, mtu int, timeoutInSeconds time.Duration) bool {
 	sendPacket(srcIP, destIP, destPort, mtu, "MTU?")
 
 	timeout := make(chan bool, 1)

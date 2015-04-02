@@ -10,12 +10,12 @@ import (
 )
 
 func sendOKResponse(packet gopacket.Packet) {
-	sendPacket(net.ParseIP(conf.SourceIP), getIP(packet), conf.Port, originalSize(packet), "OK")
+	sendPacket(conf.SourceIP, getIP(packet).String(), conf.Port, originalSize(packet), "OK")
 }
 
 //sendPacket generates & sends a packet of arbitrary size to a specific destination.
 //The size specified should be larger then 40bytes.
-func sendPacket(srcIP net.IP, dstIP net.IP, destinationPort int, size int, message string) []byte {
+func sendPacket(sourceIP string, destinationIP string, destinationPort int, size int, message string) []byte {
 
 	var payloadSize int
 	if size < 40 {
@@ -25,13 +25,9 @@ func sendPacket(srcIP net.IP, dstIP net.IP, destinationPort int, size int, messa
 		payloadSize = size - 40
 	}
 
-	if srcIP == nil || dstIP == nil {
-		log.Println("Invalid IP")
-	}
-
 	//Convert IP to 4bit representation
-	srcIP = srcIP.To4()
-	dstIP = dstIP.To4()
+	srcIP := net.ParseIP(sourceIP).To4()
+	dstIP := net.ParseIP(destinationIP).To4()
 
 	//IP Layer
 	ip := layers.IPv4{
