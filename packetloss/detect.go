@@ -5,41 +5,41 @@ import (
 	"code.google.com/p/gopacket/layers"
 	"code.google.com/p/gopacket/pcap"
 	"fmt"
+	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"log"
 	"net"
 )
 
 var espmap *EspMap
 
-func Detect(windowsize uint32) {
+func Detect(configuration config.Config) error {
 
-	espmap = NewEspMap(windowsize)
+	espmap = NewEspMap(configuration.WindowSize)
 
 	fmt.Println("detecting packetloss ...")
 
-	iface, err := net.InterfaceByName("any")
-	if err != nil {
-		// error handling
+	if configuration.InterfaceName != "any" {
+		iface, err := net.InterfaceByName(configuration.InterfaceName)
+		if err != nil {
+			return err
+		}
+		fmt.Println(iface)
 	}
 
 	//handle, err := pcap.OpenLive("any", 1500, true, 100)
 	//handle, err := pcap.OpenOffline("/home/student/TestIpSec_Ping.pcap")
 	handle, err := pcap.OpenOffline("/home/student/test.pcap")
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	stop := make(chan struct{})
-	go readIPSec(handle, iface, stop)
-	defer close(stop)
-	for {
-		fmt.Scanln()
-	}
+	readIPSec(handle)
+	return nil
 }
 
-func readIPSec(handle *pcap.Handle, iface *net.Interface, stop chan struct{}) {
+func readIPSec(handle *pcap.Handle) {
 	src := gopacket.NewPacketSource(handle, handle.LinkType())
-
+	var counter uint32
 	for packet := range src.Packets() {
 		ipsecLayer := packet.Layer(layers.LayerTypeIPSecESP)
 		if ipsecLayer != nil {
@@ -53,17 +53,13 @@ func readIPSec(handle *pcap.Handle, iface *net.Interface, stop chan struct{}) {
 			//espmap.CheckForLost()
 
 		}
+		counter++
 	}
-/*
-	for k, element := range espmap.elements {
-		fmt.Println(k)
-		for _, seqnumber := range element {
-			fmt.Println(seqnumber)
-		}
+	for _, element := range espmap.elements {
+		fmt.Println(element.lostpackets)
+		fmt.Println(element.maybelostpackets)
+
 	}
-	fmt.Println("Lost Packets: ",len(espmap.lostpackets))
-	for _, element := range espmap.lostpackets {
-		fmt.Println(element)
-	}
-	*/
+	fmt.Println("Packets: ", counter)
+
 }
