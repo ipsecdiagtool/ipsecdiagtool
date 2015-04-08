@@ -51,6 +51,8 @@ func handleArgs() {
 			fmt.Println("   + about: Learn more about IPSecDiagTool")
 		} else if os.Args[1] == "mtu" {
 			go mtu.Analyze(configuration)
+		} else if os.Args[1] == "mtu-listen" {
+			go mtu.Listen(configuration)
 		} else if os.Args[1] == "packetloss" {
 			go packetloss.Detect(configuration)
 		}

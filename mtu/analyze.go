@@ -62,6 +62,11 @@ func Analyze(c config.Config) {
 	}
 }
 
+//Listen only listens to MTU requests and replies with OK-Packets.
+func Listen(c config.Config){
+	startCapture("tcp port " + strconv.Itoa(conf.Port))
+}
+
 //FindMTU discovers the MTU between two nodes and returns it as an int value. FindMTU currently
 //increases the packet size until it runs into a timeout. Once it runs into the timeout it returns
 //the last known as good MTU.
