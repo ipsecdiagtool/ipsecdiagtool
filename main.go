@@ -20,8 +20,13 @@ func main() {
 		//Everything we need for testing belongs in here. E.g. if we're testing a new function
 		//we can add it here and set the debug flag in the config to "true". Then we don't
 		//need to mess with the flow of the real application.
+<<<<<<< Updated upstream
 		go packetloss.Detect(configuration)
 		//go mtu.Analyze(configuration)
+=======
+		//go packetloss.Detect(configuration.WindowSize)
+		go mtu.Analyze(configuration)
+>>>>>>> Stashed changes
 	} else {
 		handleArgs()
 	}
@@ -46,7 +51,7 @@ func handleArgs() {
 			fmt.Println("==================")
 			fmt.Println("\n  Commands:")
 			fmt.Println("   + mtu: Discover the ideal MTU between two nodes.")
-			fmt.Println("   + packetloss: Pssivly listen to incomming traffic and detect packet loss.")
+			fmt.Println("   + packetloss: Passivly listen to incomming traffic and detect packet loss.")
 			fmt.Println("   + about: Learn more about IPSecDiagTool")
 		} else if os.Args[1] == "mtu" {
 			go mtu.Analyze(configuration)
