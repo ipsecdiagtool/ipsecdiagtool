@@ -64,7 +64,13 @@ func Analyze(c config.Config) {
 
 //Listen only listens to MTU requests and replies with OK-Packets.
 func Listen(c config.Config){
-	startCapture("tcp port " + strconv.Itoa(conf.Port))
+	defer util.Run()()
+
+	//Setup a channel for communication with capture
+	mtuOKchan = make(chan int) // Allocate a channel.
+	conf = c
+
+	go startCapture("tcp port " + strconv.Itoa(conf.Port))
 }
 
 //FindMTU discovers the MTU between two nodes and returns it as an int value. FindMTU currently
@@ -75,6 +81,7 @@ func FindMTU(srcIP string, destIP string, destPort int, startMTU int, increment 
 
 	//1. Initiate MTU discovery by sending first packet.
 	sendPacket(srcIP, destIP, destPort, nextMTU, "MTU?")
+
 
 	//2. Either we get a message from our mtu channel or the timeout channel will message us after 10s.
 	for {
