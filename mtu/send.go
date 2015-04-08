@@ -38,7 +38,6 @@ func sendPacket(sourceIP string, destinationIP string, destinationPort int, size
 		Protocol: layers.IPProtocolTCP,
 	}
 
-	//TODO: does source port matter?
 	srcPort := layers.TCPPort(666)
 	dstPort := layers.TCPPort(destinationPort)
 
@@ -99,59 +98,7 @@ func sendPacket(sourceIP string, destinationIP string, destinationPort int, size
 	return append(ipHeaderBuf.Bytes(), tcpPayloadBuf.Bytes()...)
 }
 
-
-//TODO: working on splitting sendPacket in several smaller methods.
-func buildIPHeader(sourceIP string, destinationIP string, destinationPort int) *ipv4.Header {
-	//Convert IP to 4bit representation
-	srcIP := net.ParseIP(sourceIP).To4()
-	dstIP := net.ParseIP(destinationIP).To4()
-
-	//IP Layer
-	ip := layers.IPv4{
-		SrcIP:    srcIP,
-		DstIP:    dstIP,
-		Version:  4,
-		TTL:      64,
-		Protocol: layers.IPProtocolTCP,
-	}
-
-	//TODO: does source port matter?
-	srcPort := layers.TCPPort(666)
-	dstPort := layers.TCPPort(destinationPort)
-
-	//TCP Layer
-	tcp := layers.TCP{
-		SrcPort: srcPort,
-		DstPort: dstPort,
-		Seq:     0x539, //Hex 1337
-		Window:  1337,
-	}
-
-	opts := gopacket.SerializeOptions{
-		FixLengths:       true,
-		ComputeChecksums: true,
-	}
-
-	tcp.SetNetworkLayerForChecksum(&ip)
-
-	ipHeaderBuf := gopacket.NewSerializeBuffer()
-
-	err := ip.SerializeTo(ipHeaderBuf, opts)
-	if err != nil {
-		panic(err)
-	}
-
-	//Set Don't Fragment in Header
-	ipHeader, err := ipv4.ParseHeader(ipHeaderBuf.Bytes())
-	ipHeader.Flags |= ipv4.DontFragment
-	if err != nil {
-		panic(err)
-	}
-	return ipHeader
-}
-
 //generatePayload generates a payload of the given size (bytes).
-//If the payload is longer then 11 bytes the first eleven bytes are used to spell "Hello IPsec".
 func generatePayload(size int, message string) []byte {
 	var payload []byte
 	if size > len(message) {
