@@ -29,7 +29,7 @@ type Config struct {
 	MTUIterations      int
 
 	//Packet loss specific:
-	WindowSize uint32
+	WindowSize    uint32
 	InterfaceName string
 
 	//Used to determine whether configuration needs to be updated.
@@ -38,7 +38,7 @@ type Config struct {
 
 //initialize creates a new config with default values and writes it to disk.
 func initialize() Config {
-	conf := Config{0, false, "127.0.0.1", "127.0.0.1", 100, 500, 3, 32,"any", configVersion}
+	conf := Config{0, false, "127.0.0.1", "127.0.0.1", 100, 500, 3, 32, "any", configVersion}
 	Write(conf)
 	//TODO: perhaps write AppID to file later?
 	conf.ApplicationID = setupAppID(conf.ApplicationID)

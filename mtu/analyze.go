@@ -61,7 +61,7 @@ func Analyze(c config.Config) {
 }
 
 //Listen only listens to MTU requests and replies with OK-Packets.
-func Listen(c config.Config){
+func Listen(c config.Config) {
 	defer util.Run()()
 
 	//Setup a channel for communication with capture
@@ -80,7 +80,6 @@ func FindMTU(srcIP string, destIP string, startMTU int, increment int) int {
 	//1. Initiate MTU discovery by sending first packet.
 	sendPacket(srcIP, destIP, nextMTU, "MTU?")
 
-
 	//2. Either we get a message from our mtu channel or the timeout channel will message us after 10s.
 	for {
 		//2.1 Setting up the timeout channel
@@ -96,7 +95,7 @@ func FindMTU(srcIP string, destIP string, startMTU int, increment int) int {
 			goodMTU = nextMTU
 			nextMTU += increment
 			time.Sleep(1000 * time.Millisecond)
-			sendPacket(srcIP, destIP,nextMTU, "MTU?")
+			sendPacket(srcIP, destIP, nextMTU, "MTU?")
 		case <-timeout:
 			log.Println("Timeout has occured. We've steped over the MTU!")
 			return goodMTU

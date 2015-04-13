@@ -38,9 +38,7 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string)
 		Protocol: layers.IPProtocolICMPv4,
 	}
 	//TODO: set type etc.
-	icmp := layers.ICMPv4{
-
-	}
+	icmp := layers.ICMPv4{}
 
 	opts := gopacket.SerializeOptions{
 		FixLengths:       true,
@@ -64,7 +62,7 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string)
 	udpPayloadBuf := gopacket.NewSerializeBuffer()
 
 	//Influence the payload size
-	payload := gopacket.Payload(generatePayload(payloadSize,","+strconv.Itoa(conf.ApplicationID)+","+message+","))
+	payload := gopacket.Payload(generatePayload(payloadSize, ","+strconv.Itoa(conf.ApplicationID)+","+message+","))
 	err = gopacket.SerializeLayers(udpPayloadBuf, opts, &icmp, payload)
 	if err != nil {
 		panic(err)
