@@ -35,18 +35,16 @@ func sendPacket(sourceIP string, destinationIP string, destinationPort int, size
 		DstIP:    dstIP,
 		Version:  4,
 		TTL:      64,
-		Protocol: layers.IPProtocolTCP,
+		Protocol: layers.IPProtocolUDP,
 	}
 
-	srcPort := layers.TCPPort(666)
-	dstPort := layers.TCPPort(destinationPort)
+	srcPort := layers.UDPPort(666)
+	dstPort := layers.UDPPort(destinationPort)
 
-	//TCP Layer
-	tcp := layers.TCP{
+	//UDP Layer
+	udp := layers.UDP{
 		SrcPort: srcPort,
 		DstPort: dstPort,
-		Seq:     0x539, //Hex 1337
-		Window:  1337,
 	}
 
 	opts := gopacket.SerializeOptions{
@@ -54,7 +52,7 @@ func sendPacket(sourceIP string, destinationIP string, destinationPort int, size
 		ComputeChecksums: true,
 	}
 
-	tcp.SetNetworkLayerForChecksum(&ip)
+	udp.SetNetworkLayerForChecksum(&ip)
 
 	ipHeaderBuf := gopacket.NewSerializeBuffer()
 
@@ -70,11 +68,11 @@ func sendPacket(sourceIP string, destinationIP string, destinationPort int, size
 		panic(err)
 	}
 
-	tcpPayloadBuf := gopacket.NewSerializeBuffer()
+	udpPayloadBuf := gopacket.NewSerializeBuffer()
 
 	//Influence the payload size
 	payload := gopacket.Payload(generatePayload(payloadSize, strconv.Itoa(conf.ApplicationID)+","+message+","))
-	err = gopacket.SerializeLayers(tcpPayloadBuf, opts, &tcp, payload)
+	err = gopacket.SerializeLayers(udpPayloadBuf, opts, &udp, payload)
 	if err != nil {
 		panic(err)
 	}
@@ -83,7 +81,7 @@ func sendPacket(sourceIP string, destinationIP string, destinationPort int, size
 	var packetConn net.PacketConn
 	var rawConn *ipv4.RawConn
 
-	packetConn, err = net.ListenPacket("ip4:tcp", srcIP.String())
+	packetConn, err = net.ListenPacket("ip4:udp", srcIP.String())
 	if err != nil {
 		panic(err)
 	}
@@ -92,10 +90,10 @@ func sendPacket(sourceIP string, destinationIP string, destinationPort int, size
 		panic(err)
 	}
 
-	err = rawConn.WriteTo(ipHeader, tcpPayloadBuf.Bytes(), nil)
+	err = rawConn.WriteTo(ipHeader, udpPayloadBuf.Bytes(), nil)
 
-	log.Println("Packet with length", (len(tcpPayloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
-	return append(ipHeaderBuf.Bytes(), tcpPayloadBuf.Bytes()...)
+	log.Println("Packet with length", (len(udpPayloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
+	return append(ipHeaderBuf.Bytes(), udpPayloadBuf.Bytes()...)
 }
 
 //generatePayload generates a payload of the given size (bytes).
