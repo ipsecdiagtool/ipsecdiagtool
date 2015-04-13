@@ -18,11 +18,11 @@ func sendOKResponse(packet gopacket.Packet) {
 func sendPacket(sourceIP string, destinationIP string, size int, message string) []byte {
 
 	var payloadSize int
-	if size < 40 {
-		log.Println("Unable to create a packet smaller then 40bytes.")
+	if size < 28 {
+		log.Println("Unable to create a packet smaller then 28bytes.")
 		payloadSize = 0
 	} else {
-		payloadSize = size - 40
+		payloadSize = size - 28
 	}
 
 	//Convert IP to 4bit representation
