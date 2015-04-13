@@ -4,7 +4,6 @@ import (
 	"code.google.com/p/gopacket/examples/util"
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"log"
-	"strconv"
 	"time"
 )
 
@@ -38,7 +37,6 @@ func Analyze(c config.Config) {
 		result := FindMTU(
 			conf.SourceIP,
 			conf.DestinationIP,
-			conf.Port,
 			mtu,
 			incStep)
 
@@ -52,7 +50,7 @@ func Analyze(c config.Config) {
 		incStep = incStep / 2
 	}
 	if passed {
-		if confirmMTU(conf.SourceIP, conf.DestinationIP, conf.Port, mtu, config.Timeout) {
+		if confirmMTU(conf.SourceIP, conf.DestinationIP, mtu, config.Timeout) {
 			log.Println("MTU sucessfully detected:", mtu)
 		} else {
 			log.Println("ERROR: MTU detected as", mtu, "but unable to confirm it.")
@@ -70,17 +68,17 @@ func Listen(c config.Config){
 	mtuOKchan = make(chan int) // Allocate a channel.
 	conf = c
 
-	go startCapture("tcp port " + strconv.Itoa(conf.Port))
+	go startCapture("icmp ")
 }
 
 //FindMTU discovers the MTU between two nodes and returns it as an int value. FindMTU currently
 //increases the packet size until it runs into a timeout. Once it runs into the timeout it returns
 //the last known as good MTU.
-func FindMTU(srcIP string, destIP string, destPort int, startMTU int, increment int) int {
+func FindMTU(srcIP string, destIP string, startMTU int, increment int) int {
 	var goodMTU, nextMTU = 0, startMTU
 
 	//1. Initiate MTU discovery by sending first packet.
-	sendPacket(srcIP, destIP, destPort, nextMTU, "MTU?")
+	sendPacket(srcIP, destIP, nextMTU, "MTU?")
 
 
 	//2. Either we get a message from our mtu channel or the timeout channel will message us after 10s.
@@ -98,7 +96,7 @@ func FindMTU(srcIP string, destIP string, destPort int, startMTU int, increment 
 			goodMTU = nextMTU
 			nextMTU += increment
 			time.Sleep(1000 * time.Millisecond)
-			sendPacket(srcIP, destIP, destPort, nextMTU, "MTU?")
+			sendPacket(srcIP, destIP,nextMTU, "MTU?")
 		case <-timeout:
 			log.Println("Timeout has occured. We've steped over the MTU!")
 			return goodMTU
@@ -106,8 +104,8 @@ func FindMTU(srcIP string, destIP string, destPort int, startMTU int, increment 
 	}
 }
 
-func confirmMTU(srcIP string, destIP string, destPort int, mtu int, timeoutInSeconds time.Duration) bool {
-	sendPacket(srcIP, destIP, destPort, mtu, "MTU?")
+func confirmMTU(srcIP string, destIP string, mtu int, timeoutInSeconds time.Duration) bool {
+	sendPacket(srcIP, destIP, mtu, "MTU?")
 
 	timeout := make(chan bool, 1)
 	go func() {

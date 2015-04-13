@@ -10,12 +10,12 @@ import (
 )
 
 func sendOKResponse(packet gopacket.Packet) {
-	sendPacket(conf.SourceIP, getIP(packet).String(), conf.Port, originalSize(packet), "OK")
+	sendPacket(conf.SourceIP, getIP(packet).String(), originalSize(packet), "OK")
 }
 
 //sendPacket generates & sends a packet of arbitrary size to a specific destination.
 //The size specified should be larger then 40bytes.
-func sendPacket(sourceIP string, destinationIP string, destinationPort int, size int, message string) []byte {
+func sendPacket(sourceIP string, destinationIP string, size int, message string) []byte {
 
 	var payloadSize int
 	if size < 40 {
