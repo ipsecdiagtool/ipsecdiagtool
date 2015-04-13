@@ -35,24 +35,17 @@ func sendPacket(sourceIP string, destinationIP string, destinationPort int, size
 		DstIP:    dstIP,
 		Version:  4,
 		TTL:      64,
-		Protocol: layers.IPProtocolUDP,
+		Protocol: layers.IPProtocolICMPv4,
 	}
+	//TODO: set type etc.
+	icmp := layers.ICMPv4{
 
-	srcPort := layers.UDPPort(666)
-	dstPort := layers.UDPPort(destinationPort)
-
-	//UDP Layer
-	udp := layers.UDP{
-		SrcPort: srcPort,
-		DstPort: dstPort,
 	}
 
 	opts := gopacket.SerializeOptions{
 		FixLengths:       true,
 		ComputeChecksums: true,
 	}
-
-	udp.SetNetworkLayerForChecksum(&ip)
 
 	ipHeaderBuf := gopacket.NewSerializeBuffer()
 
@@ -71,8 +64,8 @@ func sendPacket(sourceIP string, destinationIP string, destinationPort int, size
 	udpPayloadBuf := gopacket.NewSerializeBuffer()
 
 	//Influence the payload size
-	payload := gopacket.Payload(generatePayload(payloadSize, strconv.Itoa(conf.ApplicationID)+","+message+","))
-	err = gopacket.SerializeLayers(udpPayloadBuf, opts, &udp, payload)
+	payload := gopacket.Payload(generatePayload(payloadSize,","+strconv.Itoa(conf.ApplicationID)+","+message+","))
+	err = gopacket.SerializeLayers(udpPayloadBuf, opts, &icmp, payload)
 	if err != nil {
 		panic(err)
 	}
@@ -81,7 +74,7 @@ func sendPacket(sourceIP string, destinationIP string, destinationPort int, size
 	var packetConn net.PacketConn
 	var rawConn *ipv4.RawConn
 
-	packetConn, err = net.ListenPacket("ip4:udp", srcIP.String())
+	packetConn, err = net.ListenPacket("ip4:icmp", srcIP.String())
 	if err != nil {
 		panic(err)
 	}

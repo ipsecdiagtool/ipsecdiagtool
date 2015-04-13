@@ -34,22 +34,22 @@ func startCapture(bpfFilter string) {
 //not from itself it either responds with a OK or sends an internal message
 //to the findMTU goroutine that it has received an OK.
 func handlePacket(packet gopacket.Packet) {
-	s := string(packet.TransportLayer().LayerPayload()[:])
+	s := string(packet.NetworkLayer().LayerPayload()[:])
 
 	//Cutting off the filler material
 	arr := strings.Split(s, ",")
-	if len(arr) > 1 {
-		remoteAppID, err := strconv.Atoi(arr[0])
+	if len(arr) > 2 {
+		remoteAppID, err := strconv.Atoi(arr[1])
 		if err != nil {
 			panic(err)
 		}
 		//Check that packet is not from this application
 		if conf.ApplicationID == remoteAppID {
-			//log.Println("Packet is from us.. ignoring.")
-		} else if arr[1] == "OK" {
+			//log.Println("Packet is from us.. ignoring.", remoteAppID)
+		} else if arr[2] == "OK" {
 			log.Println("Received OK-packet with length", packet.Metadata().Length, "bytes.")
 			mtuOKchan <- 1
-		} else if arr[1] == "MTU?" {
+		} else if arr[2] == "MTU?" {
 			log.Println("Received MTU?-packet with length", packet.Metadata().Length, "bytes.")
 			sendOKResponse(packet)
 		}

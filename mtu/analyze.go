@@ -25,7 +25,7 @@ func Analyze(c config.Config) {
 	conf = c
 
 	//Capture all traffic via goroutine in separate thread
-	go startCapture("udp port " + strconv.Itoa(conf.Port))
+	go startCapture("icmp")
 
 	//TODO: currently required to give capture enough time to boot..
 	time.Sleep(1000 * time.Millisecond)
