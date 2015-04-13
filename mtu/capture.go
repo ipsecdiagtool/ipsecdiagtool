@@ -40,18 +40,19 @@ func handlePacket(packet gopacket.Packet) {
 	arr := strings.Split(s, ",")
 	if len(arr) > 2 {
 		remoteAppID, err := strconv.Atoi(arr[1])
-		if err != nil {
-			panic(err)
-		}
-		//Check that packet is not from this application
-		if conf.ApplicationID == remoteAppID {
-			//log.Println("Packet is from us.. ignoring.", remoteAppID)
-		} else if arr[2] == "OK" {
-			log.Println("Received OK-packet with length", packet.Metadata().Length, "bytes.")
-			mtuOKchan <- 1
-		} else if arr[2] == "MTU?" {
-			log.Println("Received MTU?-packet with length", packet.Metadata().Length, "bytes.")
-			sendOKResponse(packet)
+		if err == nil {
+			//Check that packet is not from this application
+			if conf.ApplicationID == remoteAppID {
+				//log.Println("Packet is from us.. ignoring.", remoteAppID)
+			} else if arr[2] == "OK" {
+				log.Println("Received OK-packet with length", packet.Metadata().Length, "bytes.")
+				mtuOKchan <- 1
+			} else if arr[2] == "MTU?" {
+				log.Println("Received MTU?-packet with length", packet.Metadata().Length, "bytes.")
+				sendOKResponse(packet)
+			}
+		} else {
+			log.Println("ERROR: Cought a packet with an invalid App-ID. ", packet.NetworkLayer().LayerPayload())
 		}
 	}
 }
