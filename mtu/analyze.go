@@ -8,7 +8,7 @@ import (
 )
 
 //Package internal temp. variables
-var mtuOKchan (chan int)
+var mtuOKchan = make(chan int, 100)
 var conf config.Config
 
 //Analyze determines the ideal MTU (Maximum Transmission Unit) between two nodes
@@ -29,6 +29,10 @@ func Analyze(c config.Config) {
 	//TODO: currently required to give capture enough time to boot..
 	time.Sleep(1000 * time.Millisecond)
 
+	FastMTU(
+	conf.SourceIP,
+	conf.DestinationIP);
+/*
 	//MTU detection algorithm
 	var mtu = c.StartingMTU
 	var incStep = conf.IncrementationStep
@@ -57,18 +61,18 @@ func Analyze(c config.Config) {
 		}
 	} else {
 		log.Println("Unable to detect MTU within", c.MTUIterations, "tries.")
-	}
+	}*/
 }
 
 //Listen only listens to MTU requests and replies with OK-Packets.
-func Listen(c config.Config) {
+func Listen(c config.Config){
 	defer util.Run()()
 
 	//Setup a channel for communication with capture
 	mtuOKchan = make(chan int) // Allocate a channel.
 	conf = c
 
-	go startCapture("icmp ")
+	go startCapture("icmp")
 }
 
 //FindMTU discovers the MTU between two nodes and returns it as an int value. FindMTU currently
@@ -95,12 +99,33 @@ func FindMTU(srcIP string, destIP string, startMTU int, increment int) int {
 			goodMTU = nextMTU
 			nextMTU += increment
 			time.Sleep(1000 * time.Millisecond)
-			sendPacket(srcIP, destIP, nextMTU, "MTU?")
+			sendPacket(srcIP, destIP,nextMTU, "MTU?")
 		case <-timeout:
 			log.Println("Timeout has occured. We've steped over the MTU!")
 			return goodMTU
 		}
 	}
+}
+
+//Will be renamed once it works :P.
+func FastMTU(srcIP string, destIP string){
+	//1. First batch
+	var rangeStart = 0
+	var rangeEnd = 2000
+	var results = make(map[int]bool)
+
+	var itStep = ((rangeEnd-rangeStart)/20)
+	for i := rangeStart; i < (rangeEnd+itStep); i+=itStep {
+		sendPacket(srcIP, destIP, i, "MTU?")
+		log.Println(i)
+		results[i] = false
+	}
+
+	//2. Gather answers
+	var test int
+	test = <-mtuOKchan
+	log.Println("hi",test)
+
 }
 
 func confirmMTU(srcIP string, destIP string, mtu int, timeoutInSeconds time.Duration) bool {

@@ -46,10 +46,14 @@ func handlePacket(packet gopacket.Packet) {
 				//log.Println("Packet is from us.. ignoring.", remoteAppID)
 			} else if arr[2] == "OK" {
 				log.Println("Received OK-packet with length", packet.Metadata().Length, "bytes.")
-				mtuOKchan <- 1
+				mtuOKchan <- packet.Metadata().Length
 			} else if arr[2] == "MTU?" {
 				log.Println("Received MTU?-packet with length", packet.Metadata().Length, "bytes.")
 				sendOKResponse(packet)
+			} else {
+				if(conf.Debug){
+					log.Println("Discarded packet because neither MTU? nor OK command were included.")
+				}
 			}
 		} else {
 			log.Println("ERROR: Cought a packet with an invalid App-ID. ", packet.NetworkLayer().LayerPayload())
