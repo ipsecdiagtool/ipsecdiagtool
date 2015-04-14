@@ -8,7 +8,7 @@ import (
 )
 
 //Package internal temp. variables
-var mtuOKchan (chan int)
+var mtuOKchan = make(chan int, 100)
 var conf config.Config
 
 //Analyze determines the ideal MTU (Maximum Transmission Unit) between two nodes
@@ -29,46 +29,20 @@ func Analyze(c config.Config) {
 	//TODO: currently required to give capture enough time to boot..
 	time.Sleep(1000 * time.Millisecond)
 
-	//MTU detection algorithm
-	var mtu = c.StartingMTU
-	var incStep = conf.IncrementationStep
-	var passed = false
-	for i := 0; i < c.MTUIterations; i++ {
-		result := FindMTU(
-			conf.SourceIP,
-			conf.DestinationIP,
-			mtu,
-			incStep)
-
-		if result != 0 {
-			passed = true
-			mtu = result
-		} else {
-			log.Println("Unable to find MTU on Try:", i)
-		}
-
-		incStep = incStep / 2
-	}
-	if passed {
-		if confirmMTU(conf.SourceIP, conf.DestinationIP, mtu, config.Timeout) {
-			log.Println("MTU sucessfully detected:", mtu)
-		} else {
-			log.Println("ERROR: MTU detected as", mtu, "but unable to confirm it.")
-		}
-	} else {
-		log.Println("Unable to detect MTU within", c.MTUIterations, "tries.")
-	}
+	FastMTU(
+	conf.SourceIP,
+	conf.DestinationIP, 10);
 }
 
 //Listen only listens to MTU requests and replies with OK-Packets.
-func Listen(c config.Config) {
+func Listen(c config.Config){
 	defer util.Run()()
 
 	//Setup a channel for communication with capture
 	mtuOKchan = make(chan int) // Allocate a channel.
 	conf = c
 
-	go startCapture("icmp ")
+	go startCapture("icmp")
 }
 
 //FindMTU discovers the MTU between two nodes and returns it as an int value. FindMTU currently
@@ -95,12 +69,86 @@ func FindMTU(srcIP string, destIP string, startMTU int, increment int) int {
 			goodMTU = nextMTU
 			nextMTU += increment
 			time.Sleep(1000 * time.Millisecond)
-			sendPacket(srcIP, destIP, nextMTU, "MTU?")
+			sendPacket(srcIP, destIP,nextMTU, "MTU?")
 		case <-timeout:
 			log.Println("Timeout has occured. We've steped over the MTU!")
 			return goodMTU
 		}
 	}
+}
+
+//Detects the exact MTU asap.
+func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration){
+	var rangeStart = 0
+	var rangeEnd = 2000
+	var itStep = ((rangeEnd-rangeStart)/20)
+	var roughMTU = 0
+	var mtuDetected = false
+
+	for !mtuDetected {
+		if itStep == 0 {
+			itStep = 1
+			mtuDetected = true
+		}
+		roughMTU = sendBatch(srcIP, destIP, rangeStart, rangeEnd, itStep, timeoutInSeconds)
+
+		if(roughMTU == rangeEnd){
+			rangeStart = rangeEnd
+			rangeEnd = 2*rangeEnd
+		} else if (roughMTU == 0){
+			log.Println("ERROR: Reported MTU 0.. ")
+		} else {
+			rangeStart = roughMTU
+			rangeEnd = roughMTU+itStep
+			itStep = ((rangeEnd-rangeStart)/20)
+		}
+	}
+	log.Println("Exact MTU found", roughMTU)
+}
+
+func sendBatch(srcIP string, destIP string, rangeStart int, rangeEnd int, itStep int, timeoutInSeconds time.Duration) int {
+	//1. Send a batch of packets
+	var results = make(map[int]bool)
+	for i := rangeStart; i < (rangeEnd+itStep); i+=itStep {
+		sendPacket(srcIP, destIP, i, "MTU?")
+		log.Println(i)
+		results[i] = false
+	}
+
+	//2. Wait until time's up then gather results
+	timeout := make(chan bool, 1)
+	go func() {
+		time.Sleep(timeoutInSeconds * time.Second)
+		timeout <- true
+	}()
+
+	var largestSuccessfulPacket = 0
+
+	var gatherPackets = true
+	for gatherPackets {
+		select {
+		case goodPacket := <-mtuOKchan:
+			if(goodPacket > largestSuccessfulPacket){
+				if _, ok := results[goodPacket]; ok {
+					largestSuccessfulPacket = goodPacket
+					results[goodPacket] = true
+				} else {
+					log.Println("Received a packet of a size that wasn't sent. Truncation!")
+				}
+			}
+		case <- timeout:
+			log.Println("Time's up")
+			gatherPackets = false
+		}
+	}
+
+	if(conf.Debug){
+		log.Println("Done...")
+		log.Println("Largest successful packet", largestSuccessfulPacket)
+		log.Println(results)
+	}
+
+	return largestSuccessfulPacket
 }
 
 func confirmMTU(srcIP string, destIP string, mtu int, timeoutInSeconds time.Duration) bool {

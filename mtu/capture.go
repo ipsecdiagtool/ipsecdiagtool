@@ -15,7 +15,8 @@ import (
 //Packets can be filtered by a BPF filter string. (E.g. tcp port 22)
 func startCapture(bpfFilter string) {
 	log.Println("Waiting for MTU-Analyzer packet")
-	if handle, err := pcap.OpenLive("any", 3000, true, 100); err != nil {
+	//TODO: increase window size, currently so low to simulate breakoff after 1500
+	if handle, err := pcap.OpenLive("any", 1600, true, 100); err != nil {
 		panic(err)
 		//https://www.wireshark.org/tools/string-cf.html
 	} else if err := handle.SetBPFFilter(bpfFilter); err != nil {
@@ -46,10 +47,14 @@ func handlePacket(packet gopacket.Packet) {
 				//log.Println("Packet is from us.. ignoring.", remoteAppID)
 			} else if arr[2] == "OK" {
 				log.Println("Received OK-packet with length", packet.Metadata().Length, "bytes.")
-				mtuOKchan <- 1
+				mtuOKchan <- originalSize(packet)
 			} else if arr[2] == "MTU?" {
 				log.Println("Received MTU?-packet with length", packet.Metadata().Length, "bytes.")
 				sendOKResponse(packet)
+			} else {
+				if(conf.Debug){
+					log.Println("Discarded packet because neither MTU? nor OK command were included.")
+				}
 			}
 		} else {
 			log.Println("ERROR: Cought a packet with an invalid App-ID. ", packet.NetworkLayer().LayerPayload())
