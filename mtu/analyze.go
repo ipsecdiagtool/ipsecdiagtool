@@ -32,36 +32,6 @@ func Analyze(c config.Config) {
 	FastMTU(
 	conf.SourceIP,
 	conf.DestinationIP, 10);
-/*
-	//MTU detection algorithm
-	var mtu = c.StartingMTU
-	var incStep = conf.IncrementationStep
-	var passed = false
-	for i := 0; i < c.MTUIterations; i++ {
-		result := FindMTU(
-			conf.SourceIP,
-			conf.DestinationIP,
-			mtu,
-			incStep)
-
-		if result != 0 {
-			passed = true
-			mtu = result
-		} else {
-			log.Println("Unable to find MTU on Try:", i)
-		}
-
-		incStep = incStep / 2
-	}
-	if passed {
-		if confirmMTU(conf.SourceIP, conf.DestinationIP, mtu, config.Timeout) {
-			log.Println("MTU sucessfully detected:", mtu)
-		} else {
-			log.Println("ERROR: MTU detected as", mtu, "but unable to confirm it.")
-		}
-	} else {
-		log.Println("Unable to detect MTU within", c.MTUIterations, "tries.")
-	}*/
 }
 
 //Listen only listens to MTU requests and replies with OK-Packets.
@@ -107,14 +77,38 @@ func FindMTU(srcIP string, destIP string, startMTU int, increment int) int {
 	}
 }
 
-//Will be renamed once it works :P.
+//Detects the exact MTU asap.
 func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration){
-	//1. Send a batch of packets
 	var rangeStart = 0
 	var rangeEnd = 2000
-	var results = make(map[int]bool)
-
 	var itStep = ((rangeEnd-rangeStart)/20)
+	var roughMTU = 0
+	var mtuDetected = false
+
+	for !mtuDetected {
+		if itStep == 0 {
+			itStep = 1
+			mtuDetected = true
+		}
+		roughMTU = sendBatch(srcIP, destIP, rangeStart, rangeEnd, itStep, timeoutInSeconds)
+
+		if(roughMTU == rangeEnd){
+			rangeStart = rangeEnd
+			rangeEnd = 2*rangeEnd
+		} else if (roughMTU == 0){
+			log.Println("ERROR: Reported MTU 0.. ")
+		} else {
+			rangeStart = roughMTU
+			rangeEnd = roughMTU+itStep
+			itStep = ((rangeEnd-rangeStart)/20)
+		}
+	}
+	log.Println("Exact MTU found", roughMTU)
+}
+
+func sendBatch(srcIP string, destIP string, rangeStart int, rangeEnd int, itStep int, timeoutInSeconds time.Duration) int {
+	//1. Send a batch of packets
+	var results = make(map[int]bool)
 	for i := rangeStart; i < (rangeEnd+itStep); i+=itStep {
 		sendPacket(srcIP, destIP, i, "MTU?")
 		log.Println(i)
@@ -137,6 +131,7 @@ func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration){
 			if(goodPacket > largestSuccessfulPacket){
 				if _, ok := results[goodPacket]; ok {
 					largestSuccessfulPacket = goodPacket
+					results[goodPacket] = true
 				} else {
 					log.Println("Received a packet of a size that wasn't sent. Truncation!")
 				}
@@ -147,9 +142,13 @@ func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration){
 		}
 	}
 
-	log.Println("Done...")
-	log.Println("Largest successful packet", largestSuccessfulPacket)
-	log.Println(results)
+	if(conf.Debug){
+		log.Println("Done...")
+		log.Println("Largest successful packet", largestSuccessfulPacket)
+		log.Println(results)
+	}
+
+	return largestSuccessfulPacket
 }
 
 func confirmMTU(srcIP string, destIP string, mtu int, timeoutInSeconds time.Duration) bool {
