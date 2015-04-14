@@ -4,13 +4,12 @@ import (
 	"code.google.com/p/gopacket"
 	"code.google.com/p/gopacket/layers"
 	"golang.org/x/net/ipv4"
-	"log"
 	"net"
 	"strconv"
 )
 
 func sendOKResponse(packet gopacket.Packet) {
-	sendPacket(conf.SourceIP, getIP(packet).String(), originalSize(packet), "OK")
+	sendPacket(conf.MTUConfList[0].SourceIP, getIP(packet).String(), originalSize(packet), "OK")
 }
 
 //sendPacket generates & sends a packet of arbitrary size to a specific destination.
@@ -19,7 +18,7 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string)
 
 	var payloadSize int
 	if size < 28 {
-		log.Println("Unable to create a packet smaller then 28bytes.")
+		//log.Println("Unable to create a packet smaller then 28bytes.")
 		payloadSize = 0
 	} else {
 		payloadSize = size - 28
@@ -83,7 +82,7 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string)
 
 	err = rawConn.WriteTo(ipHeader, udpPayloadBuf.Bytes(), nil)
 
-	log.Println("Packet with length", (len(udpPayloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
+	//log.Println("Packet with length", (len(udpPayloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
 	return append(ipHeaderBuf.Bytes(), udpPayloadBuf.Bytes()...)
 }
 

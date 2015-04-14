@@ -30,8 +30,9 @@ func Analyze(c config.Config) {
 	time.Sleep(1000 * time.Millisecond)
 
 	FastMTU(
-	conf.SourceIP,
-	conf.DestinationIP, 10);
+	conf.MTUConfList[0].SourceIP, //TODO: use additional configs as well, not just first. --> Iterate
+	conf.MTUConfList[0].DestinationIP,
+	10); //TODO: use value from config
 }
 
 //Listen only listens to MTU requests and replies with OK-Packets.
@@ -79,6 +80,7 @@ func FindMTU(srcIP string, destIP string, startMTU int, increment int) int {
 
 //Detects the exact MTU asap.
 func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration){
+
 	var rangeStart = 0
 	var rangeEnd = 2000
 	var itStep = ((rangeEnd-rangeStart)/20)
@@ -97,6 +99,7 @@ func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration){
 			rangeEnd = 2*rangeEnd
 		} else if (roughMTU == 0){
 			log.Println("ERROR: Reported MTU 0.. ")
+			mtuDetected = true //TODO: better name for mtuDetected needed?
 		} else {
 			rangeStart = roughMTU
 			rangeEnd = roughMTU+itStep
@@ -111,7 +114,6 @@ func sendBatch(srcIP string, destIP string, rangeStart int, rangeEnd int, itStep
 	var results = make(map[int]bool)
 	for i := rangeStart; i < (rangeEnd+itStep); i+=itStep {
 		sendPacket(srcIP, destIP, i, "MTU?")
-		log.Println(i)
 		results[i] = false
 	}
 
@@ -129,41 +131,22 @@ func sendBatch(srcIP string, destIP string, rangeStart int, rangeEnd int, itStep
 		select {
 		case goodPacket := <-mtuOKchan:
 			if(goodPacket > largestSuccessfulPacket){
+				//Check if the packet we received was one that we sent. (Based on size)
 				if _, ok := results[goodPacket]; ok {
 					largestSuccessfulPacket = goodPacket
 					results[goodPacket] = true
-				} else {
-					log.Println("Received a packet of a size that wasn't sent. Truncation!")
 				}
 			}
 		case <- timeout:
-			log.Println("Time's up")
 			gatherPackets = false
 		}
 	}
 
-	if(conf.Debug){
-		log.Println("Done...")
-		log.Println("Largest successful packet", largestSuccessfulPacket)
+	if conf.Debug {
+		log.Println("---------------------------------------------------")
+		log.Println("Range:",rangeStart,"-",rangeEnd,"  itStep:",itStep, "  Timeout:",timeoutInSeconds)
+		log.Println("Largest successful packet:", largestSuccessfulPacket)
 		log.Println(results)
 	}
-
 	return largestSuccessfulPacket
-}
-
-func confirmMTU(srcIP string, destIP string, mtu int, timeoutInSeconds time.Duration) bool {
-	sendPacket(srcIP, destIP, mtu, "MTU?")
-
-	timeout := make(chan bool, 1)
-	go func() {
-		time.Sleep(timeoutInSeconds * time.Second)
-		timeout <- true
-	}()
-
-	select {
-	case <-mtuOKchan:
-		return true
-	case <-timeout:
-		return false
-	}
 }

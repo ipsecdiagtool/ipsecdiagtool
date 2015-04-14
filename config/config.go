@@ -10,7 +10,7 @@ import (
 )
 
 const configFile string = "config.json"
-const configVersion int = 5
+const configVersion int = 6
 
 //TimeoutInSeconds defines the amount of time we're waiting for an OK packet.
 const Timeout time.Duration = 10
@@ -22,11 +22,7 @@ type Config struct {
 	Debug         bool
 
 	//MTU specific:
-	SourceIP           string
-	DestinationIP      string
-	IncrementationStep int
-	StartingMTU        int
-	MTUIterations      int
+	MTUConfList  []MTUConfig
 
 	//Packet loss specific:
 	WindowSize    uint32
@@ -36,9 +32,19 @@ type Config struct {
 	CfgVers int
 }
 
+type MTUConfig struct {
+	SourceIP string
+	DestinationIP string
+	Timeout int
+	MTURangeStart int
+	MTURangeEnd int
+}
+
 //initialize creates a new config with default values and writes it to disk.
 func initialize() Config {
-	conf := Config{0, false, "127.0.0.1", "127.0.0.1", 100, 500, 3, 32, "any", configVersion}
+	mtuSample := MTUConfig{"127.0.0.1", "127.0.0.1", 10, 0, 2000}
+	mtuList := []MTUConfig{mtuSample,mtuSample}
+	conf := Config{0, false, mtuList, 32, "any", configVersion}
 	Write(conf)
 	//TODO: perhaps write AppID to file later?
 	conf.ApplicationID = setupAppID(conf.ApplicationID)
