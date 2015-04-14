@@ -109,7 +109,7 @@ func FindMTU(srcIP string, destIP string, startMTU int, increment int) int {
 
 //Will be renamed once it works :P.
 func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration){
-	//1. First batch
+	//1. Send a batch of packets
 	var rangeStart = 0
 	var rangeEnd = 2000
 	var results = make(map[int]bool)
@@ -121,18 +121,26 @@ func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration){
 		results[i] = false
 	}
 
-	//2. Wait until time's up
+	//2. Wait until time's up then gather results
 	timeout := make(chan bool, 1)
 	go func() {
 		time.Sleep(timeoutInSeconds * time.Second)
 		timeout <- true
 	}()
 
+	var largestSuccessfulPacket = 0
+
 	var gatherPackets = true
 	for gatherPackets {
 		select {
 		case goodPacket := <-mtuOKchan:
-			results[goodPacket]=true
+			if(goodPacket > largestSuccessfulPacket){
+				if _, ok := results[goodPacket]; ok {
+					largestSuccessfulPacket = goodPacket
+				} else {
+					log.Println("Received a packet of a size that wasn't sent. Truncation!")
+				}
+			}
 		case <- timeout:
 			log.Println("Time's up")
 			gatherPackets = false
@@ -140,6 +148,7 @@ func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration){
 	}
 
 	log.Println("Done...")
+	log.Println("Largest successful packet", largestSuccessfulPacket)
 	log.Println(results)
 }
 

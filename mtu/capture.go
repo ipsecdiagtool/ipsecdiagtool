@@ -15,7 +15,8 @@ import (
 //Packets can be filtered by a BPF filter string. (E.g. tcp port 22)
 func startCapture(bpfFilter string) {
 	log.Println("Waiting for MTU-Analyzer packet")
-	if handle, err := pcap.OpenLive("any", 3000, true, 100); err != nil {
+	//TODO: increase window size, currently so low to simulate breakoff after 1500
+	if handle, err := pcap.OpenLive("any", 1600, true, 100); err != nil {
 		panic(err)
 		//https://www.wireshark.org/tools/string-cf.html
 	} else if err := handle.SetBPFFilter(bpfFilter); err != nil {
