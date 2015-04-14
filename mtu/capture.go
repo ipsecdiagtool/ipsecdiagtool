@@ -46,6 +46,7 @@ func handlePacket(packet gopacket.Packet) {
 				//log.Println("Packet is from us.. ignoring.", remoteAppID)
 			} else if arr[2] == "OK" {
 				log.Println("Received OK-packet with length", packet.Metadata().Length, "bytes.")
+				//go func(){mtuOKchan <- packet.Metadata().Length}()
 				mtuOKchan <- packet.Metadata().Length
 			} else if arr[2] == "MTU?" {
 				log.Println("Received MTU?-packet with length", packet.Metadata().Length, "bytes.")

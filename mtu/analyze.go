@@ -31,7 +31,7 @@ func Analyze(c config.Config) {
 
 	FastMTU(
 	conf.SourceIP,
-	conf.DestinationIP);
+	conf.DestinationIP, 10);
 /*
 	//MTU detection algorithm
 	var mtu = c.StartingMTU
@@ -108,7 +108,7 @@ func FindMTU(srcIP string, destIP string, startMTU int, increment int) int {
 }
 
 //Will be renamed once it works :P.
-func FastMTU(srcIP string, destIP string){
+func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration){
 	//1. First batch
 	var rangeStart = 0
 	var rangeEnd = 2000
@@ -121,11 +121,19 @@ func FastMTU(srcIP string, destIP string){
 		results[i] = false
 	}
 
-	//2. Gather answers
-	var test int
-	test = <-mtuOKchan
-	log.Println("hi",test)
+	//2. Wait until time's up
+	timeout := make(chan bool, 1)
+	go func() {
+		time.Sleep(timeoutInSeconds * time.Second)
+		timeout <- true
+	}()
+	<- timeout
 
+	//3. Iterate through results
+	for {
+		var test = <-mtuOKchan
+		log.Println("hi",test)
+	}
 }
 
 func confirmMTU(srcIP string, destIP string, mtu int, timeoutInSeconds time.Duration) bool {
