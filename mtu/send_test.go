@@ -30,7 +30,7 @@ func TestPayloadGeneratorZero(t *testing.T) {
 
 func TestSendPacketLarge(t *testing.T) {
 	length := 1000
-	payload := sendPacket("127.0.0.1", "127.0.0.1", length, "Hello IPSec")
+	payload := sendPacket("127.0.0.1", "127.0.0.1", length, "Hello IPSec", 0)
 	if len(payload) != length {
 		t.Error("Expected", length, "bytes of payload, instead got", len(payload), "bytes.")
 	}
@@ -39,7 +39,7 @@ func TestSendPacketLarge(t *testing.T) {
 func TestSendPacketSmall(t *testing.T) {
 	length := 10
 	expected := 28
-	payload := sendPacket("127.0.0.1", "127.0.0.1", length, "Hello IPSec")
+	payload := sendPacket("127.0.0.1", "127.0.0.1", length, "Hello IPSec", 0)
 	if len(payload) != expected {
 		t.Error("Expected", expected, "bytes of payload, instead got", len(payload), "bytes.")
 	}

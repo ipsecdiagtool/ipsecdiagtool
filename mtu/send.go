@@ -5,16 +5,18 @@ import (
 	"code.google.com/p/gopacket/layers"
 	"golang.org/x/net/ipv4"
 	"net"
+	"log"
 	"strconv"
+	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 )
 
-func sendOKResponse(packet gopacket.Packet) {
-	sendPacket(conf.MTUConfList[0].SourceIP, getIP(packet).String(), originalSize(packet), "OK")
+func sendOKResponse(packet gopacket.Packet, c config.Config) {
+	sendPacket(c.MTUConfList[0].SourceIP, getIP(packet).String(), originalSize(packet), "OK", c.ApplicationID)
 }
 
 //sendPacket generates & sends a packet of arbitrary size to a specific destination.
 //The size specified should be larger then 40bytes.
-func sendPacket(sourceIP string, destinationIP string, size int, message string) []byte {
+func sendPacket(sourceIP string, destinationIP string, size int, message string, appID int) []byte {
 
 	var payloadSize int
 	if size < 28 {
@@ -61,7 +63,7 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string)
 	udpPayloadBuf := gopacket.NewSerializeBuffer()
 
 	//Influence the payload size
-	payload := gopacket.Payload(generatePayload(payloadSize, ","+strconv.Itoa(conf.ApplicationID)+","+message+","))
+	payload := gopacket.Payload(generatePayload(payloadSize, ","+strconv.Itoa(appID)+","+message+","))
 	err = gopacket.SerializeLayers(udpPayloadBuf, opts, &icmp, payload)
 	if err != nil {
 		panic(err)
@@ -82,7 +84,7 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string)
 
 	err = rawConn.WriteTo(ipHeader, udpPayloadBuf.Bytes(), nil)
 
-	//log.Println("Packet with length", (len(udpPayloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
+	log.Println("Packet with length", (len(udpPayloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
 	return append(ipHeaderBuf.Bytes(), udpPayloadBuf.Bytes()...)
 }
 

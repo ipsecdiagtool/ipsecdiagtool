@@ -2,6 +2,7 @@ package mtu
 
 import (
 	//Google packages
+	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"code.google.com/p/gopacket"
 	"code.google.com/p/gopacket/layers"
 	"code.google.com/p/gopacket/pcap"
@@ -13,10 +14,9 @@ import (
 
 //startCapture captures all packets on any interface for an unlimited duration.
 //Packets can be filtered by a BPF filter string. (E.g. tcp port 22)
-func startCapture(bpfFilter string) {
+func startCapture(bpfFilter string, snaplen int32, c config.Config) {
 	log.Println("Waiting for MTU-Analyzer packet")
-	//TODO: increase window size, currently so low to simulate breakoff after 1500
-	if handle, err := pcap.OpenLive("any", 1600, true, 100); err != nil {
+	if handle, err := pcap.OpenLive("any", snaplen, true, 100); err != nil {
 		panic(err)
 		//https://www.wireshark.org/tools/string-cf.html
 	} else if err := handle.SetBPFFilter(bpfFilter); err != nil {
@@ -25,7 +25,7 @@ func startCapture(bpfFilter string) {
 		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
 		for packet := range packetSource.Packets() {
-			handlePacket(packet)
+			handlePacket(packet, c)
 		}
 	}
 }
@@ -34,7 +34,7 @@ func startCapture(bpfFilter string) {
 //and if the packet is from itself or the neighbouring node. If the packet is
 //not from itself it either responds with a OK or sends an internal message
 //to the findMTU goroutine that it has received an OK.
-func handlePacket(packet gopacket.Packet) {
+func handlePacket(packet gopacket.Packet, c config.Config) {
 	s := string(packet.NetworkLayer().LayerPayload()[:])
 
 	//Cutting off the filler material
@@ -43,16 +43,16 @@ func handlePacket(packet gopacket.Packet) {
 		remoteAppID, err := strconv.Atoi(arr[1])
 		if err == nil {
 			//Check that packet is not from this application
-			if conf.ApplicationID == remoteAppID {
-				//log.Println("Packet is from us.. ignoring.", remoteAppID)
+			if c.ApplicationID == remoteAppID {
+				log.Println(c.ApplicationID,"Packet is from us.. ignoring.", remoteAppID)
 			} else if arr[2] == "OK" {
-				//log.Println("Received OK-packet with length", packet.Metadata().Length, "bytes.")
+				log.Println("Received OK-packet with length", packet.Metadata().Length, "bytes.")
 				mtuOKchan <- originalSize(packet)
 			} else if arr[2] == "MTU?" {
-				//log.Println("Received MTU?-packet with length", packet.Metadata().Length, "bytes.")
-				sendOKResponse(packet)
+				log.Println("Received MTU?-packet with length", packet.Metadata().Length, "bytes.")
+				sendOKResponse(packet, c)
 			} else {
-				if(conf.Debug){
+				if(c.Debug){
 					log.Println("Discarded packet because neither MTU? nor OK command were included.")
 				}
 			}

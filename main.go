@@ -52,7 +52,7 @@ func handleArgs() {
 		} else if os.Args[1] == "mtu" {
 			go mtu.Analyze(configuration)
 		} else if os.Args[1] == "mtu-listen" {
-			go mtu.Listen(configuration)
+			go mtu.Listen(configuration, 3000) //TODO: maybe increase
 		} else if os.Args[1] == "packetloss" {
 			go packetloss.Detect(configuration)
 		}
