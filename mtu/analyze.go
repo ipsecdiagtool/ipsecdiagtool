@@ -127,13 +127,20 @@ func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration){
 		time.Sleep(timeoutInSeconds * time.Second)
 		timeout <- true
 	}()
-	<- timeout
 
-	//3. Iterate through results
-	for {
-		var test = <-mtuOKchan
-		log.Println("hi",test)
+	var gatherPackets = true
+	for gatherPackets {
+		select {
+		case goodPacket := <-mtuOKchan:
+			results[goodPacket]=true
+		case <- timeout:
+			log.Println("Time's up")
+			gatherPackets = false
+		}
 	}
+
+	log.Println("Done...")
+	log.Println(results)
 }
 
 func confirmMTU(srcIP string, destIP string, mtu int, timeoutInSeconds time.Duration) bool {
