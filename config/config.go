@@ -10,10 +10,7 @@ import (
 )
 
 const configFile string = "config.json"
-const configVersion int = 6
-
-//TimeoutInSeconds defines the amount of time we're waiting for an OK packet.
-const Timeout time.Duration = 10
+const configVersion int = 7
 
 //Config contains the user configurable values for IPSecDiagTool.
 //It contains only primitive datatypes so that it is easily serializable.
@@ -22,7 +19,7 @@ type Config struct {
 	Debug         bool
 
 	//MTU specific:
-	MTUConfList  []MTUConfig
+	MTUConfList []MTUConfig
 
 	//Packet loss specific:
 	WindowSize    uint32
@@ -33,17 +30,17 @@ type Config struct {
 }
 
 type MTUConfig struct {
-	SourceIP string
+	SourceIP      string
 	DestinationIP string
-	Timeout int
+	Timeout       time.Duration
 	MTURangeStart int
-	MTURangeEnd int
+	MTURangeEnd   int
 }
 
 //initialize creates a new config with default values and writes it to disk.
 func initialize() Config {
 	mtuSample := MTUConfig{"127.0.0.1", "127.0.0.1", 10, 0, 2000}
-	mtuList := []MTUConfig{mtuSample,mtuSample}
+	mtuList := []MTUConfig{mtuSample, mtuSample}
 	conf := Config{0, false, mtuList, 32, "any", configVersion}
 	Write(conf)
 	//TODO: perhaps write AppID to file later?
@@ -106,7 +103,7 @@ func setupAppID(applicationID int) int {
 		applicationID = rand.Intn(100000)
 
 		//Prevent generation of 1337
-		if(applicationID == 1337){
+		if applicationID == 1337 {
 			applicationID = setupAppID(0)
 		}
 

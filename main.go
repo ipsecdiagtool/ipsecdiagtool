@@ -22,7 +22,7 @@ func main() {
 		//need to mess with the flow of the real application.
 		//go packetloss.Detect(configuration.WindowSize)
 		fmt.Println("Debug-Mode:")
-		go mtu.Analyze(configuration)
+		go mtu.Analyze(configuration, 3000)
 	} else {
 		handleArgs()
 	}
@@ -50,7 +50,7 @@ func handleArgs() {
 			fmt.Println("   + packetloss: Passivly listen to incomming traffic and detect packet loss.")
 			fmt.Println("   + about: Learn more about IPSecDiagTool")
 		} else if os.Args[1] == "mtu" {
-			go mtu.Analyze(configuration)
+			go mtu.Analyze(configuration, 3000)
 		} else if os.Args[1] == "mtu-listen" {
 			go mtu.Listen(configuration, 3000) //TODO: maybe increase
 		} else if os.Args[1] == "packetloss" {
