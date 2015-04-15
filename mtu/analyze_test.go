@@ -3,30 +3,66 @@ package mtu
 import (
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"testing"
+	"time"
 )
 
-func TestDetectMTU500(t *testing.T) {
-	//Test Setup
-	mtuSample := config.MTUConfig{"127.0.0.1", "127.0.0.1", 5, 0, 2000}
-	mtuList := []config.MTUConfig{mtuSample, mtuSample}
-	config := config.Config{1337, true, mtuList, 32, "any", 0}
+//Test Settings
+var tOverhead = 16
+var tTimeout = 5
 
-	//Run test
-	var exactMTU = Analyze(config, 500)
-	if exactMTU != 484 {
-		t.Error("Expected 1584 got", exactMTU, "instead.")
+//Start with a range of 0-2000 and detect the simulated MTU which is 500.
+func TestDetectMTU500(t *testing.T) {
+	//Test Settings
+	tMTU := 500
+	tRangeStart := 0
+	tRangeEnd := 2000
+
+	//Test Setup
+	mtuConfig := config.MTUConfig{"127.0.0.1", "127.0.0.1", time.Duration(tTimeout), tRangeStart, tRangeEnd}
+	mtuList := []config.MTUConfig{mtuConfig, mtuConfig}
+	appConfig := config.Config{1337, true, mtuList, 0, "_", 0}
+
+	//Run test & validate result
+	var detectedMTU = Analyze(appConfig, int32(tMTU))
+	if detectedMTU != (tMTU-tOverhead) {
+		t.Error("Expected", (tMTU-tOverhead), "got", detectedMTU, "instead.")
 	}
 }
 
-func TestDetectMTU1584(t *testing.T) {
-	//Test Setup
-	mtuSample := config.MTUConfig{"127.0.0.1", "127.0.0.1", 5, 0, 2000}
-	mtuList := []config.MTUConfig{mtuSample, mtuSample}
-	config := config.Config{1337, true, mtuList, 32, "any", 0}
+//Start with a range of 0-2000 and detect the simulated MTU which is 1600.
+func TestDetectMTU1600(t *testing.T) {
+	//Test Settings
+	tMTU := 1600
+	tRangeStart := 0
+	tRangeEnd := 2000
 
-	//Run test
-	var exactMTU = Analyze(config, 1600)
-	if exactMTU != 1584 {
-		t.Error("Expected 1584 got", exactMTU, "instead.")
+	//Test Setup
+	mtuConfig := config.MTUConfig{"127.0.0.1", "127.0.0.1", time.Duration(tTimeout), tRangeStart, tRangeEnd}
+	mtuList := []config.MTUConfig{mtuConfig, mtuConfig}
+	appConfig := config.Config{1337, true, mtuList, 0, "_", 0}
+
+	//Run test & validate result
+	var detectedMTU = Analyze(appConfig, int32(tMTU))
+	if detectedMTU != (tMTU-tOverhead) {
+		t.Error("Expected", (tMTU-tOverhead), "got", detectedMTU, "instead.")
+	}
+}
+
+//Start with a range of 0-2000 and detect the simulated MTU which is 3000.
+func TestDetectMTU3000(t *testing.T) {
+	//Test Settings
+	tMTU := 3000
+	tRangeStart := 0
+	tRangeEnd := 2000
+
+	//Test Setup
+	mtuConfig := config.MTUConfig{"127.0.0.1", "127.0.0.1", time.Duration(tTimeout), tRangeStart, tRangeEnd}
+	mtuList := []config.MTUConfig{mtuConfig, mtuConfig}
+	appConfig := config.Config{1337, true, mtuList, 0, "_", 0}
+
+	//Run test & validate result
+	var detectedMTU = Analyze(appConfig, int32(tMTU))
+	if detectedMTU != (tMTU-tOverhead) {
+		t.Error("Expected", (tMTU-tOverhead), "got", detectedMTU, "instead.")
 	}
 }

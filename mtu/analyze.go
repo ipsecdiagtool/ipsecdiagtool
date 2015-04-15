@@ -7,7 +7,7 @@ import (
 )
 
 //Package internal temp. variables
-var mtuOKchan = make(chan int, 100)
+var mtuOKchan chan int
 
 //Analyze determines the ideal MTU (Maximum Transmission Unit) between two nodes
 //by sending increasingly big packets between them. Analyze determine the MTU
@@ -17,6 +17,7 @@ func Analyze(c config.Config, snaplen int32) int {
 	log.Println("Analyzing MTU..")
 	log.Println(c)
 
+	mtuOKchan = make(chan int, 100)
 	go startCapture("icmp", snaplen, c.ApplicationID)
 
 	//TODO: currently required to give capture enough time to boot..
