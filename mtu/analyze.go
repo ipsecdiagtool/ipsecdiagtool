@@ -1,7 +1,6 @@
 package mtu
 
 import (
-	"code.google.com/p/gopacket/examples/util"
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"log"
 	"time"
@@ -15,12 +14,8 @@ var mtuOKchan = make(chan int, 100)
 //by running FindMTU multiple times. However it is not a daemon. Once it has found
 //the ideal MTU it reports it and then closes shop.
 func Analyze(c config.Config, snaplen int32) int {
-	defer util.Run()()
 	log.Println("Analyzing MTU..")
 	log.Println(c)
-
-	//Setup a channel for communication with capture
-	mtuOKchan = make(chan int) // Allocate a channel.
 
 	go startCapture("icmp", snaplen, c.ApplicationID)
 
@@ -36,7 +31,6 @@ func Analyze(c config.Config, snaplen int32) int {
 //TODO: reduce duplicate code
 //Listen only listens to MTU requests and replies with OK-Packets.
 func Listen(c config.Config, snaplen int32) {
-	defer util.Run()()
 
 	//Setup a channel for communication with capture
 	mtuOKchan = make(chan int) // Allocate a channel
