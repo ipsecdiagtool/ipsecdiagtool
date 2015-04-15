@@ -104,6 +104,12 @@ func setupAppID(applicationID int) int {
 	if applicationID == 0 {
 		rand.Seed(time.Now().UnixNano())
 		applicationID = rand.Intn(100000)
+
+		//Prevent generation of 1337
+		if(applicationID == 1337){
+			applicationID = setupAppID(0)
+		}
+
 		fmt.Println("Application ID generated:", applicationID)
 	}
 	return applicationID

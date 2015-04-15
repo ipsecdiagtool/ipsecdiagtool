@@ -14,7 +14,7 @@ var mtuOKchan = make(chan int, 100)
 //by sending increasingly big packets between them. Analyze determine the MTU
 //by running FindMTU multiple times. However it is not a daemon. Once it has found
 //the ideal MTU it reports it and then closes shop.
-func Analyze(c config.Config) {
+func Analyze(c config.Config) int {
 	defer util.Run()()
 	log.Println("Analyzing MTU..")
 	log.Println(c)
@@ -22,12 +22,12 @@ func Analyze(c config.Config) {
 	//Setup a channel for communication with capture
 	mtuOKchan = make(chan int) // Allocate a channel.
 
-	go startCapture("icmp", 1600, c)
+	go startCapture("icmp", 1600, c.ApplicationID)
 
 	//TODO: currently required to give capture enough time to boot..
 	time.Sleep(1000 * time.Millisecond)
 
-	FastMTU(
+	return FastMTU(
 	c.MTUConfList[0].SourceIP, //TODO: use additional configs as well, not just first. --> Iterate
 	c.MTUConfList[0].DestinationIP,
 	10, c.ApplicationID); //TODO: use value from config
@@ -40,10 +40,10 @@ func Listen(c config.Config, snaplen int32){
 
 	//Setup a channel for communication with capture
 	mtuOKchan = make(chan int) // Allocate a channel
-	// .
+
 	log.Println("Listener", c)
 
-	go startCapture("icmp", snaplen, c)
+	go startCapture("icmp", snaplen, c.ApplicationID)
 }
 
 //FindMTU discovers the MTU between two nodes and returns it as an int value. FindMTU currently
@@ -79,7 +79,7 @@ func FindMTU(srcIP string, destIP string, startMTU int, increment int, appID int
 }
 
 //Detects the exact MTU asap.
-func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int){
+func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int) int{
 
 	var rangeStart = 0
 	var rangeEnd = 2000
@@ -107,6 +107,7 @@ func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration, appID 
 		}
 	}
 	log.Println("Exact MTU found", roughMTU)
+	return roughMTU
 }
 
 func sendBatch(srcIP string, destIP string, rangeStart int, rangeEnd int, itStep int, timeoutInSeconds time.Duration, appID int) int {

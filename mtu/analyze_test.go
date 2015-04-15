@@ -8,17 +8,15 @@ import (
 
 func TestDetectMTU500(t *testing.T) {
 	//Setup Listener
-	mtuSample := config.MTUConfig{"127.0.0.1", "127.0.0.1", 4, 0, 2000}
+	mtuSample := config.MTUConfig{"127.0.0.1", "127.0.0.1", 1, 0, 2000}
 	mtuList := []config.MTUConfig{mtuSample,mtuSample}
-	confListener := config.Config{1, true, mtuList, 32, "any", 0}
-	Listen(confListener, 1500)
+	config := config.Config{1337, true, mtuList, 32, "any", 0}
+	Listen(config, 1600)
 	time.Sleep(1000 * time.Millisecond)
 
-	//Setup Analyzer
-	var confAnalyzer = config.Config{2, true, mtuList, 32, "any", 0}
-
 	//Run test
-	Analyze(confAnalyzer)
-
-
+	var exactMTU = Analyze(config)
+	if(exactMTU != 1584){
+		t.Error("Expected 1584 got",exactMTU,"instead.")
+	}
 }

@@ -5,13 +5,14 @@ import (
 	"code.google.com/p/gopacket/layers"
 	"golang.org/x/net/ipv4"
 	"net"
-	"log"
 	"strconv"
-	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 )
 
-func sendOKResponse(packet gopacket.Packet, c config.Config) {
-	sendPacket(c.MTUConfList[0].SourceIP, getIP(packet).String(), originalSize(packet), "OK", c.ApplicationID)
+func sendOKResponse(packet gopacket.Packet, appID int) {
+	//TODO: check with OSAG if this should be configurable as well.
+	//TODO: e.g. send from different IP..
+	srcIP, dstIP := getSrcDstIP(packet)
+	sendPacket(dstIP.String(), srcIP.String(), originalSize(packet), "OK", appID)
 }
 
 //sendPacket generates & sends a packet of arbitrary size to a specific destination.
@@ -84,7 +85,7 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string,
 
 	err = rawConn.WriteTo(ipHeader, udpPayloadBuf.Bytes(), nil)
 
-	log.Println("Packet with length", (len(udpPayloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
+	//log.Println("Packet with length", (len(udpPayloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
 	return append(ipHeaderBuf.Bytes(), udpPayloadBuf.Bytes()...)
 }
 
