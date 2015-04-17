@@ -14,7 +14,7 @@ import (
 //startCapture captures all packets on any interface for an unlimited duration.
 //Packets can be filtered by a BPF filter string. (E.g. tcp port 22)
 func startCapture(bpfFilter string, snaplen int32, appID int) {
-	//Todo: remove!
+	//Todo: remove! Used to see which capture routine handles the packets.
 	currentTime := time.Now()
 	log.Println("Waiting for MTU-Analyzer packet")
 	if handle, err := pcap.OpenLive("any", snaplen, true, 100); err != nil {
@@ -24,19 +24,25 @@ func startCapture(bpfFilter string, snaplen int32, appID int) {
 		panic(err)
 	} else {
 		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-
 		for packet := range packetSource.Packets() {
-			handlePacket(packet, appID)
+			poisoned := handlePacket(packet, appID)
+			if(poisoned){
+				break
+			}
+			//Todo: remove! Used to see which capture routine handles the packets.
 			log.Println("Goroutine:", currentTime)
 		}
+		log.Println("CHANNEL CLOSED")
+		//handle.Close()
 	}
+	log.Println("Ended", currentTime)
 }
 
 //handlePacket decides if a packet contains a valid IPSecDiagTool-MTU instruction
 //and if the packet is from itself or the neighbouring node. If the packet is
 //not from itself it either responds with a OK or sends an internal message
 //to the findMTU goroutine that it has received an OK.
-func handlePacket(packet gopacket.Packet, appID int) {
+func handlePacket(packet gopacket.Packet, appID int) bool{
 	s := string(packet.NetworkLayer().LayerPayload()[:])
 
 	//Cutting off the filler material
@@ -55,6 +61,9 @@ func handlePacket(packet gopacket.Packet, appID int) {
 			} else if arr[2] == "MTU?" {
 				//log.Println("Received MTU?-packet with length", packet.Metadata().Length, "bytes.")
 				sendOKResponse(packet, appID)
+			} else if  arr[2] == "POISON" {
+				//log.Println("Got a poison pill. Killing listener.")
+				return true
 			} else { /*
 					if(c.Debug){
 						log.Println("Discarded packet because neither MTU? nor OK command were included.")
@@ -64,6 +73,7 @@ func handlePacket(packet gopacket.Packet, appID int) {
 			log.Println("ERROR: Cought a packet with an invalid App-ID. ", packet.NetworkLayer().LayerPayload())
 		}
 	}
+	return false
 }
 
 //TODO: maybe throw error when packet without IP layer..

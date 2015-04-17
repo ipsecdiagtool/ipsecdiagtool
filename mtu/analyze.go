@@ -8,6 +8,7 @@ import (
 
 //Package internal temp. variables
 var mtuOKchan chan int
+var stopCapturechan chan bool
 
 //Analyze determines the ideal MTU (Maximum Transmission Unit) between two nodes
 //by sending increasingly big packets between them. Analyze determine the MTU
@@ -18,15 +19,20 @@ func Analyze(c config.Config, snaplen int32) int {
 	log.Println(c)
 
 	mtuOKchan = make(chan int, 100)
+	stopCapturechan = make(chan bool)
 	go startCapture("icmp", snaplen, c.ApplicationID)
 
 	//TODO: currently required to give capture enough time to boot..
 	time.Sleep(1000 * time.Millisecond)
 
-	return FastMTU(
+	result := FastMTU(
 		c.MTUConfList[0].SourceIP, //TODO: use additional configs as well, not just first. --> Iterate
 		c.MTUConfList[0].DestinationIP,
 		c.MTUConfList[0].Timeout, c.ApplicationID) //TODO: use value from config
+
+	//Kills the listener
+	sendPoisonPill(c.ApplicationID)
+	return result
 }
 
 //TODO: reduce duplicate code
@@ -38,6 +44,7 @@ func Listen(c config.Config, snaplen int32) {
 
 	log.Println("Listener", c)
 
+	//TODO: Improve or remove. Atm I never send a token to this chan.. so it's only used to satisfy the func.
 	go startCapture("icmp", snaplen, c.ApplicationID)
 }
 
