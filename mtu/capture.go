@@ -8,11 +8,14 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 )
 
 //startCapture captures all packets on any interface for an unlimited duration.
 //Packets can be filtered by a BPF filter string. (E.g. tcp port 22)
 func startCapture(bpfFilter string, snaplen int32, appID int) {
+	//Todo: remove!
+	currentTime := time.Now()
 	log.Println("Waiting for MTU-Analyzer packet")
 	if handle, err := pcap.OpenLive("any", snaplen, true, 100); err != nil {
 		panic(err)
@@ -24,6 +27,7 @@ func startCapture(bpfFilter string, snaplen int32, appID int) {
 
 		for packet := range packetSource.Packets() {
 			handlePacket(packet, appID)
+			log.Println("Goroutine:", currentTime)
 		}
 	}
 }

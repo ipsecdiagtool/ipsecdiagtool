@@ -34,7 +34,7 @@ func Analyze(c config.Config, snaplen int32) int {
 func Listen(c config.Config, snaplen int32) {
 
 	//Setup a channel for communication with capture
-	mtuOKchan = make(chan int) // Allocate a channel
+	mtuOKchan = make(chan int, 100) // Allocate a channel
 
 	log.Println("Listener", c)
 
