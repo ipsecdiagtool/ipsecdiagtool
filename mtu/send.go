@@ -15,10 +15,6 @@ func sendOKResponse(packet gopacket.Packet, appID int) {
 	sendPacket(dstIP.String(), srcIP.String(), originalSize(packet), "OK", appID)
 }
 
-func sendPoisonPill(appID int) {
-	sendPacket("127.0.0.1", "127.0.0.1", 100, "POISON", appID)
-}
-
 //sendPacket generates & sends a packet of arbitrary size to a specific destination.
 //The size specified should be larger then 40bytes.
 func sendPacket(sourceIP string, destinationIP string, size int, message string, appID int) []byte {

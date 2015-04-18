@@ -8,41 +8,37 @@ import (
 	"net"
 	"strconv"
 	"strings"
-	"time"
 )
 
 //startCapture captures all packets on any interface for an unlimited duration.
 //Packets can be filtered by a BPF filter string. (E.g. tcp port 22)
-func startCapture(bpfFilter string, snaplen int32, appID int) {
-	//Todo: remove! Used to see which capture routine handles the packets.
-	currentTime := time.Now()
+func startCapture(bpfFilter string, snaplen int32, appID int, mtuOK chan int, quit chan bool) {
 	log.Println("Waiting for MTU-Analyzer packet")
-	if handle, err := pcap.OpenLive("any", snaplen, true, 100); err != nil {
+	handle, err := pcap.OpenLive("any", snaplen, true, 100)
+	if err != nil {
 		panic(err)
 		//https://www.wireshark.org/tools/string-cf.html
 	} else if err := handle.SetBPFFilter(bpfFilter); err != nil {
 		panic(err)
 	} else {
 		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-		for packet := range packetSource.Packets() {
-			poisoned := handlePacket(packet, appID)
-			if(poisoned){
-				break
+		for {
+			select {
+			case packet := <- packetSource.Packets():
+				handlePacket(packet, appID, mtuOK)
+			case <- quit:
+				log.Println("Received quit message, stopping Listener.")
+				return
 			}
-			//Todo: remove! Used to see which capture routine handles the packets.
-			log.Println("Goroutine:", currentTime)
 		}
-		log.Println("CHANNEL CLOSED")
-		//handle.Close()
 	}
-	log.Println("Ended", currentTime)
 }
 
 //handlePacket decides if a packet contains a valid IPSecDiagTool-MTU instruction
 //and if the packet is from itself or the neighbouring node. If the packet is
 //not from itself it either responds with a OK or sends an internal message
 //to the findMTU goroutine that it has received an OK.
-func handlePacket(packet gopacket.Packet, appID int) bool{
+func handlePacket(packet gopacket.Packet, appID int, mtuOK chan int) bool{
 	s := string(packet.NetworkLayer().LayerPayload()[:])
 
 	//Cutting off the filler material
@@ -57,12 +53,12 @@ func handlePacket(packet gopacket.Packet, appID int) bool{
 				//log.Println("Packet is from us.. ignoring.")
 			} else if arr[2] == "OK" {
 				//log.Println("Received OK-packet with length", packet.Metadata().Length, "bytes.")
-				mtuOKchan <- originalSize(packet)
+				mtuOK <- originalSize(packet)
 			} else if arr[2] == "MTU?" {
 				//log.Println("Received MTU?-packet with length", packet.Metadata().Length, "bytes.")
 				sendOKResponse(packet, appID)
 			} else if  arr[2] == "POISON" {
-				//log.Println("Got a poison pill. Killing listener.")
+				log.Println("Got a poison pill. Killing listener.")
 				return true
 			} else { /*
 					if(c.Debug){
