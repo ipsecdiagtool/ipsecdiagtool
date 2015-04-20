@@ -32,19 +32,6 @@ func Analyze(c config.Config, snaplen int32) int {
 
 	return result
 }
-/*
-//TODO: reduce duplicate code
-//Listen only listens to MTU requests and replies with OK-Packets.
-func Listen(c config.Config, snaplen int32) {
-
-	//Setup a channel for communication with capture
-	mtuOKchan = make(chan int, 100) // Allocate a channel
-
-	log.Println("Listener", c)
-
-	//TODO: Improve or remove. Atm I never send a token to this chan.. so it's only used to satisfy the func.
-	go startCapture("icmp", snaplen, c.ApplicationID)
-}*/
 
 //Detects the exact MTU asap.
 func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int, mtuOK chan int) int {
