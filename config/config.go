@@ -13,7 +13,7 @@ const configFile string = "config.json"
 const configVersion int = 7
 
 //Config contains the user configurable values for IPSecDiagTool.
-//It contains only primitive datatypes so that it is easily serializable.
+//It can hold multiple MTUConfig's to handle MTU detection for multiple tunnels.
 type Config struct {
 	ApplicationID int
 	Debug         bool
@@ -29,6 +29,7 @@ type Config struct {
 	CfgVers int
 }
 
+//MTUConfig contains all the necessary settings to detect the MTU of one tunnel.
 type MTUConfig struct {
 	SourceIP      string
 	DestinationIP string
