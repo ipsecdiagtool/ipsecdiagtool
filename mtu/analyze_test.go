@@ -10,6 +10,7 @@ import (
 var tOverhead = 16
 var tTimeout = 5
 
+/*
 //Start with a range of 0-2000 and detect the simulated MTU which is 500.
 func TestDetectMTU500(t *testing.T) {
 	//Test Settings
@@ -27,12 +28,12 @@ func TestDetectMTU500(t *testing.T) {
 	if detectedMTU != (tMTU-tOverhead) {
 		t.Error("Expected", (tMTU-tOverhead), "got", detectedMTU, "instead.")
 	}
-}
+}*/
 
 //Start with a range of 0-2000 and detect the simulated MTU which is 1600.
-func TestDetectMTU1600(t *testing.T) {
+func TestDetectMTU1500(t *testing.T) {
 	//Test Settings
-	tMTU := 1600
+	tMTU := 4000
 	tRangeStart := 0
 	tRangeEnd := 2000
 
@@ -43,11 +44,12 @@ func TestDetectMTU1600(t *testing.T) {
 
 	//Run test & validate result
 	var detectedMTU = Analyze(appConfig, int32(tMTU))
-	if detectedMTU != (tMTU-tOverhead) {
-		t.Error("Expected", (tMTU-tOverhead), "got", detectedMTU, "instead.")
+	if detectedMTU != (tMTU - tOverhead) {
+		t.Error("Expected", (tMTU - tOverhead), "got", detectedMTU, "instead.")
 	}
 }
 
+/*
 //Start with a range of 0-2000 and detect the simulated MTU which is 3000.
 func TestDetectMTU3000(t *testing.T) {
 	//Test Settings
@@ -66,3 +68,4 @@ func TestDetectMTU3000(t *testing.T) {
 		t.Error("Expected", (tMTU-tOverhead), "got", detectedMTU, "instead.")
 	}
 }
+*/

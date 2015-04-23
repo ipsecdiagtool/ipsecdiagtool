@@ -3,6 +3,8 @@ package mtu
 import (
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"log"
+	"sort"
+	"strconv"
 	"time"
 )
 
@@ -55,7 +57,7 @@ func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration, appID 
 			rangeEnd = 2 * rangeEnd
 		} else if roughMTU == 0 {
 			//Retry
-			if(retries < 1){
+			if retries < 1 {
 				retries += 1
 				log.Println("Reported 0.. trying again.")
 				roughMTU = sendBatch(srcIP, destIP, rangeStart, rangeEnd, itStep, timeoutInSeconds, appID, mtuOK)
@@ -109,7 +111,29 @@ func sendBatch(srcIP string, destIP string, rangeStart int, rangeEnd int, itStep
 	log.Println("---------------------------------------------------")
 	log.Println("Range:", rangeStart, "-", rangeEnd, "  itStep:", itStep, "  Timeout:", timeoutInSeconds)
 	log.Println("Largest successful packet:", largestSuccessfulPacket)
-	log.Println(results)
+	printResultMap(results)
 
 	return largestSuccessfulPacket
+}
+
+func printResultMap(input map[int]bool) {
+	// To store the keys in slice in sorted order
+	var keys []int
+	for k := range input {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+
+	// To perform the opertion you want
+	var received = "Received: "
+	var missing = "Missing: "
+	for _, k := range keys {
+		if input[k] {
+			received += (strconv.Itoa(k) + " ")
+		} else {
+			missing += (strconv.Itoa(k) + " ")
+		}
+	}
+	log.Println(received)
+	log.Println(missing)
 }
