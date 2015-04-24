@@ -2,6 +2,7 @@ package packetloss
 
 import (
 	"time"
+	"strings"
 )
 
 //Datastructure for different ESP Connections
@@ -34,9 +35,7 @@ func NewEspMap(windowsize uint32) *EspMap {
 
 //Processing new Packets and adjusting the value of Head.
 func (espm EspMap) MakeEntry(key Connection, value uint32) {
-	if espm.elements[key].head == 0 {
-		espm.elements[key] = Packets{head: value}
-	} else {
+	if espm.elements[key].head != 0 {
 		packets := espm.elements[key]
 
 		if value > packets.head {
@@ -63,6 +62,12 @@ func (espm EspMap) MakeEntry(key Connection, value uint32) {
 				}
 			}
 		}
+		if(CheckLog(packets.lostpackets)){
+			s := []string{"Too much LostPackets in Connection: (SPI: ", string(key.SPI), " SRC: ", key.src, " DST: ",key.dst,")"};
+			AlertLog(strings.Join(s, ""))
+		}
+	} else {
+		espm.elements[key] = Packets{head: value}
 	}
 }
 
