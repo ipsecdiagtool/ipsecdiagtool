@@ -22,7 +22,10 @@ func main() {
 		//need to mess with the flow of the real application.
 		//go packetloss.Detect(configuration.WindowSize)
 		fmt.Println("Debug-Mode:")
-		go mtu.Analyze(configuration, 3000)
+		//go mtu.Analyze(configuration, 3000)
+		packetloss.InitLoger()
+		packetloss.InfoLog("Dies ist eine kurze Info")
+		packetloss.AlertLog("Dies ist ein Alert")
 	} else {
 		handleArgs()
 	}

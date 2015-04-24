@@ -10,7 +10,7 @@ import (
 )
 
 const configFile string = "config.json"
-const configVersion int = 7
+const configVersion int = 8
 
 //Config contains the user configurable values for IPSecDiagTool.
 //It contains only primitive datatypes so that it is easily serializable.
@@ -24,6 +24,8 @@ type Config struct {
 	//Packet loss specific:
 	WindowSize    uint32
 	InterfaceName string
+	AlertTime     uint32 // Time in Seconds for LostPacketsCheck
+	AlertCounter  uint32 // Packets in LostPacketsCheck
 
 	//Used to determine whether configuration needs to be updated.
 	CfgVers int
@@ -41,7 +43,7 @@ type MTUConfig struct {
 func initialize() Config {
 	mtuSample := MTUConfig{"127.0.0.1", "127.0.0.1", 10, 0, 2000}
 	mtuList := []MTUConfig{mtuSample, mtuSample}
-	conf := Config{0, false, mtuList, 32, "any", configVersion}
+	conf := Config{0, false, mtuList, 32, "any", 60, 10, configVersion}
 	Write(conf)
 	//TODO: perhaps write AppID to file later?
 	conf.ApplicationID = setupAppID(conf.ApplicationID)
