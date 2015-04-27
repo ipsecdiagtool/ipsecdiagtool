@@ -8,16 +8,14 @@ import (
 	"strconv"
 )
 
-func sendOKResponse(packet gopacket.Packet, appID int) {
-	//TODO: check with OSAG if this should be configurable as well.
-	//TODO: e.g. send from different IP..
+func sendOKResponse(packet gopacket.Packet, appID int, chanID int) {
 	srcIP, dstIP := getSrcDstIP(packet)
-	sendPacket(dstIP.String(), srcIP.String(), originalSize(packet), "OK", appID)
+	sendPacket(dstIP.String(), srcIP.String(), originalSize(packet), "OK", appID, chanID)
 }
 
 //sendPacket generates & sends a packet of arbitrary size to a specific destination.
 //The size specified should be larger then 40bytes.
-func sendPacket(sourceIP string, destinationIP string, size int, message string, appID int) []byte {
+func sendPacket(sourceIP string, destinationIP string, size int, message string, appID int, chanID int) []byte {
 
 	var payloadSize int
 	if size < 28 {
@@ -39,7 +37,7 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string,
 		TTL:      64,
 		Protocol: layers.IPProtocolICMPv4,
 	}
-	//TODO: set type etc.
+
 	icmp := layers.ICMPv4{}
 
 	opts := gopacket.SerializeOptions{
@@ -61,11 +59,11 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string,
 		panic(err)
 	}
 
-	udpPayloadBuf := gopacket.NewSerializeBuffer()
+	payloadBuf := gopacket.NewSerializeBuffer()
 
 	//Influence the payload size
-	payload := gopacket.Payload(generatePayload(payloadSize, ","+strconv.Itoa(appID)+","+message+","))
-	err = gopacket.SerializeLayers(udpPayloadBuf, opts, &icmp, payload)
+	payload := gopacket.Payload(generatePayload(payloadSize, ","+strconv.Itoa(appID)+","+strconv.Itoa(chanID)+","+message+","))
+	err = gopacket.SerializeLayers(payloadBuf, opts, &icmp, payload)
 	if err != nil {
 		panic(err)
 	}
@@ -83,21 +81,21 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string,
 		panic(err)
 	}
 
-	err = rawConn.WriteTo(ipHeader, udpPayloadBuf.Bytes(), nil)
+	err = rawConn.WriteTo(ipHeader, payloadBuf.Bytes(), nil)
 
-	//log.Println("Packet with length", (len(udpPayloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
-	return append(ipHeaderBuf.Bytes(), udpPayloadBuf.Bytes()...)
+	//log.Println("Packet with length", (len(payloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
+	return append(ipHeaderBuf.Bytes(), payloadBuf.Bytes()...)
 }
 
-//generatePayload generates a payload of the given size (bytes).
+//generatePayload generates a payload of the given size (bytes) unless the wanted size is smaller then the message
+//in that case it simply returns the message as payload. We're assuming the message is more important than the exact size.
 func generatePayload(size int, message string) []byte {
 	var payload []byte
 	if size > len(message) {
 		payload = make([]byte, size-len(message))
 		payload = append([]byte(message), payload...)
 	} else {
-		//TODO: Case is probably not relevant. Remove.
-		payload = make([]byte, size)
+		payload = []byte(message)
 	}
 	return payload
 }

@@ -6,6 +6,8 @@ import (
 	"os"
 
 	//Our packages
+	"code.google.com/p/gopacket"
+	"github.com/ipsecdiagtool/ipsecdiagtool/capture"
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"github.com/ipsecdiagtool/ipsecdiagtool/mtu"
 	"github.com/ipsecdiagtool/ipsecdiagtool/packetloss"
@@ -13,6 +15,7 @@ import (
 )
 
 var configuration config.Config
+var capQuit chan bool
 
 func main() {
 	configuration = config.LoadConfig()
@@ -22,12 +25,14 @@ func main() {
 		//we can add it here and set the debug flag in the config to "true". Then we don't
 		//need to mess with the flow of the real application.
 
+
 		fmt.Println("Debug-Mode:")
 		//go mtu.Analyze(configuration, 3000)
 		logging.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
 		go packetloss.Detect(configuration)		
 		logging.InfoLog("Dies ist eine kurze Info")
 		logging.AlertLog("Dies ist ein Alert")
+
 	} else {
 		handleArgs()
 	}
@@ -37,6 +42,7 @@ func main() {
 	//might be the better solution, but for now scanln is enough.
 	fmt.Println("Press any key to exit IPSecDiagTool")
 	fmt.Scanln()
+	capQuit <- true
 }
 
 //Handle commandline arguments. Arg0 = path where program is running,
@@ -55,9 +61,13 @@ func handleArgs() {
 			fmt.Println("   + packetloss: Passivly listen to incomming traffic and detect packet loss.")
 			fmt.Println("   + about: Learn more about IPSecDiagTool")
 		} else if os.Args[1] == "mtu" {
-			go mtu.Analyze(configuration, 3000)
+			icmpPackets := make(chan gopacket.Packet, 100)
+			capQuit = capture.Start(configuration, icmpPackets)
+			go mtu.FindAll(configuration, icmpPackets)
 		} else if os.Args[1] == "mtu-listen" {
-			//go mtu.Listen(configuration, 3000) //TODO: maybe increase
+			icmpPackets := make(chan gopacket.Packet, 100)
+			capQuit = capture.Start(configuration, icmpPackets)
+			//TODO: doesn't reply.. --> make it reply
 		} else if os.Args[1] == "packetloss" {
 			go packetloss.Detect(configuration)
 		}

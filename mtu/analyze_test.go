@@ -20,12 +20,12 @@ func TestDetectMTU500(t *testing.T) {
 	//Test Setup
 	mtuConfig := config.MTUConfig{"127.0.0.1", "127.0.0.1", time.Duration(tTimeout), tRangeStart, tRangeEnd}
 	mtuList := []config.MTUConfig{mtuConfig, mtuConfig}
-	appConfig := config.Config{1337, true, mtuList, 0, "_", 0}
+	appConfig := config.Config{1337, true, mtuList, 0, "_", 0, 0, "_", 0}
 
 	//Run test & validate result
 	var detectedMTU = Analyze(appConfig, int32(tMTU))
-	if detectedMTU != (tMTU-tOverhead) {
-		t.Error("Expected", (tMTU-tOverhead), "got", detectedMTU, "instead.")
+	if detectedMTU != (tMTU - tOverhead) {
+		t.Error("Expected", (tMTU - tOverhead), "got", detectedMTU, "instead.")
 	}
 }
 
@@ -39,12 +39,12 @@ func TestDetectMTU1600(t *testing.T) {
 	//Test Setup
 	mtuConfig := config.MTUConfig{"127.0.0.1", "127.0.0.1", time.Duration(tTimeout), tRangeStart, tRangeEnd}
 	mtuList := []config.MTUConfig{mtuConfig, mtuConfig}
-	appConfig := config.Config{1337, true, mtuList, 0, "_", 0}
+	appConfig := config.Config{1337, true, mtuList, 0, "_", 0, 0, "_", 0}
 
 	//Run test & validate result
 	var detectedMTU = Analyze(appConfig, int32(tMTU))
-	if detectedMTU != (tMTU-tOverhead) {
-		t.Error("Expected", (tMTU-tOverhead), "got", detectedMTU, "instead.")
+	if detectedMTU != (tMTU - tOverhead) {
+		t.Error("Expected", (tMTU - tOverhead), "got", detectedMTU, "instead.")
 	}
 }
 
@@ -58,11 +58,11 @@ func TestDetectMTU3000(t *testing.T) {
 	//Test Setup
 	mtuConfig := config.MTUConfig{"127.0.0.1", "127.0.0.1", time.Duration(tTimeout), tRangeStart, tRangeEnd}
 	mtuList := []config.MTUConfig{mtuConfig, mtuConfig}
-	appConfig := config.Config{1337, true, mtuList, 0, "_", 0}
+	appConfig := config.Config{1337, true, mtuList, 0, "_", 0, 0, "_", 0}
 
 	//Run test & validate result
 	var detectedMTU = Analyze(appConfig, int32(tMTU))
-	if detectedMTU != (tMTU-tOverhead) {
-		t.Error("Expected", (tMTU-tOverhead), "got", detectedMTU, "instead.")
+	if detectedMTU != (tMTU - tOverhead) {
+		t.Error("Expected", (tMTU - tOverhead), "got", detectedMTU, "instead.")
 	}
 }

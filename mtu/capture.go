@@ -3,34 +3,16 @@ package mtu
 import (
 	"code.google.com/p/gopacket"
 	"code.google.com/p/gopacket/layers"
-	"code.google.com/p/gopacket/pcap"
-	"log"
 	"net"
 	"strconv"
 	"strings"
+	"github.com/ipsecdiagtool/ipsecdiagtool/config"
+	"log"
 )
 
-//startCapture captures all packets on any interface for an unlimited duration.
-//Packets can be filtered by a BPF filter string. (E.g. tcp port 22)
-func startCapture(bpfFilter string, snaplen int32, appID int, mtuOK chan int, quit chan bool) {
-	log.Println("Waiting for MTU-Analyzer packet")
-	handle, err := pcap.OpenLive("any", snaplen, true, 100)
-	if err != nil {
-		panic(err)
-		//https://www.wireshark.org/tools/string-cf.html
-	} else if err := handle.SetBPFFilter(bpfFilter); err != nil {
-		panic(err)
-	} else {
-		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-		for {
-			select {
-			case packet := <- packetSource.Packets():
-				handlePacket(packet, appID, mtuOK)
-			case <- quit:
-				log.Println("Received quit message, stopping Listener.")
-				return
-			}
-		}
+func handlePackets(icmpPackets chan gopacket.Packet, appID int, mtuOkChannels map[int]chan int) {
+	for packet := range icmpPackets {
+		handlePacketForChannel(packet, appID, mtuOkChannels)
 	}
 }
 
@@ -38,41 +20,42 @@ func startCapture(bpfFilter string, snaplen int32, appID int, mtuOK chan int, qu
 //and if the packet is from itself or the neighbouring node. If the packet is
 //not from itself it either responds with a OK or sends an internal message
 //to the findMTU goroutine that it has received an OK.
-func handlePacket(packet gopacket.Packet, appID int, mtuOK chan int) bool{
+func handlePacketForChannel(packet gopacket.Packet, appID int, mtuOkChannels map[int]chan int) bool {
 	s := string(packet.NetworkLayer().LayerPayload()[:])
 
-	//Cutting off the filler material
 	arr := strings.Split(s, ",")
-	if len(arr) > 2 {
-		remoteAppID, err := strconv.Atoi(arr[1])
-		if err == nil {
+	if len(arr) > 3 {
+		remoteAppID, err1 := strconv.Atoi(arr[1])
+		chanID, err2 := strconv.Atoi(arr[2])
+		if (err1 == nil) && (err2 == nil) {
 			//Check that packet is not from this application
-			//1337 is used to disable the id check for unit-tests. It can't be generated
-			//in production use.
+			//1337 is used to disable the id check for unit-tests. It can't be generated in production use.
 			if appID == remoteAppID && appID != 1337 {
 				//log.Println("Packet is from us.. ignoring.")
-			} else if arr[2] == "OK" {
+			} else if arr[3] == "OK" {
 				//log.Println("Received OK-packet with length", packet.Metadata().Length, "bytes.")
-				mtuOK <- originalSize(packet)
-			} else if arr[2] == "MTU?" {
+				select {
+				case mtuOkChannels[chanID] <- originalSize(packet): // Put packet in channel unless full
+				default:
+					if(config.Debug){
+						log.Println("mtuOkChannels is full or doesn't exist. Dropping OK-Information.")
+					}
+				}
+			} else if arr[3] == "MTU?" {
 				//log.Println("Received MTU?-packet with length", packet.Metadata().Length, "bytes.")
-				sendOKResponse(packet, appID)
-			} else if  arr[2] == "POISON" {
-				log.Println("Got a poison pill. Killing listener.")
-				return true
-			} else { /*
-					if(c.Debug){
-						log.Println("Discarded packet because neither MTU? nor OK command were included.")
-					}*/ //TODO: fix
+				sendOKResponse(packet, appID, chanID)
+			} else {
+				//log.Println("Discarded packet because neither MTU? nor OK command were included.")
 			}
 		} else {
-			log.Println("ERROR: Cought a packet with an invalid App-ID. ", packet.NetworkLayer().LayerPayload())
+			if(config.Debug){
+				log.Println("ERROR: Cought a packet with an invalid app- or chan-ID. ", packet.NetworkLayer().LayerPayload())
+			}
 		}
 	}
 	return false
 }
 
-//TODO: maybe throw error when packet without IP layer..
 //Returns both the source & destination IP.
 func getSrcDstIP(packet gopacket.Packet) (net.IP, net.IP) {
 	ipLayer := packet.Layer(layers.LayerTypeIPv4)
