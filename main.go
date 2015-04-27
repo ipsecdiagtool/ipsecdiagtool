@@ -27,11 +27,19 @@ func main() {
 
 
 		fmt.Println("Debug-Mode:")
-		//go mtu.Analyze(configuration, 3000)
 		logging.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
-		go packetloss.Detect(configuration)		
-		logging.InfoLog("Dies ist eine kurze Info")
-		logging.AlertLog("Dies ist ein Alert")
+		icmpPackets := make(chan gopacket.Packet, 100)
+		ipsecPackets := make(chan gopacket.Packet, 100)
+		go packetloss.Detectnew(configuration, ipsecPackets)
+		//go mtu.FindAll(configuration, icmpPackets)
+		capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
+	
+	
+		
+		//go mtu.Analyze(configuration, 3000)	
+		//go packetloss.Detect(configuration)		
+		//logging.InfoLog("Dies ist eine kurze Info")
+		//logging.AlertLog("Dies ist ein Alert")
 
 	} else {
 		handleArgs()
@@ -62,11 +70,11 @@ func handleArgs() {
 			fmt.Println("   + about: Learn more about IPSecDiagTool")
 		} else if os.Args[1] == "mtu" {
 			icmpPackets := make(chan gopacket.Packet, 100)
-			capQuit = capture.Start(configuration, icmpPackets)
+			//capQuit = capture.Start(configuration, icmpPackets)
 			go mtu.FindAll(configuration, icmpPackets)
 		} else if os.Args[1] == "mtu-listen" {
-			icmpPackets := make(chan gopacket.Packet, 100)
-			capQuit = capture.Start(configuration, icmpPackets)
+			//icmpPackets := make(chan gopacket.Packet, 100)
+			//capQuit = capture.Start(configuration, icmpPackets)
 			//TODO: doesn't reply.. --> make it reply
 		} else if os.Args[1] == "packetloss" {
 			go packetloss.Detect(configuration)

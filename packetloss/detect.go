@@ -60,3 +60,20 @@ func readIPSec(handle *pcap.Handle) {
 	fmt.Println("Packets: ", counter)
 
 }
+
+func Detectnew(c config.Config, ipSecESP chan gopacket.Packet) {
+	espmap = NewEspMap(c.WindowSize)
+	fmt.Println("detecting packetloss ...")
+	
+	for packet := range ipSecESP{
+		ipsecLayer := packet.Layer(layers.LayerTypeIPSecESP)
+		if ipsecLayer != nil {
+			netFlow := packet.NetworkLayer().NetworkFlow()
+			src, dst := netFlow.Endpoints()
+			ipsec := ipsecLayer.(*layers.IPSecESP)
+			log.Println("Source: ", src, "Destination: ", dst, "Seqnumber: ", ipsec.Seq)
+
+			espmap.MakeEntry(Connection{src.String(), dst.String(), ipsec.SPI}, ipsec.Seq)		
+		}
+	} 
+}
