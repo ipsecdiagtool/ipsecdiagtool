@@ -9,6 +9,7 @@ import (
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"github.com/ipsecdiagtool/ipsecdiagtool/mtu"
 	"github.com/ipsecdiagtool/ipsecdiagtool/packetloss"
+	"github.com/ipsecdiagtool/ipsecdiagtool/logging"
 )
 
 var configuration config.Config
@@ -23,10 +24,10 @@ func main() {
 
 		fmt.Println("Debug-Mode:")
 		//go mtu.Analyze(configuration, 3000)
-		packetloss.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
+		logging.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
 		go packetloss.Detect(configuration)		
-		packetloss.InfoLog("Dies ist eine kurze Info")
-		packetloss.AlertLog("Dies ist ein Alert")
+		logging.InfoLog("Dies ist eine kurze Info")
+		logging.AlertLog("Dies ist ein Alert")
 	} else {
 		handleArgs()
 	}

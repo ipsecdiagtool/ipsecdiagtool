@@ -1,8 +1,9 @@
 package packetloss
 
 import (
-	"time"
 	"strings"
+	"time"
+	"github.com/ipsecdiagtool/ipsecdiagtool/logging"
 )
 
 //Datastructure for different ESP Connections
@@ -24,7 +25,7 @@ type Packets struct {
 
 type LostPacket struct {
 	sequencenumber uint32
-	timestamp      time.Time
+	Timestamp      time.Time
 	late           bool
 }
 
@@ -36,44 +37,32 @@ func NewEspMap(windowsize uint32) *EspMap {
 //Processing new Packets and adjusting the value of Head.
 func (espm EspMap) MakeEntry(key Connection, value uint32) {
 	if espm.elements[key].head != 0 {
+
 		packets := espm.elements[key]
 
-		if value > packets.head {
-
-			if value != packets.head+1 {
-				for i := packets.head + 1; i < value; i++ {
-					packets.maybelostpackets = append(packets.maybelostpackets, i)
-				}
-			}
-			packets.head = value
-			espm.elements[key] = checkLost(packets, espm.windowsize)
-		} else {
-			if (packets.head-espm.windowsize) < value || value < espm.windowsize {
-				for i, v := range packets.maybelostpackets {
-					if v == value {
-						packets.maybelostpackets = append(packets.maybelostpackets[:i], packets.maybelostpackets[i+1:]...)
-					}
-				}
-			} else {
-				for k, v := range packets.lostpackets {
-					if v.sequencenumber == value {
-						packets.lostpackets[k].late = true
-					}
-				}
-			}
+		if value > packets.head {			
+			handleNewpacket(&packets, value)
+			checkLost(&packets, espm.windowsize)
+			
+		} else {			
+			handleOldpacket(&packets, value, espm.windowsize)
+			
 		}
-		if(CheckLog(packets.lostpackets)){
-			s := []string{"Too much LostPackets in Connection: (SPI: ", string(key.SPI), " SRC: ", key.src, " DST: ",key.dst,")"};
-			AlertLog(strings.Join(s, ""))
+		if CheckLog(packets.lostpackets) {
+			s := []string{"Too much LostPackets in Connection: (SPI: ", string(key.SPI), " SRC: ", key.src, " DST: ", key.dst, ")"}
+			logging.AlertLog(strings.Join(s, ""))
+			
 		}
+		espm.elements[key] = packets
 	} else {
 		espm.elements[key] = Packets{head: value}
+		
 	}
 }
 
 //Checks if MaybeLost values are valid.
 //If values are not within the WindowSize they are definitly lost
-func checkLost(packets Packets, windowsize uint32) Packets {
+func checkLost(packets *Packets, windowsize uint32) {
 	var newMaybelost []uint32
 	for _, e := range packets.maybelostpackets {
 		if packets.head > windowsize && packets.head-windowsize >= e {
@@ -83,5 +72,46 @@ func checkLost(packets Packets, windowsize uint32) Packets {
 		}
 	}
 	packets.maybelostpackets = newMaybelost
-	return packets
+}
+
+//Handles a Packet with a Sequencnumber bigger than current Head
+func handleNewpacket(packets *Packets, value uint32) {
+	if value != packets.head+1 {
+		for i := packets.head + 1; i < value; i++ {
+			packets.maybelostpackets = append(packets.maybelostpackets, i)
+		}
+	}
+	packets.head = value
+}
+
+//Handles a Packet with a Sequencnumber less than current Head
+func handleOldpacket(packets *Packets, value uint32, windowsize uint32) {
+	if (packets.head-windowsize) < value || value < windowsize {
+
+		for i, v := range packets.maybelostpackets {
+
+			if v == value {
+				packets.maybelostpackets = append(packets.maybelostpackets[:i], packets.maybelostpackets[i+1:]...)
+			}
+		}
+	} else {
+		for k, v := range packets.lostpackets {
+			if v.sequencenumber == value {
+				packets.lostpackets[k].late = true
+			}
+		}
+	}
+}
+
+//Checks the current espmap if alert logging is necessary
+func CheckLog(lostpackets []LostPacket)bool{
+	var counter int
+	currenttime := time.Now().Local()
+	for _, v := range lostpackets {
+		seconds := currenttime.Sub(v.Timestamp).Seconds()		
+		if(seconds < float64(logging.AlertTime())){
+			counter ++
+		}
+	}
+	return counter > logging.AlertCounter()
 }
