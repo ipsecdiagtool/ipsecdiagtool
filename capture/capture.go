@@ -14,8 +14,7 @@ import (
 func Start(c config.Config, icmpPackets chan gopacket.Packet, ipSecESP chan gopacket.Packet) chan bool {
 	quit := make(chan bool)
 	captureReady := make(chan bool)
-	//go startCapture(3000, icmpPackets, ipSecESP, quit, captureReady)
-	go startFileCapture(3000, icmpPackets, ipSecESP, quit, captureReady)
+	go startCapture(3000, icmpPackets, ipSecESP, quit, captureReady)
 	<-captureReady
 	if c.Debug {
 		log.Println("Capture Goroutine Ready")
@@ -28,7 +27,7 @@ func Start(c config.Config, icmpPackets chan gopacket.Packet, ipSecESP chan gopa
 func startCapture(snaplen int32, icmpPackets chan gopacket.Packet, ipSecESP chan gopacket.Packet, quit chan bool, captureReady chan bool) {
 	log.Println("Waiting for MTU-Analyzer packet")
 	handle, err := pcap.OpenLive("any", snaplen, true, 100)
-
+	//handle, err := pcap.OpenOffline("/home/student/test.pcap")
 	if err != nil {
 		panic(err)
 	} else {
@@ -38,51 +37,8 @@ func startCapture(snaplen int32, icmpPackets chan gopacket.Packet, ipSecESP chan
 		for {
 			select {
 			case packet := <-packetSource.Packets():
-				//1. do packetloss stuff here:
-				if packet.Layer(layers.LayerTypeIPSecESP) != nil {
-					select {
-					case ipSecESP <- packet:
-					default:
-						if config.Debug {
-							log.Println("IpSecEsp-Channel full, discarding packet.")
-						}
-					}
-				}
-
-				//2. Handle ICMP packets for MTU-Detection if relevant.
-				if packet.Layer(layers.LayerTypeICMPv4) != nil {
-
-					//2.1 ICMP packets are handled by mtu package
-					select {
-					case icmpPackets <- packet: // Put packet in channel unless full
-					default:
-						if config.Debug {
-							log.Println("icmpPackets-Channel full, discarding packet.")
-						}
-					}
-				}
-			case <-quit:
-				log.Println("Received quit message, stopping Listener.")
-				return
-			}
-		}
-	}
-}
-
-func startFileCapture(snaplen int32, icmpPackets chan gopacket.Packet, ipSecESP chan gopacket.Packet, quit chan bool, captureReady chan bool) {
-	log.Println("Waiting for MTU-Analyzer packet")
-	handle, err := pcap.OpenOffline("/home/student/test.pcap")
-	if err != nil {
-		panic(err)
-	} else {
-		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-		captureReady <- true
-
-		for {
-			select {
-			case packet := <-packetSource.Packets():
-				//1. do packetloss stuff here:
 				if packet != nil {
+					//1. do packetloss stuff here:
 					if packet.Layer(layers.LayerTypeIPSecESP) != nil {
 						select {
 						case ipSecESP <- packet:
@@ -92,6 +48,7 @@ func startFileCapture(snaplen int32, icmpPackets chan gopacket.Packet, ipSecESP 
 							}
 						}
 					}
+
 					//2. Handle ICMP packets for MTU-Detection if relevant.
 					if packet.Layer(layers.LayerTypeICMPv4) != nil {
 
