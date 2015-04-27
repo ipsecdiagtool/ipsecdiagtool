@@ -3,13 +3,14 @@ package mtu
 import (
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"log"
+	"sort"
+	"strconv"
 	"time"
 )
 
-//Analyze determines the ideal MTU (Maximum Transmission Unit) between two nodes
-//by sending increasingly big packets between them. Analyze determine the MTU
-//by running FindMTU multiple times. However it is not a daemon. Once it has found
-//the ideal MTU it reports it and then closes shop.
+//Analyze accepts a config and captureLength, then sets up a ICMP-Listener and starts
+//to detect the ideal MTU between two nodes, as specified in the config. Analyzes uses
+//FastMTU to find the MTU.
 func Analyze(c config.Config, snaplen int32) int {
 	log.Println("Analyzing MTU..")
 	log.Println(c)
@@ -32,21 +33,13 @@ func Analyze(c config.Config, snaplen int32) int {
 
 	return result
 }
-/*
-//TODO: reduce duplicate code
-//Listen only listens to MTU requests and replies with OK-Packets.
-func Listen(c config.Config, snaplen int32) {
 
-	//Setup a channel for communication with capture
-	mtuOKchan = make(chan int, 100) // Allocate a channel
-
-	log.Println("Listener", c)
-
-	//TODO: Improve or remove. Atm I never send a token to this chan.. so it's only used to satisfy the func.
-	go startCapture("icmp", snaplen, c.ApplicationID)
-}*/
-
-//Detects the exact MTU asap.
+//FastMTU finds the ideal MTU between two nodes by sending batches of packets with varying sizes
+//to a remote node. The remote nodes is requires to respond to those packets if it received them.
+//so it can determine the largest packet that was received on the remote node and the smallest packet that
+//went missing. In a next step FastMTU sends again a batch of packets with sizes between the largest successful
+//and smallest unsuccessful packet. This behaviour is continued until the size-difference between individual
+//packets is no larger then 1Byte. Once that happens the largest successful packet is reported as MTU.
 func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int, mtuOK chan int) int {
 
 	var rangeStart = 0
@@ -68,8 +61,8 @@ func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration, appID 
 			rangeEnd = 2 * rangeEnd
 		} else if roughMTU == 0 {
 			//Retry
-			if(retries < 1){
-				retries += 1
+			if retries < 1 {
+				retries++
 				log.Println("Reported 0.. trying again.")
 				roughMTU = sendBatch(srcIP, destIP, rangeStart, rangeEnd, itStep, timeoutInSeconds, appID, mtuOK)
 			} else {
@@ -122,7 +115,29 @@ func sendBatch(srcIP string, destIP string, rangeStart int, rangeEnd int, itStep
 	log.Println("---------------------------------------------------")
 	log.Println("Range:", rangeStart, "-", rangeEnd, "  itStep:", itStep, "  Timeout:", timeoutInSeconds)
 	log.Println("Largest successful packet:", largestSuccessfulPacket)
-	log.Println(results)
+	printResultMap(results)
 
 	return largestSuccessfulPacket
+}
+
+func printResultMap(input map[int]bool) {
+	// To store the keys in slice in sorted order
+	var keys []int
+	for k := range input {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+
+	// To perform the opertion you want
+	var received = "Received: "
+	var missing = "Missing: "
+	for _, k := range keys {
+		if input[k] {
+			received += (strconv.Itoa(k) + " ")
+		} else {
+			missing += (strconv.Itoa(k) + " ")
+		}
+	}
+	log.Println(received)
+	log.Println(missing)
 }
