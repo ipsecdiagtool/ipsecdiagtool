@@ -6,6 +6,7 @@ import (
 	"golang.org/x/net/ipv4"
 	"net"
 	"strconv"
+	"log"
 )
 
 func sendOKResponse(packet gopacket.Packet, appID int) {
@@ -61,11 +62,11 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string,
 		panic(err)
 	}
 
-	udpPayloadBuf := gopacket.NewSerializeBuffer()
+	payloadBuf := gopacket.NewSerializeBuffer()
 
 	//Influence the payload size
 	payload := gopacket.Payload(generatePayload(payloadSize, ","+strconv.Itoa(appID)+","+message+","))
-	err = gopacket.SerializeLayers(udpPayloadBuf, opts, &icmp, payload)
+	err = gopacket.SerializeLayers(payloadBuf, opts, &icmp, payload)
 	if err != nil {
 		panic(err)
 	}
@@ -83,10 +84,11 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string,
 		panic(err)
 	}
 
-	err = rawConn.WriteTo(ipHeader, udpPayloadBuf.Bytes(), nil)
+	err = rawConn.WriteTo(ipHeader, payloadBuf.Bytes(), nil)
 
-	//log.Println("Packet with length", (len(udpPayloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
-	return append(ipHeaderBuf.Bytes(), udpPayloadBuf.Bytes()...)
+	log.Println()
+	log.Println("Packet with length", (len(payloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
+	return append(ipHeaderBuf.Bytes(), payloadBuf.Bytes()...)
 }
 
 //generatePayload generates a payload of the given size (bytes).

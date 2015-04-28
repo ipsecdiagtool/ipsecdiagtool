@@ -19,10 +19,13 @@ func Analyze(c config.Config, snaplen int32) int {
 	quit := make(chan bool)
 	go startCapture("icmp", snaplen, c.ApplicationID, mtuOK, quit)
 
-	//TODO: currently required to give capture enough time to boot..
+	//TODO: currently required to give ddd enough time to boot..
 	time.Sleep(1000 * time.Millisecond)
 
 	//TODO: use additional configs as well, not just first. --> Iterate
+	/*for conf := range c.MTUConfList {
+
+	}*/
 	result := FastMTU(
 		c.MTUConfList[0].SourceIP,
 		c.MTUConfList[0].DestinationIP,

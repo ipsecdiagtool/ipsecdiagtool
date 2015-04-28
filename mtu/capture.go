@@ -78,5 +78,6 @@ func getSrcDstIP(packet gopacket.Packet) (net.IP, net.IP) {
 }
 
 func originalSize(packet gopacket.Packet) int {
+	log.Println("TEST TEST", len(packet.Data()))
 	return len(packet.NetworkLayer().LayerPayload()) + len(packet.NetworkLayer().LayerContents())
 }
