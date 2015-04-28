@@ -45,8 +45,9 @@ func startCapture(snaplen int32, icmpPackets chan gopacket.Packet, quit chan boo
 					select {
 					case icmpPackets <- packet: // Put packet in channel unless full
 					default:
-						//TODO: only log when debug-mode is enabled.
-						log.Println("Channel full, discarding ICMP packet.")
+						if(config.Debug){
+							log.Println("icmpPackets-Channel full, discarding packet.")
+						}
 					}
 				}
 			case <-quit:

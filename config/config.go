@@ -7,7 +7,10 @@ import (
 	"math/rand"
 	"os"
 	"time"
+	"log"
 )
+
+var Debug = false
 
 const configFile string = "config.json"
 const configVersion int = 9
@@ -47,7 +50,6 @@ func initialize() Config {
 	mtuList := []MTUConfig{mtuSample, mtuSample}
 	conf := Config{0, false, mtuList, 32, "any", 60, 10, "localhost:514", configVersion}
 	Write(conf)
-	//TODO: perhaps write AppID to file later?
 	conf.ApplicationID = setupAppID(conf.ApplicationID)
 	return conf
 }
@@ -95,6 +97,10 @@ func LoadConfig() Config {
 	} else {
 		fmt.Println("No config found, running init.")
 		conf = initialize()
+	}
+	Debug = conf.Debug
+	if(Debug){
+		log.Println("Debug-Mode enabled. Verbose reporting of status & errors.")
 	}
 	return conf
 }

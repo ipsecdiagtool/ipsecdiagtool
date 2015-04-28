@@ -61,11 +61,11 @@ func Find(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int
 			//Retry
 			if retries < 1 {
 				retries++
-				log.Println("Reported 0.. trying again.")
+				log.Println("ERROR: Reported 0.. trying again.")
 				roughMTU = sendBatch(srcIP, destIP, rangeStart, rangeEnd, itStep, timeoutInSeconds, appID, chanID, mtuOK)
 			} else {
 				log.Println("ERROR: Reported MTU 0.. ")
-				mtuDetected = true //TODO: better name for mtuDetected needed?
+				mtuDetected = true
 			}
 		} else {
 			rangeStart = roughMTU

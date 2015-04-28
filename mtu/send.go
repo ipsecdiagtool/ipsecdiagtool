@@ -37,7 +37,7 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string,
 		TTL:      64,
 		Protocol: layers.IPProtocolICMPv4,
 	}
-	//TODO: set type etc.
+
 	icmp := layers.ICMPv4{}
 
 	opts := gopacket.SerializeOptions{
@@ -87,15 +87,15 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string,
 	return append(ipHeaderBuf.Bytes(), payloadBuf.Bytes()...)
 }
 
-//generatePayload generates a payload of the given size (bytes).
+//generatePayload generates a payload of the given size (bytes) unless the wanted size is smaller then the message
+//in that case it simply returns the message as payload. We're assuming the message is more important than the exact size.
 func generatePayload(size int, message string) []byte {
 	var payload []byte
 	if size > len(message) {
 		payload = make([]byte, size-len(message))
 		payload = append([]byte(message), payload...)
 	} else {
-		//TODO: Case is probably not relevant. Remove.
-		payload = make([]byte, size)
+		payload = []byte(message)
 	}
 	return payload
 }

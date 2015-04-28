@@ -20,7 +20,6 @@ func main() {
 	configuration = config.LoadConfig()
 
 	if configuration.Debug {
-		fmt.Println("Debug-Mode:")
 		//Everything we need for testing belongs in here. E.g. if we're testing a new function
 		//we can add it here and set the debug flag in the config to "true". Then we don't
 		//need to mess with the flow of the real application.
