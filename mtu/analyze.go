@@ -24,7 +24,7 @@ func FindAll(c config.Config, icmpPackets chan gopacket.Packet) {
 	//TODO: use additional configs as well, not just first. --> Iterate
 	for conf := range c.MTUConfList {
 		log.Println("------------------------- MTU Conf",conf," -------------------------")
-		Find(
+		go Find(
 			c.MTUConfList[conf].SourceIP,
 			c.MTUConfList[conf].DestinationIP,
 			c.MTUConfList[conf].Timeout, c.ApplicationID,
