@@ -10,6 +10,7 @@ import (
 	"github.com/ipsecdiagtool/ipsecdiagtool/mtu"
 	"github.com/ipsecdiagtool/ipsecdiagtool/packetloss"
 	"github.com/ipsecdiagtool/ipsecdiagtool/capture"
+	"code.google.com/p/gopacket"
 )
 
 var configuration config.Config
@@ -23,10 +24,10 @@ func main() {
 		//we can add it here and set the debug flag in the config to "true". Then we don't
 		//need to mess with the flow of the real application.
 
+		icmpPackets := make(chan gopacket.Packet, 100)
+		capture.Start(configuration, icmpPackets)
 
-		capture.Start(configuration)
-
-		//go mtu.Analyze(configuration, 3000)
+		go mtu.FindAll(configuration, icmpPackets)
 
 		/*
 		packetloss.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
@@ -61,7 +62,7 @@ func handleArgs() {
 			fmt.Println("   + packetloss: Passivly listen to incomming traffic and detect packet loss.")
 			fmt.Println("   + about: Learn more about IPSecDiagTool")
 		} else if os.Args[1] == "mtu" {
-			go mtu.Analyze(configuration, 3000)
+			//go mtu.FindAll(configuration, 3000)
 		} else if os.Args[1] == "mtu-listen" {
 			//go mtu.Listen(configuration, 3000) //TODO: maybe increase
 		} else if os.Args[1] == "packetloss" {

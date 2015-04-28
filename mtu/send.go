@@ -6,7 +6,6 @@ import (
 	"golang.org/x/net/ipv4"
 	"net"
 	"strconv"
-	"log"
 )
 
 func sendOKResponse(packet gopacket.Packet, appID int) {
@@ -86,8 +85,7 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string,
 
 	err = rawConn.WriteTo(ipHeader, payloadBuf.Bytes(), nil)
 
-	log.Println()
-	log.Println("Packet with length", (len(payloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
+	//log.Println("Packet with length", (len(payloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
 	return append(ipHeaderBuf.Bytes(), payloadBuf.Bytes()...)
 }
 

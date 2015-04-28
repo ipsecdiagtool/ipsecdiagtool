@@ -6,44 +6,37 @@ import (
 	"sort"
 	"strconv"
 	"time"
+	"code.google.com/p/gopacket"
 )
 
-//Analyze accepts a config and captureLength, then sets up a ICMP-Listener and starts
-//to detect the ideal MTU between two nodes, as specified in the config. Analyzes uses
-//FastMTU to find the MTU.
-func Analyze(c config.Config, snaplen int32) int {
+//FindAll accepts a configuration and a mtuOK channel. It finds the MTU for each connection specified in the
+//configuration. Use Find() if you're only looking for a specific MTU.
+func FindAll(c config.Config, icmpPackets chan gopacket.Packet) int {
 	log.Println("Analyzing MTU..")
-	log.Println(c)
 
-	mtuOK := make(chan int, 100)
-	quit := make(chan bool)
-	go startCapture("icmp", snaplen, c.ApplicationID, mtuOK, quit)
-
-	//TODO: currently required to give ddd enough time to boot..
-	time.Sleep(1000 * time.Millisecond)
+	mtuOk := make(chan int, 100)
+	go handlePackets(icmpPackets, c.ApplicationID, mtuOk)
 
 	//TODO: use additional configs as well, not just first. --> Iterate
 	/*for conf := range c.MTUConfList {
 
 	}*/
-	result := FastMTU(
+	result := Find(
 		c.MTUConfList[0].SourceIP,
 		c.MTUConfList[0].DestinationIP,
 		c.MTUConfList[0].Timeout, c.ApplicationID,
-		mtuOK)
-
-	quit <- true
+		mtuOk)
 
 	return result
 }
 
-//FastMTU finds the ideal MTU between two nodes by sending batches of packets with varying sizes
+//Find finds the ideal MTU between two nodes by sending batches of packets with varying sizes
 //to a remote node. The remote nodes is requires to respond to those packets if it received them.
 //so it can determine the largest packet that was received on the remote node and the smallest packet that
 //went missing. In a next step FastMTU sends again a batch of packets with sizes between the largest successful
 //and smallest unsuccessful packet. This behaviour is continued until the size-difference between individual
 //packets is no larger then 1Byte. Once that happens the largest successful packet is reported as MTU.
-func FastMTU(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int, mtuOK chan int) int {
+func Find(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int, mtuOK chan int) int {
 
 	var rangeStart = 0
 	var rangeEnd = 2000

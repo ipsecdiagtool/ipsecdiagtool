@@ -3,34 +3,14 @@ package mtu
 import (
 	"code.google.com/p/gopacket"
 	"code.google.com/p/gopacket/layers"
-	"code.google.com/p/gopacket/pcap"
-	"log"
 	"net"
 	"strconv"
 	"strings"
 )
 
-//startCapture captures all packets on any interface for an unlimited duration.
-//Packets can be filtered by a BPF filter string. (E.g. tcp port 22)
-func startCapture(bpfFilter string, snaplen int32, appID int, mtuOK chan int, quit chan bool) {
-	log.Println("Waiting for MTU-Analyzer packet")
-	handle, err := pcap.OpenLive("any", snaplen, true, 100)
-	if err != nil {
-		panic(err)
-		//https://www.wireshark.org/tools/string-cf.html
-	} else if err := handle.SetBPFFilter(bpfFilter); err != nil {
-		panic(err)
-	} else {
-		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-		for {
-			select {
-			case packet := <-packetSource.Packets():
-				handlePacket(packet, appID, mtuOK)
-			case <-quit:
-				log.Println("Received quit message, stopping Listener.")
-				return
-			}
-		}
+func handlePackets(icmpPackets chan gopacket.Packet, appID int, mtuOk chan int){
+	for packet := range icmpPackets{
+		handlePacket(packet, appID, mtuOk)
 	}
 }
 
@@ -78,6 +58,5 @@ func getSrcDstIP(packet gopacket.Packet) (net.IP, net.IP) {
 }
 
 func originalSize(packet gopacket.Packet) int {
-	log.Println("TEST TEST", len(packet.Data()))
 	return len(packet.NetworkLayer().LayerPayload()) + len(packet.NetworkLayer().LayerContents())
 }
