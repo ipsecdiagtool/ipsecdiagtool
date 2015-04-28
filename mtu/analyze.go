@@ -11,23 +11,20 @@ import (
 
 //FindAll accepts a configuration and a mtuOK channel. It finds the MTU for each connection specified in the
 //configuration. Use Find() if you're only looking for a specific MTU.
-func FindAll(c config.Config, icmpPackets chan gopacket.Packet) int {
-	log.Println("Analyzing MTU..")
-
+func FindAll(c config.Config, icmpPackets chan gopacket.Packet) {
 	mtuOk := make(chan int, 100)
 	go handlePackets(icmpPackets, c.ApplicationID, mtuOk)
 
 	//TODO: use additional configs as well, not just first. --> Iterate
-	/*for conf := range c.MTUConfList {
+	for conf := range c.MTUConfList {
+		log.Println("------------------------- MTU Conf",conf," -------------------------")
+		Find(
+			c.MTUConfList[conf].SourceIP,
+			c.MTUConfList[conf].DestinationIP,
+			c.MTUConfList[conf].Timeout, c.ApplicationID,
+			mtuOk)
+	}
 
-	}*/
-	result := Find(
-		c.MTUConfList[0].SourceIP,
-		c.MTUConfList[0].DestinationIP,
-		c.MTUConfList[0].Timeout, c.ApplicationID,
-		mtuOk)
-
-	return result
 }
 
 //Find finds the ideal MTU between two nodes by sending batches of packets with varying sizes
