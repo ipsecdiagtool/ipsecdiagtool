@@ -24,7 +24,7 @@ func Start(c config.Config, icmpPackets chan gopacket.Packet) chan bool{
 
 //startCapture captures all packets on any interface for an unlimited duration.
 //Packets can be filtered by a BPF filter string. (E.g. tcp port 22)
-func startCapture( snaplen int32, icmpPackets chan gopacket.Packet, quit chan bool, captureReady chan bool) {
+func startCapture(snaplen int32, icmpPackets chan gopacket.Packet, quit chan bool, captureReady chan bool) {
 	log.Println("Waiting for MTU-Analyzer packet")
 	handle, err := pcap.OpenLive("any", snaplen, true, 100)
 	if err != nil {
@@ -40,9 +40,14 @@ func startCapture( snaplen int32, icmpPackets chan gopacket.Packet, quit chan bo
 
 				//2. Handle ICMP packets for MTU-Detection if relevant.
 				if packet.Layer(layers.LayerTypeICMPv4) != nil{
-					//TODO: make overflow
+
 					//2.1 ICMP packets are handled by mtu package
-					icmpPackets <- packet
+					select {
+					case icmpPackets <- packet: // Put packet in channel unless full
+					default:
+						//TODO: only log when debug-mode is enabled.
+						log.Println("Channel full, discarding ICMP packet.")
+					}
 				}
 			case <-quit:
 				log.Println("Received quit message, stopping Listener.")
