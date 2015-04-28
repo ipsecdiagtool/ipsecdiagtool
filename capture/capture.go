@@ -8,11 +8,10 @@ import (
 	"code.google.com/p/gopacket/layers"
 )
 
-var quit chan bool
-
 //Start creates a new goroutine that captures data from device "ANY".
-//This function blocks until the capturing-goroutine is ready.
-func Start(c config.Config, icmpPackets chan gopacket.Packet){
+//It is blocking until the capture-goroutine is ready. Start returns a quit-channel
+//that can be used to gracefully shutdown it's capture-goroutine.
+func Start(c config.Config, icmpPackets chan gopacket.Packet) chan bool{
 	quit := make(chan bool)
 	captureReady := make(chan bool)
 	go startCapture(3000, icmpPackets, quit, captureReady)
@@ -20,12 +19,7 @@ func Start(c config.Config, icmpPackets chan gopacket.Packet){
 	if(c.Debug){
 		log.Println("Capture Goroutine Ready")
 	}
-}
-
-//Sends a quit-Message to the capturing-goroutine to gracefully shutdown.
-func Stop() {
-	//TODO: check if nil
-	quit <- true
+	return quit
 }
 
 //startCapture captures all packets on any interface for an unlimited duration.

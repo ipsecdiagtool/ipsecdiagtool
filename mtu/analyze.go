@@ -21,7 +21,6 @@ func FindAll(c config.Config, icmpPackets chan gopacket.Packet) {
 
 	go handlePackets(icmpPackets, c.ApplicationID, mtuOkChannels)
 
-	//TODO: use additional configs as well, not just first. --> Iterate
 	for conf := range c.MTUConfList {
 		log.Println("------------------------- MTU Conf",conf," -------------------------")
 		go Find(
@@ -31,7 +30,6 @@ func FindAll(c config.Config, icmpPackets chan gopacket.Packet) {
 			conf,
 			mtuOkChannels[conf])
 	}
-
 }
 
 //Find finds the ideal MTU between two nodes by sending batches of packets with varying sizes

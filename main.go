@@ -14,6 +14,7 @@ import (
 )
 
 var configuration config.Config
+var capQuit chan bool
 
 func main() {
 	configuration = config.LoadConfig()
@@ -25,8 +26,7 @@ func main() {
 		//need to mess with the flow of the real application.
 
 		icmpPackets := make(chan gopacket.Packet, 100)
-		capture.Start(configuration, icmpPackets)
-
+		capQuit = capture.Start(configuration, icmpPackets)
 		go mtu.FindAll(configuration, icmpPackets)
 
 		/*
@@ -44,6 +44,7 @@ func main() {
 	//might be the better solution, but for now scanln is enough.
 	fmt.Println("Press any key to exit IPSecDiagTool")
 	fmt.Scanln()
+	capQuit <- true
 }
 
 //Handle commandline arguments. Arg0 = path where program is running,
@@ -62,9 +63,13 @@ func handleArgs() {
 			fmt.Println("   + packetloss: Passivly listen to incomming traffic and detect packet loss.")
 			fmt.Println("   + about: Learn more about IPSecDiagTool")
 		} else if os.Args[1] == "mtu" {
-			//go mtu.FindAll(configuration, 3000)
+			icmpPackets := make(chan gopacket.Packet, 100)
+			capQuit = capture.Start(configuration, icmpPackets)
+			go mtu.FindAll(configuration, icmpPackets)
 		} else if os.Args[1] == "mtu-listen" {
-			//go mtu.Listen(configuration, 3000) //TODO: maybe increase
+			icmpPackets := make(chan gopacket.Packet, 100)
+			capQuit = capture.Start(configuration, icmpPackets)
+			//TODO: doesn't reply.. --> make it reply
 		} else if os.Args[1] == "packetloss" {
 			go packetloss.Detect(configuration)
 		}
