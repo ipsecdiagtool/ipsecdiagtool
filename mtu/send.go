@@ -8,16 +8,14 @@ import (
 	"strconv"
 )
 
-func sendOKResponse(packet gopacket.Packet, appID int) {
-	//TODO: check with OSAG if this should be configurable as well.
-	//TODO: e.g. send from different IP..
+func sendOKResponse(packet gopacket.Packet, appID int, chanID int) {
 	srcIP, dstIP := getSrcDstIP(packet)
-	sendPacket(dstIP.String(), srcIP.String(), originalSize(packet), "OK", appID)
+	sendPacket(dstIP.String(), srcIP.String(), originalSize(packet), "OK", appID, chanID)
 }
 
 //sendPacket generates & sends a packet of arbitrary size to a specific destination.
 //The size specified should be larger then 40bytes.
-func sendPacket(sourceIP string, destinationIP string, size int, message string, appID int) []byte {
+func sendPacket(sourceIP string, destinationIP string, size int, message string, appID int, chanID int) []byte {
 
 	var payloadSize int
 	if size < 28 {
@@ -64,7 +62,7 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string,
 	payloadBuf := gopacket.NewSerializeBuffer()
 
 	//Influence the payload size
-	payload := gopacket.Payload(generatePayload(payloadSize, ","+strconv.Itoa(appID)+","+message+","))
+	payload := gopacket.Payload(generatePayload(payloadSize, ","+strconv.Itoa(appID)+","+strconv.Itoa(chanID)+","+message+","))
 	err = gopacket.SerializeLayers(payloadBuf, opts, &icmp, payload)
 	if err != nil {
 		panic(err)

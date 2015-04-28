@@ -12,8 +12,14 @@ import (
 //FindAll accepts a configuration and a mtuOK channel. It finds the MTU for each connection specified in the
 //configuration. Use Find() if you're only looking for a specific MTU.
 func FindAll(c config.Config, icmpPackets chan gopacket.Packet) {
-	mtuOk := make(chan int, 100)
-	go handlePackets(icmpPackets, c.ApplicationID, mtuOk)
+
+	//Setup a mtuOK channel for each config
+	var mtuOkChannels = make(map[int]chan int)
+	for conf := range c.MTUConfList {
+		mtuOkChannels[conf] = make(chan int, 100)
+	}
+
+	go handlePackets(icmpPackets, c.ApplicationID, mtuOkChannels)
 
 	//TODO: use additional configs as well, not just first. --> Iterate
 	for conf := range c.MTUConfList {
@@ -22,7 +28,8 @@ func FindAll(c config.Config, icmpPackets chan gopacket.Packet) {
 			c.MTUConfList[conf].SourceIP,
 			c.MTUConfList[conf].DestinationIP,
 			c.MTUConfList[conf].Timeout, c.ApplicationID,
-			mtuOk)
+			conf,
+			mtuOkChannels[conf])
 	}
 
 }
@@ -33,7 +40,7 @@ func FindAll(c config.Config, icmpPackets chan gopacket.Packet) {
 //went missing. In a next step FastMTU sends again a batch of packets with sizes between the largest successful
 //and smallest unsuccessful packet. This behaviour is continued until the size-difference between individual
 //packets is no larger then 1Byte. Once that happens the largest successful packet is reported as MTU.
-func Find(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int, mtuOK chan int) int {
+func Find(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int, chanID int, mtuOK chan int) int {
 
 	var rangeStart = 0
 	var rangeEnd = 2000
@@ -47,7 +54,7 @@ func Find(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int
 			itStep = 1
 			mtuDetected = true
 		}
-		roughMTU = sendBatch(srcIP, destIP, rangeStart, rangeEnd, itStep, timeoutInSeconds, appID, mtuOK)
+		roughMTU = sendBatch(srcIP, destIP, rangeStart, rangeEnd, itStep, timeoutInSeconds, appID, chanID, mtuOK)
 
 		if roughMTU == rangeEnd {
 			rangeStart = rangeEnd
@@ -57,7 +64,7 @@ func Find(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int
 			if retries < 1 {
 				retries++
 				log.Println("Reported 0.. trying again.")
-				roughMTU = sendBatch(srcIP, destIP, rangeStart, rangeEnd, itStep, timeoutInSeconds, appID, mtuOK)
+				roughMTU = sendBatch(srcIP, destIP, rangeStart, rangeEnd, itStep, timeoutInSeconds, appID, chanID, mtuOK)
 			} else {
 				log.Println("ERROR: Reported MTU 0.. ")
 				mtuDetected = true //TODO: better name for mtuDetected needed?
@@ -72,11 +79,11 @@ func Find(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int
 	return roughMTU
 }
 
-func sendBatch(srcIP string, destIP string, rangeStart int, rangeEnd int, itStep int, timeoutInSeconds time.Duration, appID int, mtuOK chan int) int {
+func sendBatch(srcIP string, destIP string, rangeStart int, rangeEnd int, itStep int, timeoutInSeconds time.Duration, appID int, chanID int, mtuOK chan int) int {
 	//1. Send a batch of packets
 	var results = make(map[int]bool)
 	for i := rangeStart; i < (rangeEnd + itStep); i += itStep {
-		sendPacket(srcIP, destIP, i, "MTU?", appID)
+		sendPacket(srcIP, destIP, i, "MTU?", appID, chanID)
 		results[i] = false
 	}
 

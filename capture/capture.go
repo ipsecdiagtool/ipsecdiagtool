@@ -15,7 +15,7 @@ var quit chan bool
 func Start(c config.Config, icmpPackets chan gopacket.Packet){
 	quit := make(chan bool)
 	captureReady := make(chan bool)
-	go startCapture("icmp", 3000, icmpPackets, quit, captureReady)
+	go startCapture(3000, icmpPackets, quit, captureReady)
 	<- captureReady
 	if(c.Debug){
 		log.Println("Capture Goroutine Ready")
@@ -30,22 +30,19 @@ func Stop() {
 
 //startCapture captures all packets on any interface for an unlimited duration.
 //Packets can be filtered by a BPF filter string. (E.g. tcp port 22)
-func startCapture(bpfFilter string, snaplen int32, icmpPackets chan gopacket.Packet, quit chan bool, captureReady chan bool) {
+func startCapture( snaplen int32, icmpPackets chan gopacket.Packet, quit chan bool, captureReady chan bool) {
 	log.Println("Waiting for MTU-Analyzer packet")
 	handle, err := pcap.OpenLive("any", snaplen, true, 100)
 	if err != nil {
 		panic(err)
-		//https://www.wireshark.org/tools/string-cf.html
-	} else if err := handle.SetBPFFilter(bpfFilter); err != nil {
-		panic(err)
 	} else {
 		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-
 		captureReady <- true
 		for {
 			select {
 			case packet := <-packetSource.Packets():
 				//1. do packetloss stuff here:
+				//probably best to send it relevant packets to separate packetloss goroutine, similar to how I've done it below..
 
 				//2. Handle ICMP packets for MTU-Detection if relevant.
 				if packet.Layer(layers.LayerTypeICMPv4) != nil{

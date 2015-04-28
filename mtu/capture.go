@@ -8,9 +8,9 @@ import (
 	"strings"
 )
 
-func handlePackets(icmpPackets chan gopacket.Packet, appID int, mtuOk chan int){
+func handlePackets(icmpPackets chan gopacket.Packet, appID int, mtuOkChannels map[int]chan int){
 	for packet := range icmpPackets{
-		handlePacket(packet, appID, mtuOk)
+		handlePacket(packet, appID, mtuOkChannels)
 	}
 }
 
@@ -18,26 +18,28 @@ func handlePackets(icmpPackets chan gopacket.Packet, appID int, mtuOk chan int){
 //and if the packet is from itself or the neighbouring node. If the packet is
 //not from itself it either responds with a OK or sends an internal message
 //to the findMTU goroutine that it has received an OK.
-func handlePacket(packet gopacket.Packet, appID int, mtuOK chan int) bool {
+func handlePacket(packet gopacket.Packet, appID int, mtuOkChannels map[int]chan int) bool {
 	s := string(packet.NetworkLayer().LayerPayload()[:])
 
 	//Cutting off the filler material
 	arr := strings.Split(s, ",")
-	if len(arr) > 2 {
+	if len(arr) > 3 {
+		//TODO: clean error handling
 		remoteAppID, err := strconv.Atoi(arr[1])
+		chanID, err := strconv.Atoi(arr[2])
 		if err == nil {
 			//Check that packet is not from this application
 			//1337 is used to disable the id check for unit-tests. It can't be generated
 			//in production use.
 			if appID == remoteAppID && appID != 1337 {
 				//log.Println("Packet is from us.. ignoring.")
-			} else if arr[2] == "OK" {
+			} else if arr[3] == "OK" {
 				//log.Println("Received OK-packet with length", packet.Metadata().Length, "bytes.")
-				mtuOK <- originalSize(packet)
-				//log.Println(len(mtuOK))
-			} else if arr[2] == "MTU?" {
+				//TODO: overflow if chan doesn't exist !!!
+				mtuOkChannels[chanID] <- originalSize(packet)
+			} else if arr[3] == "MTU?" {
 				//log.Println("Received MTU?-packet with length", packet.Metadata().Length, "bytes.")
-				sendOKResponse(packet, appID)
+				sendOKResponse(packet, appID, chanID)
 			} else {
 				//log.Println("Discarded packet because neither MTU? nor OK command were included.")
 			}
