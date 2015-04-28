@@ -6,11 +6,11 @@ import (
 	"os"
 
 	//Our packages
+	"code.google.com/p/gopacket"
+	"github.com/ipsecdiagtool/ipsecdiagtool/capture"
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"github.com/ipsecdiagtool/ipsecdiagtool/mtu"
 	"github.com/ipsecdiagtool/ipsecdiagtool/packetloss"
-	"github.com/ipsecdiagtool/ipsecdiagtool/capture"
-	"code.google.com/p/gopacket"
 )
 
 var configuration config.Config
@@ -30,10 +30,10 @@ func main() {
 		go mtu.FindAll(configuration, icmpPackets)
 
 		/*
-		packetloss.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
-		go packetloss.Detect(configuration)		
-		packetloss.InfoLog("Dies ist eine kurze Info")
-		packetloss.AlertLog("Dies ist ein Alert")
+			packetloss.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
+			go packetloss.Detect(configuration)
+			packetloss.InfoLog("Dies ist eine kurze Info")
+			packetloss.AlertLog("Dies ist ein Alert")
 		*/
 	} else {
 		handleArgs()

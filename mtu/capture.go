@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-func handlePackets(icmpPackets chan gopacket.Packet, appID int, mtuOkChannels map[int]chan int){
-	for packet := range icmpPackets{
+func handlePackets(icmpPackets chan gopacket.Packet, appID int, mtuOkChannels map[int]chan int) {
+	for packet := range icmpPackets {
 		handlePacket(packet, appID, mtuOkChannels)
 	}
 }

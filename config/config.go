@@ -24,8 +24,8 @@ type Config struct {
 	//Packet loss specific:
 	WindowSize    uint32
 	InterfaceName string
-	AlertTime     int // Time in Seconds for LostPacketsCheck
-	AlertCounter  int // Packets in LostPacketsCheck
+	AlertTime     int    // Time in Seconds for LostPacketsCheck
+	AlertCounter  int    // Packets in LostPacketsCheck
 	SyslogServer  string //Path inclusive Port
 
 	//Used to determine whether configuration needs to be updated.
@@ -45,7 +45,7 @@ type MTUConfig struct {
 func initialize() Config {
 	mtuSample := MTUConfig{"127.0.0.1", "127.0.0.1", 10, 0, 2000}
 	mtuList := []MTUConfig{mtuSample, mtuSample}
-	conf := Config{0, false, mtuList, 32, "any", 60, 10,"localhost:514", configVersion}
+	conf := Config{0, false, mtuList, 32, "any", 60, 10, "localhost:514", configVersion}
 	Write(conf)
 	//TODO: perhaps write AppID to file later?
 	conf.ApplicationID = setupAppID(conf.ApplicationID)

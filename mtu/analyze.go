@@ -1,12 +1,12 @@
 package mtu
 
 import (
+	"code.google.com/p/gopacket"
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"log"
 	"sort"
 	"strconv"
 	"time"
-	"code.google.com/p/gopacket"
 )
 
 //FindAll accepts a configuration and a mtuOK channel. It finds the MTU for each connection specified in the
@@ -22,7 +22,7 @@ func FindAll(c config.Config, icmpPackets chan gopacket.Packet) {
 	go handlePackets(icmpPackets, c.ApplicationID, mtuOkChannels)
 
 	for conf := range c.MTUConfList {
-		log.Println("------------------------- MTU Conf",conf," -------------------------")
+		log.Println("------------------------- MTU Conf", conf, " -------------------------")
 		go Find(
 			c.MTUConfList[conf].SourceIP,
 			c.MTUConfList[conf].DestinationIP,

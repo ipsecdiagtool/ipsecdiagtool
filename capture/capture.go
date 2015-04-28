@@ -2,21 +2,21 @@ package capture
 
 import (
 	"code.google.com/p/gopacket"
-	"code.google.com/p/gopacket/pcap"
-	"log"
-	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"code.google.com/p/gopacket/layers"
+	"code.google.com/p/gopacket/pcap"
+	"github.com/ipsecdiagtool/ipsecdiagtool/config"
+	"log"
 )
 
 //Start creates a new goroutine that captures data from device "ANY".
 //It is blocking until the capture-goroutine is ready. Start returns a quit-channel
 //that can be used to gracefully shutdown it's capture-goroutine.
-func Start(c config.Config, icmpPackets chan gopacket.Packet) chan bool{
+func Start(c config.Config, icmpPackets chan gopacket.Packet) chan bool {
 	quit := make(chan bool)
 	captureReady := make(chan bool)
 	go startCapture(3000, icmpPackets, quit, captureReady)
-	<- captureReady
-	if(c.Debug){
+	<-captureReady
+	if c.Debug {
 		log.Println("Capture Goroutine Ready")
 	}
 	return quit
@@ -39,7 +39,7 @@ func startCapture(snaplen int32, icmpPackets chan gopacket.Packet, quit chan boo
 				//probably best to send it relevant packets to separate packetloss goroutine, similar to how I've done it below..
 
 				//2. Handle ICMP packets for MTU-Detection if relevant.
-				if packet.Layer(layers.LayerTypeICMPv4) != nil{
+				if packet.Layer(layers.LayerTypeICMPv4) != nil {
 
 					//2.1 ICMP packets are handled by mtu package
 					select {
