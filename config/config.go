@@ -10,6 +10,7 @@ import (
 	"log"
 )
 
+//Debug is mainly used to determine whether to report a log message or not.
 var Debug = false
 
 const configFile string = "config.json"
