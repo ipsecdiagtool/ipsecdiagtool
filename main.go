@@ -34,11 +34,8 @@ func main() {
 		go packetloss.Detectnew(configuration, ipsecPackets)
 		//go mtu.FindAll(configuration, icmpPackets)
 		capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
-		go mtu.FindAll(configuration, icmpPackets)
 
-		//go packetloss.Detect(configuration)		
-		//logging.InfoLog("Dies ist eine kurze Info")
-		//logging.AlertLog("Dies ist ein Alert")
+
 	} else {
 		handleArgs()
 	}

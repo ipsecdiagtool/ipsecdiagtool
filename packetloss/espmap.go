@@ -1,9 +1,10 @@
 package packetloss
 
 import (
+	"github.com/ipsecdiagtool/ipsecdiagtool/logging"
 	"strings"
 	"time"
-	"github.com/ipsecdiagtool/ipsecdiagtool/logging"
+	"fmt"
 )
 
 //Datastructure for different ESP Connections
@@ -18,6 +19,7 @@ type Connection struct {
 }
 
 type Packets struct {
+	LastAlert        time.Time
 	head             uint32
 	lostpackets      []LostPacket
 	maybelostpackets []uint32
@@ -40,23 +42,29 @@ func (espm EspMap) MakeEntry(key Connection, value uint32) {
 
 		packets := espm.elements[key]
 
-		if value > packets.head {			
+		if value > packets.head {
 			handleNewpacket(&packets, value)
 			checkLost(&packets, espm.windowsize)
-			
-		} else {			
+
+		} else {
 			handleOldpacket(&packets, value, espm.windowsize)
-			
+
 		}
-		if CheckLog(packets.lostpackets) {
+		
+		if time.Now().Local().Sub(packets.LastAlert).Seconds() > 10 && CheckLog(packets.lostpackets) {
 			s := []string{"Too much LostPackets in Connection: (SPI: ", string(key.SPI), " SRC: ", key.src, " DST: ", key.dst, ")"}
 			logging.AlertLog(strings.Join(s, ""))
-			
+			packets.LastAlert = time.Now().Local()
 		}
 		espm.elements[key] = packets
 	} else {
-		espm.elements[key] = Packets{head: value}
-		
+		 t1, e := time.Parse(time.RFC3339,"2012-11-01T22:08:41+00:00")
+		 if(e!=nil){
+		 	panic(e)
+		 }
+		 fmt.Println(t1.Format("2006-01-02T15:04:05.999999-07:00"))
+		espm.elements[key] = Packets{head: value, LastAlert:  t1}
+
 	}
 }
 
@@ -104,13 +112,13 @@ func handleOldpacket(packets *Packets, value uint32, windowsize uint32) {
 }
 
 //Checks the current espmap if alert logging is necessary
-func CheckLog(lostpackets []LostPacket)bool{
+func CheckLog(lostpackets []LostPacket) bool {
 	var counter int
 	currenttime := time.Now().Local()
 	for _, v := range lostpackets {
-		seconds := currenttime.Sub(v.Timestamp).Seconds()		
-		if(seconds < float64(logging.AlertTime())){
-			counter ++
+		seconds := currenttime.Sub(v.Timestamp).Seconds()
+		if seconds < float64(logging.AlertTime()) {
+			counter++
 		}
 	}
 	return counter > logging.AlertCounter()
