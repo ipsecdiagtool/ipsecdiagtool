@@ -55,8 +55,7 @@ func initialize() Config {
 	return conf
 }
 
-//Read reads an existing config file and returns it as a config object. If you're loading
-//the configuration for the first time you should use LoadConfig() instead.
+//Read an existing config file and return it.
 func Read() Config {
 	jsonConfig, err := ioutil.ReadFile(configFile)
 	check(err)
@@ -76,7 +75,7 @@ func Read() Config {
 	return conf
 }
 
-//Write accepts a Config object and writes it to the disk.
+//Write a config to the disk
 func Write(conf Config) {
 	jsonConfig, err := json.MarshalIndent(conf, "", "    ")
 	check(err)
@@ -88,15 +87,18 @@ func Write(conf Config) {
 	w.Write(jsonConfig)
 }
 
-//LoadConfig reads an existing config file if it exists. If it doesn't
-//exist a new config, containing default values, is written.
-func LoadConfig() Config {
+//LoadConfig tries to read an existing config from the program directory first and in the users current working
+//directory second. If neither folder contains a config it will initialize a new config.
+func LoadConfig(location string) Config {
 	var conf Config
-	if _, err := os.Stat(configFile); err == nil {
-		fmt.Println("Existing config found.")
+	if _, err := os.Stat(location+"/"+configFile); err == nil {
+		log.Println("Existing config found in program directory.")
+		conf = Read()
+	} else if _, err := os.Stat(configFile); err == nil {
+		log.Println("Existing config found in current working directory.")
 		conf = Read()
 	} else {
-		fmt.Println("No config found, running init.")
+		log.Println("No config found, running init.")
 		conf = initialize()
 	}
 	Debug = conf.Debug
@@ -117,8 +119,9 @@ func setupAppID(applicationID int) int {
 		if applicationID == 1337 {
 			applicationID = setupAppID(0)
 		}
-
-		fmt.Println("Application ID generated:", applicationID)
+		if(Debug){
+			log.Println("Application ID generated:", applicationID)
+		}
 	}
 	return applicationID
 }

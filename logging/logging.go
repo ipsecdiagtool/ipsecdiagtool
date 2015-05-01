@@ -27,12 +27,12 @@ func InitLoger(SyslogServer string, AlertCounter int, AlertTime int) {
 
 func InfoLog(info string) {
 	logging.logwriter.Info(info)
-	fmt.Println("Syslog Info")
+	fmt.Println("Syslog Info: "+info)
 }
 
 func AlertLog(alert string) {
 	logging.logwriter.Alert(alert)
-	fmt.Println("Syslog Alert")
+	fmt.Println("Syslog Alert: "+alert)
 }
 
 func AlertTime()int{
