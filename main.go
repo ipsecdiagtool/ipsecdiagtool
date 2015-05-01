@@ -18,6 +18,7 @@ var configuration config.Config
 var capQuit chan bool
 
 func main() {
+	fmt.Println(os.Args[0])
 	configuration = config.LoadConfig()
 
 	if configuration.Debug {
