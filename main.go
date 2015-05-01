@@ -16,32 +16,29 @@ import (
 
 var configuration config.Config
 var capQuit chan bool
+var icmpPackets = make(chan gopacket.Packet, 100)
+var ipsecPackets = make(chan gopacket.Packet, 100)
 
 func main() {
-	fmt.Println(os.Args[0])
-	configuration = config.LoadConfig()
+
+	configuration = config.LoadConfig(os.Args[0])
+
 
 	if configuration.Debug {
 		//Everything we need for testing belongs in here. E.g. if we're testing a new function
 		//we can add it here and set the debug flag in the config to "true". Then we don't
 		//need to mess with the flow of the real application.
 
-
 		fmt.Println("Debug-Mode:")
 		logging.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
-		icmpPackets := make(chan gopacket.Packet, 100)
-		ipsecPackets := make(chan gopacket.Packet, 100)
 		go packetloss.Detectnew(configuration, ipsecPackets)
 		//go mtu.FindAll(configuration, icmpPackets)
 		capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
-	
-	
-		
-		//go mtu.Analyze(configuration, 3000)	
+		go mtu.FindAll(configuration, icmpPackets)
+
 		//go packetloss.Detect(configuration)		
 		//logging.InfoLog("Dies ist eine kurze Info")
 		//logging.AlertLog("Dies ist ein Alert")
-
 	} else {
 		handleArgs()
 	}
@@ -51,7 +48,12 @@ func main() {
 	//might be the better solution, but for now scanln is enough.
 	fmt.Println("Press any key to exit IPSecDiagTool")
 	fmt.Scanln()
-	capQuit <- true
+
+	//TODO: capQuit has to be declared outside..
+	if(capQuit != nil){
+		fmt.Println("test")
+		capQuit <- true
+	}
 }
 
 //Handle commandline arguments. Arg0 = path where program is running,
@@ -70,15 +72,13 @@ func handleArgs() {
 			fmt.Println("   + packetloss: Passivly listen to incomming traffic and detect packet loss.")
 			fmt.Println("   + about: Learn more about IPSecDiagTool")
 		} else if os.Args[1] == "mtu" {
-			icmpPackets := make(chan gopacket.Packet, 100)
-			//capQuit = capture.Start(configuration, icmpPackets)
+			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
 			go mtu.FindAll(configuration, icmpPackets)
 		} else if os.Args[1] == "mtu-listen" {
-			//icmpPackets := make(chan gopacket.Packet, 100)
-			//capQuit = capture.Start(configuration, icmpPackets)
+			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
 			//TODO: doesn't reply.. --> make it reply
 		} else if os.Args[1] == "packetloss" {
-			go packetloss.Detect(configuration)
+			go packetloss.Detectnew(configuration, ipsecPackets)
 		}
 	} else if len(os.Args) == 1 {
 		fmt.Println("Run ipsecdiagtool help to learn how to use this application.")

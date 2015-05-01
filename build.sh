@@ -9,7 +9,7 @@
 #  Linux environment.                                       #
 #                                                           #
 #  Dependencies:                                            #
-#   - libpcap-0.8-dev                                       #
+#   - libpcap0.8-dev                                       #
 #-----------------------------------------------------------#
 
 echo "Cleaning workspace"
@@ -32,7 +32,7 @@ export PATH="$PATH:$GOROOT/bin:$GOPATH/bin"
 cd workspace
 
 echo "Downloading dependencies"
-#Assuming libpcap-0.8-dev has been installed.
+#Assuming libpcap0.8-dev has been installed.
 #sudo apt-get install libpcap-0.8-dev
 go get code.google.com/p/gopacket
 go get code.google.com/p/gopacket/pcap
