@@ -35,7 +35,7 @@ func Test2(t *testing.T) {
 
 	lp := len(esp.elements[con].lostpackets)
 	mlp := len(esp.elements[con].maybelostpackets)
-
+	WriteLostFile(con,esp.elements[con].lostpackets)
 	if lp != 3 || mlp != 1 {
 		t.Error("Expected lostpackets 3 but it's: ", len(esp.elements[con].lostpackets), "and maybelostpackets 1 but it's:", len(esp.elements[con].maybelostpackets))
 	}
