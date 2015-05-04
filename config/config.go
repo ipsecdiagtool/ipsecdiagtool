@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"os"
 	"time"
-	"log"
 )
 
 //Debug is mainly used to determine whether to report a log message or not.
@@ -29,9 +29,9 @@ type Config struct {
 	//Packet loss specific:
 	WindowSize    uint32
 	InterfaceName string
-	AlertTime     int    // Time in Seconds for LostPacketsCheck
-	AlertCounter  int    // Packets in LostPacketsCheck
-    PcapFile string
+	AlertTime     int // Time in Seconds for LostPacketsCheck
+	AlertCounter  int // Packets in LostPacketsCheck
+	PcapFile      string
 
 	//Used to determine whether configuration needs to be updated.
 	CfgVers int
@@ -92,7 +92,7 @@ func Write(conf Config) {
 //directory second. If neither folder contains a config it will initialize a new config.
 func LoadConfig(location string) Config {
 	var conf Config
-	if _, err := os.Stat(location+"/"+configFile); err == nil {
+	if _, err := os.Stat(location + "/" + configFile); err == nil {
 		log.Println("Existing config found in program directory.")
 		conf = Read()
 	} else if _, err := os.Stat(configFile); err == nil {
@@ -103,7 +103,7 @@ func LoadConfig(location string) Config {
 		conf = initialize()
 	}
 	Debug = conf.Debug
-	if(Debug){
+	if Debug {
 		log.Println("Debug-Mode enabled. Verbose reporting of status & errors.")
 	}
 	return conf
@@ -120,7 +120,7 @@ func setupAppID(applicationID int) int {
 		if applicationID == 1337 {
 			applicationID = setupAppID(0)
 		}
-		if(Debug){
+		if Debug {
 			log.Println("Application ID generated:", applicationID)
 		}
 	}

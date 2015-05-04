@@ -9,9 +9,9 @@ import (
 	"code.google.com/p/gopacket"
 	"github.com/ipsecdiagtool/ipsecdiagtool/capture"
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
+	"github.com/ipsecdiagtool/ipsecdiagtool/logging"
 	"github.com/ipsecdiagtool/ipsecdiagtool/mtu"
 	"github.com/ipsecdiagtool/ipsecdiagtool/packetloss"
-	"github.com/ipsecdiagtool/ipsecdiagtool/logging"
 )
 
 var configuration config.Config
@@ -20,9 +20,7 @@ var icmpPackets = make(chan gopacket.Packet, 100)
 var ipsecPackets = make(chan gopacket.Packet, 100)
 
 func main() {
-
 	configuration = config.LoadConfig(os.Args[0])
-
 
 	if configuration.Debug {
 		//Everything we need for testing belongs in here. E.g. if we're testing a new function
@@ -32,9 +30,8 @@ func main() {
 		fmt.Println("Debug-Mode:")
 		logging.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
 		go packetloss.Detectnew(configuration, ipsecPackets)
-		//go mtu.FindAll(configuration, icmpPackets)
 		capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
-
+		//go mtu.FindAll(configuration, icmpPackets)
 
 	} else {
 		handleArgs()
@@ -46,9 +43,7 @@ func main() {
 	fmt.Println("Press any key to exit IPSecDiagTool")
 	fmt.Scanln()
 
-	//TODO: capQuit has to be declared outside..
-	if(capQuit != nil){
-		fmt.Println("test")
+	if capQuit != nil {
 		capQuit <- true
 	}
 }
@@ -75,7 +70,9 @@ func handleArgs() {
 			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
 			//TODO: doesn't reply.. --> make it reply
 		} else if os.Args[1] == "packetloss" {
+			logging.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
 			go packetloss.Detectnew(configuration, ipsecPackets)
+			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
 		}
 	} else if len(os.Args) == 1 {
 		fmt.Println("Run ipsecdiagtool help to learn how to use this application.")

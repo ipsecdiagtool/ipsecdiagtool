@@ -3,11 +3,11 @@ package mtu
 import (
 	"code.google.com/p/gopacket"
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
+	"github.com/ipsecdiagtool/ipsecdiagtool/logging"
 	"log"
 	"sort"
 	"strconv"
 	"time"
-	"github.com/ipsecdiagtool/ipsecdiagtool/logging"
 )
 
 //FindAll accepts a configuration and a mtuOK channel. It finds the MTU for each connection specified in the
@@ -75,7 +75,7 @@ func Find(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int
 		}
 	}
 	log.Println("Exact MTU found", roughMTU)
-	logging.InfoLog("Exact MTU found "+ strconv.Itoa(roughMTU))
+	logging.InfoLog("Exact MTU found " + strconv.Itoa(roughMTU))
 	return roughMTU
 }
 

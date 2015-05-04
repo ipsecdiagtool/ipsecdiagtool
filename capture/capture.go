@@ -34,7 +34,7 @@ func startCapture(snaplen int32, quit chan bool, captureReady chan bool, pcapFil
 	log.Println("Waiting for MTU-Analyzer packet")
 	var handle *pcap.Handle
 	var err error
-	if(pcapFile != ""){
+	if pcapFile != "" {
 		log.Println("Reading packet loss data from pcap-file:", pcapFile)
 		handle, err = pcap.OpenOffline(pcapFile) //Path: /home/student/test.pcap
 	} else {
@@ -53,12 +53,12 @@ func startCapture(snaplen int32, quit chan bool, captureReady chan bool, pcapFil
 				if packet != nil {
 					//Handling packet loss
 					if packet.Layer(layers.LayerTypeIPSecESP) != nil {
-						putChannel(packet,ipSecChannel)
+						putChannel(packet, ipSecChannel)
 					}
 
 					//Handling mtu detection
 					if packet.Layer(layers.LayerTypeICMPv4) != nil {
-						putChannel(packet,icmpChannel)
+						putChannel(packet, icmpChannel)
 					}
 				}
 			case <-quit:

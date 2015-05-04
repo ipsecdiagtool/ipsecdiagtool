@@ -3,11 +3,11 @@ package mtu
 import (
 	"code.google.com/p/gopacket"
 	"code.google.com/p/gopacket/layers"
+	"github.com/ipsecdiagtool/ipsecdiagtool/config"
+	"log"
 	"net"
 	"strconv"
 	"strings"
-	"github.com/ipsecdiagtool/ipsecdiagtool/config"
-	"log"
 )
 
 func handlePackets(icmpPackets chan gopacket.Packet, appID int, mtuOkChannels map[int]chan int) {
@@ -37,7 +37,7 @@ func handlePacketForChannel(packet gopacket.Packet, appID int, mtuOkChannels map
 				select {
 				case mtuOkChannels[chanID] <- originalSize(packet): // Put packet in channel unless full
 				default:
-					if(config.Debug){
+					if config.Debug {
 						log.Println("mtuOkChannels is full or doesn't exist. Dropping OK-Information.")
 					}
 				}
@@ -48,7 +48,7 @@ func handlePacketForChannel(packet gopacket.Packet, appID int, mtuOkChannels map
 				//log.Println("Discarded packet because neither MTU? nor OK command were included.")
 			}
 		} else {
-			if(config.Debug){
+			if config.Debug {
 				log.Println("ERROR: Cought a packet with an invalid app- or chan-ID. ", packet.NetworkLayer().LayerPayload())
 			}
 		}
