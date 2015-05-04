@@ -18,8 +18,6 @@ var configuration config.Config
 var capQuit chan bool
 var icmpPackets = make(chan gopacket.Packet, 100)
 var ipsecPackets = make(chan gopacket.Packet, 100)
-
-
 var logger service.Logger
 
 // Program structures.
@@ -29,6 +27,21 @@ type program struct {
 }
 
 func (p *program) Start(s service.Service) error {
+
+	if len(os.Args) > 1 {
+		command := os.Args[1]
+		var err error
+		switch command {
+		case "install":
+			err = s.Install()
+		case "remove":
+			err = s.Uninstall()
+		}
+		if(err != nil){
+			log.Println(err)
+		}
+	}
+
 	if service.Interactive() {
 		logger.Info("Running in terminal.")
 	} else {
@@ -36,23 +49,59 @@ func (p *program) Start(s service.Service) error {
 	}
 	p.exit = make(chan struct{})
 
-	err := s.Install()
-	if(err != nil){
-		log.Println(err)
-	}
-	// Start should not block. Do the actual work async.
 	go p.run()
 	return nil
 }
 
 func (p *program) run() error {
 	logger.Infof("I'm running %v.", service.Platform())
+	configuration = config.LoadConfig(os.Args[0])
 
-	//Execute our program
-	run()
+	if configuration.Debug {
+		fmt.Println("Debug-Mode:")
+		//Code tested directly in the IDE belongs in here
+		logging.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
+		go packetloss.Detectnew(configuration, ipsecPackets)
+		capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
+		//go mtu.FindAll(configuration, icmpPackets)
+	} else {
+		handleArgs()
+	}
 
 	<-p.exit
 	return nil
+}
+
+func handleArgs() {
+	if len(os.Args) > 1 {
+		command := os.Args[1]
+		switch command {
+		case "about":
+			fmt.Println("IPSecDiagTool is being developed at HSR (Hoschschule für Technik Rapperswil)\n" +
+					"as a semester/bachelor thesis. For more information please visit our repository on\n" +
+					"Github: https://github.com/IPSecDiagTool/IPSecDiagTool\n")
+		case "help":
+			fmt.Println("IPSecDiagTool Help")
+			fmt.Println("==================")
+			fmt.Println("\n  Commands:")
+			fmt.Println("   + mtu: Discover the ideal MTU between two nodes.")
+			fmt.Println("   + packetloss: Passivly listen to incomming traffic and detect packet loss.")
+			fmt.Println("   + intall: Install this application as a service/daemon.")
+			fmt.Println("   + uninstall: Uninstall this application's service/daemon.")
+			fmt.Println("   + about: Learn more about IPSecDiagTool")
+		case "mtu":
+			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
+			go mtu.FindAll(configuration, icmpPackets)
+		case "packetloss":
+			logging.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
+			go packetloss.Detectnew(configuration, ipsecPackets)
+			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
+		default:
+			fmt.Println("Argument not reconized. Run 'ipsecdiagtool help' to learn how to use this application.")
+		}
+	} else {
+		fmt.Println("Run 'ipsecdiagtool help' to learn how to use this application.")
+	}
 }
 
 func (p *program) Stop(s service.Service) error {
@@ -109,55 +158,5 @@ func main() {
 	err = s.Run()
 	if err != nil {
 		logger.Error(err)
-	}
-}
-
-func run() {
-	configuration = config.LoadConfig(os.Args[0])
-
-	if configuration.Debug {
-		//Everything we need for testing belongs in here. E.g. if we're testing a new function
-		//we can add it here and set the debug flag in the config to "true". Then we don't
-		//need to mess with the flow of the real application.
-
-		fmt.Println("Debug-Mode:")
-		logging.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
-		go packetloss.Detectnew(configuration, ipsecPackets)
-		capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
-		//go mtu.FindAll(configuration, icmpPackets)
-
-	} else {
-		handleArgs()
-	}
-}
-
-func handleArgs() {
-	if len(os.Args) > 1 {
-		if os.Args[1] == "about" {
-			fmt.Println("IPSecDiagTool is being developed at HSR (Hoschschule für Technik Rapperswil)\n" +
-				"as a semester/bachelor thesis. For more information please visit our repository on\n" +
-				"Github: https://github.com/IPSecDiagTool/IPSecDiagTool\n")
-		} else if os.Args[1] == "help" {
-			fmt.Println("IPSecDiagTool Help")
-			fmt.Println("==================")
-			fmt.Println("\n  Commands:")
-			fmt.Println("   + mtu: Discover the ideal MTU between two nodes.")
-			fmt.Println("   + packetloss: Passivly listen to incomming traffic and detect packet loss.")
-			fmt.Println("   + about: Learn more about IPSecDiagTool")
-		} else if os.Args[1] == "mtu" {
-			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
-			go mtu.FindAll(configuration, icmpPackets)
-		} else if os.Args[1] == "mtu-listen" {
-			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
-			//TODO: doesn't reply.. --> make it reply
-		} else if os.Args[1] == "packetloss" {
-			logging.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
-			go packetloss.Detectnew(configuration, ipsecPackets)
-			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
-		} else if os.Args[1] == "install" {
-			//TODO: service installation
-		}
-	} else if len(os.Args) == 1 {
-		fmt.Println("Run ipsecdiagtool help to learn how to use this application.")
 	}
 }
