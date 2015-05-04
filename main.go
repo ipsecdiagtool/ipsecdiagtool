@@ -1,17 +1,17 @@
 package main
 
 import (
-	//GO default packages
 	"fmt"
 	"os"
-
-	//Our packages
 	"code.google.com/p/gopacket"
-	"github.com/ipsecdiagtool/ipsecdiagtool/capture"
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
+	"github.com/ipsecdiagtool/ipsecdiagtool/capture"
 	"github.com/ipsecdiagtool/ipsecdiagtool/logging"
 	"github.com/ipsecdiagtool/ipsecdiagtool/mtu"
 	"github.com/ipsecdiagtool/ipsecdiagtool/packetloss"
+	"github.com/kardianos/service"
+	"log"
+	"flag"
 )
 
 var configuration config.Config
@@ -19,7 +19,100 @@ var capQuit chan bool
 var icmpPackets = make(chan gopacket.Packet, 100)
 var ipsecPackets = make(chan gopacket.Packet, 100)
 
+
+var logger service.Logger
+
+// Program structures.
+//  Define Start and Stop methods.
+type program struct {
+	exit chan struct{}
+}
+
+func (p *program) Start(s service.Service) error {
+	if service.Interactive() {
+		logger.Info("Running in terminal.")
+	} else {
+		logger.Info("Running under service manager.")
+	}
+	p.exit = make(chan struct{})
+
+	err := s.Install()
+	if(err != nil){
+		log.Println(err)
+	}
+	// Start should not block. Do the actual work async.
+	go p.run()
+	return nil
+}
+
+func (p *program) run() error {
+	logger.Infof("I'm running %v.", service.Platform())
+
+	//Execute our program
+	run()
+
+	<-p.exit
+	return nil
+}
+
+func (p *program) Stop(s service.Service) error {
+	// Any work in Stop should be quick, usually a few seconds at most.
+	logger.Info("I'm Stopping!")
+	close(p.exit)
+	return nil
+}
+
+// Service setup.
+//   Define service config.
+//   Create the service.
+//   Setup the logger.
+//   Handle service controls (optional).
+//   Run the service.
 func main() {
+	svcFlag := flag.String("service", "", "Control the system service.")
+	flag.Parse()
+
+	svcConfig := &service.Config{
+		Name:        "IPSecDiagTool",
+		DisplayName: "A service for IPSecDiagTool",
+		Description: "Detects packet loss & periodically reports the MTU for all configured tunnels.",
+	}
+
+	prg := &program{}
+	s, err := service.New(prg, svcConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+	errs := make(chan error, 5)
+	logger, err = s.Logger(errs)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	go func() {
+		for {
+			err := <-errs
+			if err != nil {
+				log.Print(err)
+			}
+		}
+	}()
+
+	if len(*svcFlag) != 0 {
+		err := service.Control(s, *svcFlag)
+		if err != nil {
+			log.Printf("Valid actions: %q\n", service.ControlAction)
+			log.Fatal(err)
+		}
+		return
+	}
+	err = s.Run()
+	if err != nil {
+		logger.Error(err)
+	}
+}
+
+func run() {
 	configuration = config.LoadConfig(os.Args[0])
 
 	if configuration.Debug {
@@ -36,20 +129,8 @@ func main() {
 	} else {
 		handleArgs()
 	}
-
-	//Keep main open forever
-	//http://stackoverflow.com/questions/9543835/how-best-do-i-keep-a-long-running-go-program-running
-	//might be the better solution, but for now scanln is enough.
-	fmt.Println("Press any key to exit IPSecDiagTool")
-	fmt.Scanln()
-
-	if capQuit != nil {
-		capQuit <- true
-	}
 }
 
-//Handle commandline arguments. Arg0 = path where program is running,
-//Arg1+ raw arguments.
 func handleArgs() {
 	if len(os.Args) > 1 {
 		if os.Args[1] == "about" {
@@ -73,6 +154,8 @@ func handleArgs() {
 			logging.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
 			go packetloss.Detectnew(configuration, ipsecPackets)
 			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
+		} else if os.Args[1] == "install" {
+			//TODO: service installation
 		}
 	} else if len(os.Args) == 1 {
 		fmt.Println("Run ipsecdiagtool help to learn how to use this application.")
