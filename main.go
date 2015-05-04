@@ -8,15 +8,16 @@ import (
 	//Our packages
 	"code.google.com/p/gopacket"
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
-	/*"github.com/ipsecdiagtool/ipsecdiagtool/capture"
+	"github.com/ipsecdiagtool/ipsecdiagtool/capture"
 	"github.com/ipsecdiagtool/ipsecdiagtool/logging"
 	"github.com/ipsecdiagtool/ipsecdiagtool/mtu"
-	"github.com/ipsecdiagtool/ipsecdiagtool/packetloss"*/
-	"github.com/takama/daemon"
+	"github.com/ipsecdiagtool/ipsecdiagtool/packetloss"
+	//"github.com/ipsecdiagtool/ipsecdiagtool/service"
+	//"flag"
+	//"time"
+	"github.com/kardianos/service"
 	"log"
-	"os/signal"
-	"syscall"
-	"net"
+	"time"
 )
 
 var configuration config.Config
@@ -24,128 +25,70 @@ var capQuit chan bool
 var icmpPackets = make(chan gopacket.Packet, 100)
 var ipsecPackets = make(chan gopacket.Packet, 100)
 
-const (
-	// name of the service, match with executable file name
-	name        = "IPSecDiagTool"
-	description = "Detects packet loss and periodically reports the MTU for all configured tunnels."
 
-	// port which daemon should be listen
-	port = ":9978"
-)
+var doStuff = true
+var logger service.Logger
+type program struct{}
 
-var stdlog, errlog *log.Logger
-
-// Service has embedded daemon
-type Service struct {
-	daemon.Daemon
+func (p *program) Start(s service.Service) error {
+	// Start should not block. Do the actual work async.
+	go p.run()
+	return nil
 }
-
-// Manage by daemon commands or run the daemon
-func (service *Service) Manage() (string, error) {
-
-	usage := "Usage: myservice install | remove | start | stop | status"
-
-	// if received any kind of command, do it
-	if len(os.Args) > 1 {
-		command := os.Args[1]
-		switch command {
-		case "install":
-			return service.Install()
-		case "remove":
-			return service.Remove()
-		case "start":
-			return service.Start()
-		case "stop":
-			return service.Stop()
-		case "status":
-			return service.Status()
-		case "hello":
-			return "Hello there", nil
-		default:
-			return usage, nil
-		}
-	}
-
-	// Do something, call your goroutines, etc
-
-	// Set up channel on which to send signal notifications.
-	// We must use a buffered channel or risk missing the signal
-	// if we're not ready to receive when the signal is sent.
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt, os.Kill, syscall.SIGTERM)
-
-	// Set up listener for defined host and port
-	listener, err := net.Listen("tcp", port)
-	if err != nil {
-		return "Possibly was a problem with the port binding", err
-	}
-
-	// set up channel on which to send accepted connections
-	listen := make(chan net.Conn, 100)
-	go acceptConnection(listener, listen)
-
-	// loop work cycle with accept connections or interrupt
-	// by system signal
-	for {
-		select {
-		case conn := <-listen:
-			go handleClient(conn)
-		case killSignal := <-interrupt:
-			stdlog.Println("Got signal:", killSignal)
-			stdlog.Println("Stoping listening on ", listener.Addr())
-			listener.Close()
-			if killSignal == os.Interrupt {
-				return "Daemon was interruped by system signal", nil
-			}
-			return "Daemon was killed", nil
-		}
-	}
-
-	// never happen, but need to complete code
-	return usage, nil
-}
-
-// Accept a client connection and collect it in a channel
-func acceptConnection(listener net.Listener, listen chan<- net.Conn) {
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			continue
-		}
-		listen <- conn
+func (p *program) run() {
+	// Do work here
+	for(doStuff){
+		log.Println("hi")
+		time.Sleep(10*time.Second)
 	}
 }
-
-func handleClient(client net.Conn) {
-	for {
-		buf := make([]byte, 4096)
-		numbytes, err := client.Read(buf)
-		if numbytes == 0 || err != nil {
-			return
-		}
-		client.Write(buf)
-	}
-}
-
-func init() {
-	stdlog = log.New(os.Stdout, "", log.Ldate|log.Ltime)
-	errlog = log.New(os.Stderr, "", log.Ldate|log.Ltime)
+func (p *program) Stop(s service.Service) error {
+	// Stop should not block. Return with a few seconds.
+	doStuff = false
+	log.Println("done done")
+	return nil
 }
 
 func main() {
-	srv, err := daemon.New(name, description)
-	if err != nil {
-		errlog.Println("Error: ", err)
-		os.Exit(1)
+	svcConfig := &service.Config{
+		Name:        "ipsecdiagtool",
+		DisplayName: "Go Service Test",
+		Description: "This is a test Go service.",
 	}
-	service := &Service{srv}
-	status, err := service.Manage()
+	prg := &program{}
+	s, err := service.New(prg, svcConfig)
 	if err != nil {
-		errlog.Println(status, "\nError: ", err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
-	fmt.Println(status)
+	logger, err = s.Logger(nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = s.Run()
+	if err != nil {
+		logger.Error(err)
+	}
 }
+/*
+func main() {
+	daemon, err := service.New("ipsecdiagtool", "IPSecDiag Tool Daemon")
+	if err != nil {
+		fmt.Println("Error: ", err)
+		os.Exit(1)
+	}
+	flag.Parse()
+
+	status, err := daemon.Manage()
+	if err != nil {
+		fmt.Println(status, "\nError: ", err)
+		os.Exit(1)
+	}
+	// Wait for logger output
+	time.Sleep(100 * time.Millisecond)
+	fmt.Println(status)
+}*/
+
+
 /*
 func main() {
 	service, err := daemon.New("IPSecDiagTool", "Detects IPSec packet loss and discovers the MTU periodically.")
@@ -185,7 +128,7 @@ func main() {
 		capQuit <- true
 	}
 }
-
+*/
 //Handle commandline arguments. Arg0 = path where program is running,
 //Arg1+ raw arguments.
 func handleArgs() {
@@ -216,4 +159,4 @@ func handleArgs() {
 		fmt.Println("Run ipsecdiagtool help to learn how to use this application.")
 	}
 }
-*/
+
