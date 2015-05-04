@@ -1,11 +1,8 @@
 package main
 
 import (
-	//GO default packages
 	"fmt"
 	"os"
-
-	//Our packages
 	"code.google.com/p/gopacket"
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"github.com/ipsecdiagtool/ipsecdiagtool/capture"
@@ -115,9 +112,6 @@ func main() {
 	}
 }
 
-
-
-
 func run() {
 	configuration = config.LoadConfig(os.Args[0])
 
@@ -135,14 +129,8 @@ func run() {
 	} else {
 		handleArgs()
 	}
-
-	if capQuit != nil {
-		capQuit <- true
-	}
 }
 
-//Handle commandline arguments. Arg0 = path where program is running,
-//Arg1+ raw arguments.
 func handleArgs() {
 	if len(os.Args) > 1 {
 		if os.Args[1] == "about" {
@@ -166,9 +154,10 @@ func handleArgs() {
 			logging.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
 			go packetloss.Detectnew(configuration, ipsecPackets)
 			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
+		} else if os.Args[1] == "install" {
+			//TODO: service installation
 		}
 	} else if len(os.Args) == 1 {
 		fmt.Println("Run ipsecdiagtool help to learn how to use this application.")
 	}
 }
-
