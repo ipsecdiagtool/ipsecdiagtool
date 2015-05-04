@@ -1,17 +1,17 @@
 package main
 
 import (
-	"fmt"
-	"os"
 	"code.google.com/p/gopacket"
-	"github.com/ipsecdiagtool/ipsecdiagtool/config"
+	"flag"
+	"fmt"
 	"github.com/ipsecdiagtool/ipsecdiagtool/capture"
+	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"github.com/ipsecdiagtool/ipsecdiagtool/logging"
 	"github.com/ipsecdiagtool/ipsecdiagtool/mtu"
 	"github.com/ipsecdiagtool/ipsecdiagtool/packetloss"
 	"github.com/kardianos/service"
 	"log"
-	"flag"
+	"os"
 )
 
 var configuration config.Config
@@ -37,7 +37,7 @@ func (p *program) Start(s service.Service) error {
 		case "remove":
 			err = s.Uninstall()
 		}
-		if(err != nil){
+		if err != nil {
 			log.Println(err)
 		}
 	}
@@ -78,8 +78,8 @@ func handleArgs() {
 		switch command {
 		case "about":
 			fmt.Println("IPSecDiagTool is being developed at HSR (Hoschschule für Technik Rapperswil)\n" +
-					"as a semester/bachelor thesis. For more information please visit our repository on\n" +
-					"Github: https://github.com/IPSecDiagTool/IPSecDiagTool\n")
+				"as a semester/bachelor thesis. For more information please visit our repository on\n" +
+				"Github: https://github.com/IPSecDiagTool/IPSecDiagTool\n")
 		case "help":
 			fmt.Println("IPSecDiagTool Help")
 			fmt.Println("==================")
