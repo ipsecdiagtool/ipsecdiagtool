@@ -20,7 +20,7 @@ func Start(c config.Config, icmpPackets chan gopacket.Packet, ipSecESP chan gopa
 
 	quit := make(chan bool)
 	captureReady := make(chan bool)
-	go startCapture(3000, quit, captureReady)
+	go startCapture(3000, quit, captureReady, c.PcapFile)
 	<-captureReady
 	if c.Debug {
 		log.Println("Capture Goroutine Ready")
@@ -30,10 +30,17 @@ func Start(c config.Config, icmpPackets chan gopacket.Packet, ipSecESP chan gopa
 
 //startCapture captures all packets on any interface for an unlimited duration.
 //Packets can be filtered by a BPF filter string. (E.g. tcp port 22)
-func startCapture(snaplen int32, quit chan bool, captureReady chan bool) {
+func startCapture(snaplen int32, quit chan bool, captureReady chan bool, pcapFile string) {
 	log.Println("Waiting for MTU-Analyzer packet")
-	//handle, err := pcap.OpenLive("any", snaplen, true, 100)
-	handle, err := pcap.OpenOffline("/home/student/test.pcap")
+	var handle *pcap.Handle
+	var err error
+	if(pcapFile != ""){
+		log.Println("Reading packet loss data from pcap-file:", pcapFile)
+		handle, err = pcap.OpenOffline(pcapFile) //Path: /home/student/test.pcap
+	} else {
+		handle, err = pcap.OpenLive("any", snaplen, true, 100)
+	}
+
 	if err != nil {
 		panic(err)
 	} else {
@@ -44,14 +51,13 @@ func startCapture(snaplen int32, quit chan bool, captureReady chan bool) {
 			select {
 			case packet := <-packetSource.Packets():
 				if packet != nil {
-					//1. do packetloss stuff here:
+					//Handling packet loss
 					if packet.Layer(layers.LayerTypeIPSecESP) != nil {
 						putChannel(packet,ipSecChannel)
 					}
 
-					//2. Handle ICMP packets for MTU-Detection if relevant.
+					//Handling mtu detection
 					if packet.Layer(layers.LayerTypeICMPv4) != nil {
-						//2.1 ICMP packets are handled by mtu package
 						putChannel(packet,icmpChannel)
 					}
 				}
@@ -65,7 +71,8 @@ func startCapture(snaplen int32, quit chan bool, captureReady chan bool) {
 
 func putChannel(packet gopacket.Packet, channel chan gopacket.Packet) {
 	select {
-	case channel <- packet: // Put packet in channel unless full
+	// Put packets in channel unless full
+	case channel <- packet:
 	default:
 		if config.Debug {
 			log.Println("Channel full, discarding packet.")

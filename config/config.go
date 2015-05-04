@@ -14,13 +14,14 @@ import (
 var Debug = false
 
 const configFile string = "config.json"
-const configVersion int = 9
+const configVersion int = 10
 
 //Config contains the user configurable values for IPSecDiagTool.
 //It can hold multiple MTUConfig's to handle MTU detection for multiple tunnels.
 type Config struct {
 	ApplicationID int
 	Debug         bool
+	SyslogServer  string //IP:Port
 
 	//MTU specific:
 	MTUConfList []MTUConfig
@@ -30,7 +31,7 @@ type Config struct {
 	InterfaceName string
 	AlertTime     int    // Time in Seconds for LostPacketsCheck
 	AlertCounter  int    // Packets in LostPacketsCheck
-	SyslogServer  string //Path inclusive Port
+    PcapFile string
 
 	//Used to determine whether configuration needs to be updated.
 	CfgVers int
@@ -49,7 +50,7 @@ type MTUConfig struct {
 func initialize() Config {
 	mtuSample := MTUConfig{"127.0.0.1", "127.0.0.1", 10, 0, 2000}
 	mtuList := []MTUConfig{mtuSample, mtuSample}
-	conf := Config{0, false, mtuList, 32, "any", 60, 10, "localhost:514", configVersion}
+	conf := Config{0, false, "localhost:514", mtuList, 32, "any", 60, 10, "", configVersion}
 	Write(conf)
 	conf.ApplicationID = setupAppID(conf.ApplicationID)
 	return conf
