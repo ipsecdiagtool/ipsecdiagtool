@@ -37,6 +37,7 @@ echo "Downloading dependencies"
 go get code.google.com/p/gopacket
 go get code.google.com/p/gopacket/pcap
 go get golang.org/x/net/ipv4
+go get github.com/kardianos/service
 
 echo "Moving to program directory"
 cd src
