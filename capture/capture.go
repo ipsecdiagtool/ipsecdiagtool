@@ -5,6 +5,7 @@ import (
 	"code.google.com/p/gopacket/layers"
 	"code.google.com/p/gopacket/pcap"
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
+	"github.com/ipsecdiagtool/ipsecdiagtool/mtu"
 	"log"
 )
 
@@ -17,6 +18,9 @@ var icmpChannel chan gopacket.Packet
 func Start(c config.Config, icmpPackets chan gopacket.Packet, ipSecESP chan gopacket.Packet) chan bool {
 	ipSecChannel = ipSecESP
 	icmpChannel = icmpPackets
+
+	//Init MTU packet handling
+	mtu.Init(c, icmpPackets)
 
 	quit := make(chan bool)
 	captureReady := make(chan bool)

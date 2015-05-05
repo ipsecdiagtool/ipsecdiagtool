@@ -16,7 +16,7 @@ var icmpPacketsStage1 chan gopacket.Packet
 var icmpPacketsStage2 chan gopacket.Packet
 
 //Init the MTU package so that you can call FindAll()
-func Init(config config.Config, icmpPackets chan gopacket.Packet){
+func Init(config config.Config, icmpPackets chan gopacket.Packet) {
 	conf = config
 	icmpPacketsStage1 = icmpPackets
 	icmpPacketsStage2 = make(chan gopacket.Packet, 100)
@@ -27,7 +27,7 @@ func Init(config config.Config, icmpPackets chan gopacket.Packet){
 //FindAll finds the MTU for each connection specified in the
 //configuration. Use Find() if you're only looking for a specific MTU.
 func FindAll() {
-	if (initalized) {
+	if initalized {
 		c := conf
 		//Setup a mtuOK channel for each config
 		var mtuOkChannels = make(map[int]chan int)

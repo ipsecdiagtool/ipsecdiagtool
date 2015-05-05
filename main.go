@@ -38,7 +38,6 @@ func (p *program) Start(s service.Service) error {
 		if configuration.Debug {
 			//Code tested directly in the IDE belongs in here
 			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
-			mtu.Init(configuration, icmpPackets)
 			go mtu.FindAll()
 
 		} else {
@@ -56,7 +55,7 @@ func (p *program) Start(s service.Service) error {
 					go p.run()
 					interactiveMode()
 				case "mtu-discovery":
-					//TODO: send command to daemon to start MTU detection
+					mtu.RequestDaemonMTU(configuration.ApplicationID)
 				case "about":
 					printAbout()
 				case "help":
@@ -81,8 +80,6 @@ func (p *program) Start(s service.Service) error {
 
 func (p *program) run() error {
 	logger.Infof("I'm running %v.", service.Platform())
-
-	mtu.Init(configuration, icmpPackets)
 	go packetloss.Detectnew(configuration, ipsecPackets)
 	capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
 
