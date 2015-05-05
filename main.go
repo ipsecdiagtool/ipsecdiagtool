@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"code.google.com/p/gopacket"
 	"flag"
 	"fmt"
@@ -28,39 +29,48 @@ type program struct {
 
 func (p *program) Start(s service.Service) error {
 	p.exit = make(chan struct{})
+	configuration = config.LoadConfig(os.Args[0])
+	logging.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
 
 	if service.Interactive() {
 		logger.Info("Running in terminal.")
 
-		//Initial Switch
-		if len(os.Args) > 1 {
-			command := os.Args[1]
-			var err error
-			switch command {
-			case "install":
-				err = s.Install()
-			case "remove":
-				err = s.Uninstall()
-			case "interactive":
-				log.Println("Interactive testing")
-				go p.run()
-				//TODO: second arg handler
-			case "mtu-discovery":
-				//TODO: send command to daemon to start MTU detection
-			case "about":
-				printAbout()
-			case "help":
-				printHelp()
-			default:
-				fmt.Println("Argument not reconized. Run 'ipsecdiagtool help' to learn how to use this application.")
-			}
-			if err != nil {
-				log.Println(err)
-			}
-		} else {
-			fmt.Println("Run 'ipsecdiagtool help' to learn how to use this application.")
-		}
+		if configuration.Debug {
+			fmt.Println("Debug-Mode:")
+			//Code tested directly in the IDE belongs in here
+			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
+			go mtu.FindAll(configuration, icmpPackets)
 
+		} else {
+			//Initial Switch
+			if len(os.Args) > 1 {
+				command := os.Args[1]
+				var err error
+				switch command {
+				case "install":
+					err = s.Install()
+				case "remove":
+					err = s.Uninstall()
+				case "interactive":
+					log.Println("Interactive testing")
+					go p.run()
+					interactiveMode()
+				case "mtu-discovery":
+					//TODO: send command to daemon to start MTU detection
+				case "about":
+					printAbout()
+				case "help":
+					printHelp()
+				default:
+					fmt.Println("Argument not reconized. Run 'ipsecdiagtool help' to learn how to use this application.")
+				}
+				if err != nil {
+					log.Println(err)
+				}
+			} else {
+				fmt.Println("Run 'ipsecdiagtool help' to learn how to use this application.")
+			}
+		}
 	} else {
 		logger.Info("Running under service manager.")
 		go p.run()
@@ -71,17 +81,9 @@ func (p *program) Start(s service.Service) error {
 
 func (p *program) run() error {
 	logger.Infof("I'm running %v.", service.Platform())
-	configuration = config.LoadConfig(os.Args[0])
 
-	//TODO: better debug
-	if configuration.Debug {
-		fmt.Println("Debug-Mode:")
-		//Code tested directly in the IDE belongs in here
-		logging.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
-		go packetloss.Detectnew(configuration, ipsecPackets)
-		capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
-		go mtu.FindAll(configuration, icmpPackets)
-	}
+	go packetloss.Detectnew(configuration, ipsecPackets)
+	capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
 
 	<-p.exit
 	return nil
@@ -89,8 +91,8 @@ func (p *program) run() error {
 
 func printAbout() {
 	fmt.Println("IPSecDiagTool is being developed at HSR (Hoschschule für Technik Rapperswil)\n" +
-			"as a semester/bachelor thesis. For more information please visit our repository on\n" +
-			"Github: https://github.com/IPSecDiagTool/IPSecDiagTool\n")
+		"as a semester/bachelor thesis. For more information please visit our repository on\n" +
+		"Github: https://github.com/IPSecDiagTool/IPSecDiagTool\n")
 }
 
 func printHelp() {
@@ -102,6 +104,25 @@ func printHelp() {
 	fmt.Println("   + intall: Install this application as a service/daemon.")
 	fmt.Println("   + uninstall: Uninstall this application's service/daemon.")
 	fmt.Println("   + about: Learn more about IPSecDiagTool")
+}
+
+//TODO: make better
+func interactiveMode() {
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		printHelp()
+		fmt.Print("Enter a command: ")
+		input, _ := reader.ReadString('\n')
+		//TODO proper error handling
+		switch input {
+		case "mtu":
+			go mtu.FindAll(configuration, icmpPackets)
+		case "packetloss":
+			//TODO:
+		case "about":
+			printAbout()
+		}
+	}
 }
 
 func (p *program) Stop(s service.Service) error {
@@ -155,6 +176,7 @@ func main() {
 		}
 		return
 	}
+
 	err = s.Run()
 	if err != nil {
 		logger.Error(err)
