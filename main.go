@@ -13,6 +13,7 @@ import (
 	"github.com/kardianos/service"
 	"log"
 	"os"
+	"strings"
 )
 
 var configuration config.Config
@@ -44,37 +45,33 @@ func (p *program) Start(s service.Service) error {
 			//Initial Switch
 			if len(os.Args) > 1 {
 				command := os.Args[1]
-				var err error
 				switch command {
 				case "install":
-					err = s.Install()
-				case "remove":
-					err = s.Uninstall()
-				case "interactive":
+					installService(s)
+				case "uninstall", "remove":
+					uninstallService(s)
+				case "interactive", "demo":
 					log.Println("Interactive testing")
 					go p.run()
 					interactiveMode()
-				case "mtu-discovery":
+				case "mtu-discovery", "mtu":
 					mtu.RequestDaemonMTU(configuration.ApplicationID)
-				case "about":
+				case "about", "version":
 					printAbout()
 				case "help":
 					printHelp()
 				default:
 					fmt.Println("Argument not reconized. Run 'ipsecdiagtool help' to learn how to use this application.")
 				}
-				if err != nil {
-					log.Println(err)
-				}
 			} else {
 				fmt.Println("Run 'ipsecdiagtool help' to learn how to use this application.")
 			}
+			os.Exit(0)
 		}
 	} else {
 		logger.Info("Running under service manager.")
 		go p.run()
 	}
-
 	return nil
 }
 
@@ -87,11 +84,26 @@ func (p *program) run() error {
 	return nil
 }
 
-func daemonMTU() {
+func installService(s service.Service){
+	err := s.Install()
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println("IPSecDiagTool Daemon successfully installed.")
+	}
+}
 
+func uninstallService(s service.Service){
+	err := s.Uninstall()
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println("IPSecDiagTool Daemon successfully uninstalled.")
+	}
 }
 
 func printAbout() {
+	//TODO: display version info
 	fmt.Println("IPSecDiagTool is being developed at HSR (Hoschschule für Technik Rapperswil)\n" +
 		"as a semester/bachelor thesis. For more information please visit our repository on\n" +
 		"Github: https://github.com/IPSecDiagTool/IPSecDiagTool\n")
@@ -115,14 +127,17 @@ func interactiveMode() {
 		printHelp()
 		fmt.Print("Enter a command: ")
 		input, _ := reader.ReadString('\n')
+		input = strings.TrimRight(input, "\n")
 		//TODO proper error handling
 		switch input {
 		case "mtu":
-			go mtu.FindAll()
+			mtu.FindAll()
 		case "packetloss":
 			//TODO:
 		case "about":
 			printAbout()
+		default:
+			log.Println("Command",input,"not recognized")
 		}
 	}
 }
