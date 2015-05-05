@@ -36,10 +36,10 @@ func (p *program) Start(s service.Service) error {
 		logger.Info("Running in terminal.")
 
 		if configuration.Debug {
-			fmt.Println("Debug-Mode:")
 			//Code tested directly in the IDE belongs in here
 			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
-			go mtu.FindAll(configuration, icmpPackets)
+			mtu.Init(configuration, icmpPackets)
+			go mtu.FindAll()
 
 		} else {
 			//Initial Switch
@@ -82,11 +82,16 @@ func (p *program) Start(s service.Service) error {
 func (p *program) run() error {
 	logger.Infof("I'm running %v.", service.Platform())
 
+	mtu.Init(configuration, icmpPackets)
 	go packetloss.Detectnew(configuration, ipsecPackets)
 	capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
 
 	<-p.exit
 	return nil
+}
+
+func daemonMTU() {
+
 }
 
 func printAbout() {
@@ -116,7 +121,7 @@ func interactiveMode() {
 		//TODO proper error handling
 		switch input {
 		case "mtu":
-			go mtu.FindAll(configuration, icmpPackets)
+			go mtu.FindAll()
 		case "packetloss":
 			//TODO:
 		case "about":

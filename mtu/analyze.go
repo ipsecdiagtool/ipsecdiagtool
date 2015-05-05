@@ -10,26 +10,46 @@ import (
 	"time"
 )
 
-//FindAll accepts a configuration and a mtuOK channel. It finds the MTU for each connection specified in the
+var initalized = false
+var conf config.Config
+var icmpPacketsStage1 chan gopacket.Packet
+var icmpPacketsStage2 chan gopacket.Packet
+
+//Init the MTU package so that you can call FindAll()
+func Init(config config.Config, icmpPackets chan gopacket.Packet){
+	conf = config
+	icmpPacketsStage1 = icmpPackets
+	icmpPacketsStage2 = make(chan gopacket.Packet, 100)
+	initalized = true
+	go handlePackets(icmpPacketsStage1, icmpPacketsStage2, conf.ApplicationID)
+}
+
+//FindAll finds the MTU for each connection specified in the
 //configuration. Use Find() if you're only looking for a specific MTU.
-func FindAll(c config.Config, icmpPackets chan gopacket.Packet) {
+func FindAll() {
+	if (initalized) {
+		c := conf
+		//Setup a mtuOK channel for each config
+		var mtuOkChannels = make(map[int]chan int)
+		for conf := range c.MTUConfList {
+			mtuOkChannels[conf] = make(chan int, 100)
+		}
 
-	//Setup a mtuOK channel for each config
-	var mtuOkChannels = make(map[int]chan int)
-	for conf := range c.MTUConfList {
-		mtuOkChannels[conf] = make(chan int, 100)
-	}
+		//go handlePackets(icmpPacketsStage2, c.ApplicationID, mtuOkChannels)
+		go distributeMtuOkPackets(icmpPacketsStage2, mtuOkChannels)
 
-	go handlePackets(icmpPackets, c.ApplicationID, mtuOkChannels)
-
-	for conf := range c.MTUConfList {
-		log.Println("------------------------- MTU Conf", conf, " -------------------------")
-		go Find(
-			c.MTUConfList[conf].SourceIP,
-			c.MTUConfList[conf].DestinationIP,
-			c.MTUConfList[conf].Timeout, c.ApplicationID,
-			conf,
-			mtuOkChannels[conf])
+		for conf := range c.MTUConfList {
+			log.Println("------------------------- MTU Conf", conf, " -------------------------")
+			go Find(
+				c.MTUConfList[conf].SourceIP,
+				c.MTUConfList[conf].DestinationIP,
+				c.MTUConfList[conf].Timeout,
+				c.ApplicationID,
+				conf,
+				mtuOkChannels[conf])
+		}
+	} else {
+		log.Println("Please make sure that the MTU package was configured with mtu.Init(.., ..)")
 	}
 }
 
