@@ -22,6 +22,17 @@ purposes it also has a interactive mode.
 + Machine and human readable JSON configuration.
 + Optimized for minimal performance impact.
 
+##Usage
+
+| Command       | Alt.    | Explanation                                                                                                  |
+|---------------|---------|--------------------------------------------------------------------------------------------------------------|
+| install       |         | Installs IPSecDiagTool as a service/daemon.                                                                  |
+| uninstall     | remove  | Removes IPSecDiagTool service.                                                                               |
+| interactive   | demo    | Allows for interactive testing. Results are directly printed to the console. The service/daemon is not used. |
+| mtu-discovery | mtu     | Tells the service/daemon to start finding the MTU for all configured tunnels.                                |
+| about         | version | General information about IPSecDiagTool.                                                                     |
+| help          |         | A list of commands and how to use them.
+
 ##Project structure
 
     YOUR_GO_WORKSPACE
