@@ -33,7 +33,7 @@ func handlePackets(icmpPacketsStage1 chan gopacket.Packet, icmpPacketsStage2 cha
 				} else if arr[3] == "MTU?" {
 					//log.Println("Received MTU?-packet with length", packet.Metadata().Length, "bytes.")
 					sendOKResponse(packet, appID, chanID)
-				} else if arr[3] == "DaemonMTU?" {
+				} else if arr[3] == "DaemonFindMTUPlz!!" {
 					go FindAll()
 				} else {
 					//log.Println("Discarded packet because neither MTU? nor OK command were included.")

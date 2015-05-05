@@ -9,7 +9,7 @@ import (
 )
 
 func RequestDaemonMTU(appID int) {
-	sendPacket("127.0.0.1", "127.0.0.1", 200, "OK", appID, 99)
+	sendPacket("127.0.0.1", "127.0.0.1", 200, "DaemonFindMTUPlz!!", appID, 99)
 }
 
 func sendOKResponse(packet gopacket.Packet, appID int, chanID int) {
