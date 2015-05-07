@@ -38,6 +38,7 @@ func (p *program) Start(s service.Service) error {
 
 		if configuration.Debug {
 			//Code tested directly in the IDE belongs in here
+			mtu.Init(configuration, icmpPackets)
 			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
 			go mtu.FindAll()
 
@@ -78,6 +79,7 @@ func (p *program) Start(s service.Service) error {
 func (p *program) run() error {
 	logger.Infof("I'm running %v.", service.Platform())
 	go packetloss.Detectnew(configuration, ipsecPackets)
+	mtu.Init(configuration, icmpPackets)
 	capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
 
 	<-p.exit

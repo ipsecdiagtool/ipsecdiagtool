@@ -5,7 +5,6 @@ import (
 	"code.google.com/p/gopacket/layers"
 	"code.google.com/p/gopacket/pcap"
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
-	"github.com/ipsecdiagtool/ipsecdiagtool/mtu"
 	"log"
 	"errors"
 )
@@ -18,10 +17,6 @@ var icmpChannel chan gopacket.Packet
 //that can be used to gracefully shutdown it's capture-goroutine.
 func Start(c config.Config, icmpPackets chan gopacket.Packet, ipsecESP chan gopacket.Packet) chan bool {
 	initChannels(icmpPackets, ipsecESP)
-
-	//Init MTU packet handling
-	mtu.Init(c, icmpPackets)
-
 	quit := make(chan bool)
 	captureReady := make(chan bool)
 	go startCapture(3000, quit, captureReady, c.PcapFile)
