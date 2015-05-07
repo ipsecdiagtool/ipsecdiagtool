@@ -19,7 +19,7 @@ func Start(c config.Config, icmpPackets chan gopacket.Packet, ipsecESP chan gopa
 	initChannels(icmpPackets, ipsecESP)
 	quit := make(chan bool)
 	captureReady := make(chan bool)
-	go startCapture(3000, quit, captureReady, c.PcapFile)
+	go startCapture(c.PcapSnapLen, quit, captureReady, c.PcapFile)
 	<-captureReady
 	if c.Debug {
 		log.Println("Capture Goroutine Ready")
