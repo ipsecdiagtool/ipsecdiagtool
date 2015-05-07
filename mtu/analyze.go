@@ -41,9 +41,7 @@ func FindAll() {
 		for conf := range c.MTUConfList {
 			log.Println("------------------------- MTU Conf", conf, " -------------------------")
 			go Find(
-				c.MTUConfList[conf].SourceIP,
-				c.MTUConfList[conf].DestinationIP,
-				c.MTUConfList[conf].Timeout,
+				c.MTUConfList[conf],
 				c.ApplicationID,
 				conf,
 				mtuOkChannels[conf])
@@ -59,10 +57,10 @@ func FindAll() {
 //went missing. In a next step FastMTU sends again a batch of packets with sizes between the largest successful
 //and smallest unsuccessful packet. This behaviour is continued until the size-difference between individual
 //packets is no larger then 1Byte. Once that happens the largest successful packet is reported as MTU.
-func Find(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int, chanID int, mtuOK chan int) int {
+func Find(mtuConf config.MTUConfig, appID int, chanID int, mtuOK chan int) int {
 
-	var rangeStart = 0
-	var rangeEnd = 2000
+	var rangeStart = mtuConf.MTURangeStart
+	var rangeEnd = mtuConf.MTURangeEnd
 	var itStep = ((rangeEnd - rangeStart) / 20)
 	var roughMTU = 0
 	var mtuDetected = false
@@ -73,7 +71,7 @@ func Find(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int
 			itStep = 1
 			mtuDetected = true
 		}
-		roughMTU = sendBatch(srcIP, destIP, rangeStart, rangeEnd, itStep, timeoutInSeconds, appID, chanID, mtuOK)
+		roughMTU = sendBatch(mtuConf.SourceIP, mtuConf.DestinationIP, rangeStart, rangeEnd, itStep, mtuConf.Timeout, appID, chanID, mtuOK)
 
 		if roughMTU == rangeEnd {
 			rangeStart = rangeEnd
@@ -83,7 +81,7 @@ func Find(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int
 			if retries < 1 {
 				retries++
 				log.Println("ERROR: Reported 0.. trying again.")
-				roughMTU = sendBatch(srcIP, destIP, rangeStart, rangeEnd, itStep, timeoutInSeconds, appID, chanID, mtuOK)
+				roughMTU = sendBatch(mtuConf.SourceIP, mtuConf.DestinationIP, rangeStart, rangeEnd, itStep, mtuConf.Timeout, appID, chanID, mtuOK)
 			} else {
 				log.Println("ERROR: Reported MTU 0.. ")
 				mtuDetected = true

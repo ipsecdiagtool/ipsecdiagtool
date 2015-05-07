@@ -30,7 +30,7 @@ func testFind(simulatedMTU int, rangeStart int, rangeEnd int) int {
 	go distributeMtuOkPackets(icmpPacketsStage2, mtuOkChannels)
 
 	//TEST
-	result := Find(mtu.SourceIP, mtu.DestinationIP, mtu.Timeout, conf.ApplicationID, 0, mtuOkChannels[0])
+	result := Find(mtu, conf.ApplicationID, 0, mtuOkChannels[0])
 	capQuit <- true
 	return result
 }
