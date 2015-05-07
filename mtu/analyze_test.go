@@ -8,18 +8,12 @@ import (
 	"github.com/ipsecdiagtool/ipsecdiagtool/logging"
 )
 
-var tTimeout = 5
-
-//Start with a range of 0-2000 and detect the simulated MTU which is 500.
-func TestDetectMTU500(t *testing.T) {
-	//Test Settings
-	tMTU := 1500
-
+func testFind(simulatedMTU int, rangeStart int, rangeEnd int) int {
 	//Test Setup
-	mtu := config.MTUConfig{"127.0.0.1", "127.0.0.1", 10, 0, 2000}
+	mtu := config.MTUConfig{"127.0.0.1", "127.0.0.1", 2, rangeStart, rangeEnd}
 	mtuList := []config.MTUConfig{mtu, mtu}
 
-	conf := config.Config{0, false, "localhost:514", int32(tMTU+16), mtuList, 32, "any", 60, 10, "", 0}
+	conf := config.Config{0, false, "localhost:514", int32(simulatedMTU+16), mtuList, 32, "any", 60, 10, "", 0}
 	logging.InitLoger(conf.SyslogServer, conf.AlertCounter, conf.AlertTime)
 
 	icmpPackets := make(chan gopacket.Packet, 100)
@@ -37,9 +31,36 @@ func TestDetectMTU500(t *testing.T) {
 
 	//TEST
 	result := Find(mtu.SourceIP, mtu.DestinationIP, mtu.Timeout, conf.ApplicationID, 0, mtuOkChannels[0])
+	capQuit <- true
+	return result
+}
+
+//Start with a range of 0-2000 and detect the simulated MTU which is 500.
+func TestDetectMTU500(t *testing.T) {
+	tMTU := 500
+	result := testFind(tMTU, 0, 2000)
 
 	if result != (tMTU) {
 		t.Error("Expected", (tMTU), "got", result, "instead.")
 	}
-	capQuit <- true
+}
+
+//Start with a range of 0-2000 and detect the simulated MTU which is 1500.
+func TestDetectMTU1500(t *testing.T) {
+	tMTU := 1500
+	result := testFind(tMTU, 0, 2000)
+
+	if result != (tMTU) {
+		t.Error("Expected", (tMTU), "got", result, "instead.")
+	}
+}
+
+//Start with a range of 0-500 and detect the simulated MTU which is 1500.
+func TestDetectMTU1500withSmallRange(t *testing.T) {
+	tMTU := 1500
+	result := testFind(tMTU, 0, 500)
+
+	if result != (tMTU) {
+		t.Error("Expected", (tMTU), "got", result, "instead.")
+	}
 }
