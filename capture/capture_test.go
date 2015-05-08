@@ -35,7 +35,7 @@ func TestReadFromPcap(t *testing.T) {
 	quit := make(chan bool)
 	captureReady := make(chan bool)
 
-	err := startCapture(500, quit, captureReady, "/test.pcap")
+	err := capture(500, quit, captureReady, "/test.pcap")
 	if err.Error() != "/test.pcap: No such file or directory" {
 		t.Error("Tried reading a pcap file that doesn't exist. Didn't get the correct error. Got", err, "instead.")
 	}

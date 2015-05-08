@@ -19,7 +19,7 @@ func Start(c config.Config, icmpPackets chan gopacket.Packet, ipsecESP chan gopa
 	initChannels(icmpPackets, ipsecESP)
 	quit := make(chan bool)
 	captureReady := make(chan bool)
-	go startCapture(c.PcapSnapLen, quit, captureReady, c.PcapFile)
+	go capture(c.PcapSnapLen, quit, captureReady, c.PcapFile)
 	<-captureReady
 	if c.Debug {
 		log.Println("Capture Goroutine Ready")
@@ -35,7 +35,7 @@ func initChannels(icmpPackets chan gopacket.Packet, ipsecESP chan gopacket.Packe
 
 //startCapture captures all packets on any interface for an unlimited duration.
 //Packets can be filtered by a BPF filter string. (E.g. tcp port 22)
-func startCapture(snaplen int32, quit chan bool, captureReady chan bool, pcapFile string) error {
+func capture(snaplen int32, quit chan bool, captureReady chan bool, pcapFile string) error {
 	log.Println("Waiting for MTU-Analyzer packet")
 	var handle *pcap.Handle
 	var err error
