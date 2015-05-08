@@ -15,7 +15,7 @@ var conf config.Config
 var icmpPacketsStage1 chan gopacket.Packet
 var icmpPacketsStage2 chan gopacket.Packet
 
-//Init the MTU package so that you can call FindAll()
+//Init the MTU package so that you can call FindAll()
 func Init(config config.Config, icmpPackets chan gopacket.Packet) {
 	conf = config
 	icmpPacketsStage1 = icmpPackets
@@ -28,7 +28,7 @@ func Init(config config.Config, icmpPackets chan gopacket.Packet) {
 //configuration. Use Find() if you're only looking for a specific MTU.
 func FindAll() {
 	if !initalized {
-		log.Println("Please make sure that the MTU package was configured with mtu.Init(.., ..)")
+		log.Println("Please make sure that the MTU package was configured with mtu.Init(.., ..)")
 		return
 	}
 	c := conf
@@ -59,7 +59,7 @@ func FindAll() {
 //packets is no larger then 1Byte. Once that happens the largest successful packet is reported as MTU.
 func Find(mtuConf config.MTUConfig, appID int, chanID int, mtuOK chan int) int {
 	if !initalized {
-		log.Println("Please make sure that the MTU package was configured with mtu.Init(.., ..)")
+		log.Println("Please make sure that the MTU package was configured with mtu.Init(.., ..)")
 		return 0
 	}
 	var rangeStart = mtuConf.MTURangeStart
