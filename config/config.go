@@ -110,7 +110,7 @@ func LoadConfig(location string) Config {
 	return conf
 }
 
-//setupAppID generates a new Application ID if the existing appID equals 0.
+//setupAppID generates a new Application ID if the existing appID equals 0.
 //If the existing ID doesn't equal 0, then it will be returned instead.
 func setupAppID(applicationID int) int {
 	if applicationID == 0 {
