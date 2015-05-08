@@ -10,24 +10,42 @@ import (
 	"time"
 )
 
-//FindAll accepts a configuration and a mtuOK channel. It finds the MTU for each connection specified in the
-//configuration. Use Find() if you're only looking for a specific MTU.
-func FindAll(c config.Config, icmpPackets chan gopacket.Packet) {
+var initalized = false
+var conf config.Config
+var icmpPacketsStage1 chan gopacket.Packet
+var icmpPacketsStage2 chan gopacket.Packet
 
+//Init the MTU package so that you can call FindAll()
+func Init(config config.Config, icmpPackets chan gopacket.Packet) {
+	conf = config
+	icmpPacketsStage1 = icmpPackets
+	icmpPacketsStage2 = make(chan gopacket.Packet, 100)
+	initalized = true
+	go handlePackets(icmpPacketsStage1, icmpPacketsStage2, conf.ApplicationID)
+}
+
+//FindAll finds the MTU for each connection specified in the
+//configuration. Use Find() if you're only looking for a specific MTU.
+func FindAll() {
+	if !initalized {
+		log.Println("Please make sure that the MTU package was configured with mtu.Init(.., ..)")
+		return
+	}
+	c := conf
 	//Setup a mtuOK channel for each config
 	var mtuOkChannels = make(map[int]chan int)
 	for conf := range c.MTUConfList {
 		mtuOkChannels[conf] = make(chan int, 100)
 	}
 
-	go handlePackets(icmpPackets, c.ApplicationID, mtuOkChannels)
+	//go handlePackets(icmpPacketsStage2, c.ApplicationID, mtuOkChannels)
+	go distributeMtuOkPackets(icmpPacketsStage2, mtuOkChannels)
 
 	for conf := range c.MTUConfList {
 		log.Println("------------------------- MTU Conf", conf, " -------------------------")
 		go Find(
-			c.MTUConfList[conf].SourceIP,
-			c.MTUConfList[conf].DestinationIP,
-			c.MTUConfList[conf].Timeout, c.ApplicationID,
+			c.MTUConfList[conf],
+			c.ApplicationID,
 			conf,
 			mtuOkChannels[conf])
 	}
@@ -39,10 +57,13 @@ func FindAll(c config.Config, icmpPackets chan gopacket.Packet) {
 //went missing. In a next step FastMTU sends again a batch of packets with sizes between the largest successful
 //and smallest unsuccessful packet. This behaviour is continued until the size-difference between individual
 //packets is no larger then 1Byte. Once that happens the largest successful packet is reported as MTU.
-func Find(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int, chanID int, mtuOK chan int) int {
-
-	var rangeStart = 0
-	var rangeEnd = 2000
+func Find(mtuConf config.MTUConfig, appID int, chanID int, mtuOK chan int) int {
+	if !initalized {
+		log.Println("Please make sure that the MTU package was configured with mtu.Init(.., ..)")
+		return 0
+	}
+	var rangeStart = mtuConf.MTURangeStart
+	var rangeEnd = mtuConf.MTURangeEnd
 	var itStep = ((rangeEnd - rangeStart) / 20)
 	var roughMTU = 0
 	var mtuDetected = false
@@ -53,7 +74,7 @@ func Find(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int
 			itStep = 1
 			mtuDetected = true
 		}
-		roughMTU = sendBatch(srcIP, destIP, rangeStart, rangeEnd, itStep, timeoutInSeconds, appID, chanID, mtuOK)
+		roughMTU = sendBatch(mtuConf.SourceIP, mtuConf.DestinationIP, rangeStart, rangeEnd, itStep, mtuConf.Timeout, appID, chanID, mtuOK)
 
 		if roughMTU == rangeEnd {
 			rangeStart = rangeEnd
@@ -63,7 +84,7 @@ func Find(srcIP string, destIP string, timeoutInSeconds time.Duration, appID int
 			if retries < 1 {
 				retries++
 				log.Println("ERROR: Reported 0.. trying again.")
-				roughMTU = sendBatch(srcIP, destIP, rangeStart, rangeEnd, itStep, timeoutInSeconds, appID, chanID, mtuOK)
+				roughMTU = sendBatch(mtuConf.SourceIP, mtuConf.DestinationIP, rangeStart, rangeEnd, itStep, mtuConf.Timeout, appID, chanID, mtuOK)
 			} else {
 				log.Println("ERROR: Reported MTU 0.. ")
 				mtuDetected = true
@@ -116,6 +137,7 @@ func sendBatch(srcIP string, destIP string, rangeStart int, rangeEnd int, itStep
 	log.Println("Range:", rangeStart, "-", rangeEnd, "  itStep:", itStep, "  Timeout:", timeoutInSeconds)
 	log.Println("Largest successful packet:", largestSuccessfulPacket)
 	printResultMap(results)
+	log.Println()
 
 	return largestSuccessfulPacket
 }

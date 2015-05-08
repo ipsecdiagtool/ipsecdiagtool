@@ -5,18 +5,24 @@ import (
 	"testing"
 )
 
-func TestInitReadWriteCompare(t *testing.T) {
-	initializedConf := initialize()
+//Init a new config, write it to a file with a specific value,
+//read it again and check value.
+func TestReadWrite(t *testing.T) {
+	conf := initialize()
+	conf.ApplicationID = 1337
+	conf.Debug = true
+	Write(conf)
 	readConf := Read()
 
-	initializedConf.ApplicationID = 0
-	readConf.ApplicationID = 0
-	if initializedConf != readConf {
-		t.Error("Initialized configuration and read configuration do not match.")
+	if readConf.ApplicationID != 1337 {
+		t.Error("Wrote a config with 1337 as AppID, read the file and got", readConf.ApplicationID)
+	} else if readConf.Debug != true {
+		t.Error("Wrote a config with Debug=true, read the file and got", readConf.Debug)
 	}
 	os.Remove(configFile)
 }
 
+//Check that a random AppID is generated if AppID is 0
 func TestSetupAppID(t *testing.T) {
 	id1 := setupAppID(0)
 	id2 := setupAppID(0)
@@ -28,15 +34,15 @@ func TestSetupAppID(t *testing.T) {
 	if id3 != 666 {
 		t.Error("Expected id3 to be 666, not", id3)
 	}
-
 }
 
+//Check that updating an outdated config works
 func TestOutDatedConfigMechanism(t *testing.T) {
 	initializedConf := initialize()
 	initializedConf.CfgVers = 0
 	Write(initializedConf)
 
-	updatedConf := LoadConfig()
+	updatedConf := LoadConfig(os.Args[0])
 
 	if updatedConf.CfgVers == 0 {
 		t.Error("Configuration not properly updated.")

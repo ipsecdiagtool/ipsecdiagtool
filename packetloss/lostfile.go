@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 //Writes a csv file.
@@ -22,7 +23,7 @@ func WriteLostFile(con Connection, lostpackets []LostPacket) {
 		fmt.Println(v.sequencenumber)
 		s = []string{
 			strconv.FormatUint(uint64(v.sequencenumber), 10), ";",
-			string(v.Timestamp.Format("2006-01-02T15:04:05.999999-07:00")), ";",
+			string(v.Timestamp.Format(time.RFC850)), ";",
 			strconv.FormatBool(v.late), "\n"}
 		f.WriteString(strings.Join(s, ""))
 	}
