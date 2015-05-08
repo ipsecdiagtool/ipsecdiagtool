@@ -86,7 +86,7 @@ func (p *program) run() error {
 	return nil
 }
 
-func installService(s service.Service){
+func installService(s service.Service) {
 	err := s.Install()
 	if err != nil {
 		log.Println(err)
@@ -95,7 +95,7 @@ func installService(s service.Service){
 	}
 }
 
-func uninstallService(s service.Service){
+func uninstallService(s service.Service) {
 	err := s.Uninstall()
 	if err != nil {
 		log.Println(err)
@@ -139,7 +139,7 @@ func interactiveMode() {
 		case "about":
 			printAbout()
 		default:
-			log.Println("Command",input,"not recognized")
+			log.Println("Command", input, "not recognized")
 		}
 	}
 }

@@ -1,23 +1,24 @@
 package mtu
 
 import (
-	"github.com/ipsecdiagtool/ipsecdiagtool/config"
-	"testing"
-	"github.com/ipsecdiagtool/ipsecdiagtool/capture"
 	"code.google.com/p/gopacket"
+	"github.com/ipsecdiagtool/ipsecdiagtool/capture"
+	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"github.com/ipsecdiagtool/ipsecdiagtool/logging"
+	"testing"
 )
 
 func testFind(simulatedMTU int, rangeStart int, rangeEnd int) int {
 	//Test Setup
-	mtu := config.MTUConfig{"127.0.0.1", "127.0.0.1", 2, rangeStart, rangeEnd}
+	mtu := config.MTUConfig{"127.0.0.1", "127.0.0.1", 12, rangeStart, rangeEnd}
 	mtuList := []config.MTUConfig{mtu, mtu}
 
-	conf := config.Config{0, false, "localhost:514", int32(simulatedMTU+16), mtuList, 32, "any", 60, 10, "", 0}
+	//AppID=1337 is allowed to answer it's own packets.
+	conf := config.Config{1337, false, "localhost:514", int32(simulatedMTU + 16), mtuList, 32, "any", 60, 10, "", 0}
 	logging.InitLoger(conf.SyslogServer, conf.AlertCounter, conf.AlertTime)
 
-	icmpPackets := make(chan gopacket.Packet, 100)
-	ipsecPackets := make(chan gopacket.Packet, 100)
+	icmpPackets := make(chan gopacket.Packet, 500)
+	ipsecPackets := make(chan gopacket.Packet, 500)
 	Init(conf, icmpPackets)
 	var capQuit chan bool
 	capQuit = capture.Start(conf, icmpPackets, ipsecPackets)

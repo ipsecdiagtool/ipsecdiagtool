@@ -27,27 +27,27 @@ func Init(config config.Config, icmpPackets chan gopacket.Packet) {
 //FindAll finds the MTU for each connection specified in the
 //configuration. Use Find() if you're only looking for a specific MTU.
 func FindAll() {
-	if initalized {
-		c := conf
-		//Setup a mtuOK channel for each config
-		var mtuOkChannels = make(map[int]chan int)
-		for conf := range c.MTUConfList {
-			mtuOkChannels[conf] = make(chan int, 100)
-		}
-
-		//go handlePackets(icmpPacketsStage2, c.ApplicationID, mtuOkChannels)
-		go distributeMtuOkPackets(icmpPacketsStage2, mtuOkChannels)
-
-		for conf := range c.MTUConfList {
-			log.Println("------------------------- MTU Conf", conf, " -------------------------")
-			go Find(
-				c.MTUConfList[conf],
-				c.ApplicationID,
-				conf,
-				mtuOkChannels[conf])
-		}
-	} else {
+	if !initalized {
 		log.Println("Please make sure that the MTU package was configured with mtu.Init(.., ..)")
+		return
+	}
+	c := conf
+	//Setup a mtuOK channel for each config
+	var mtuOkChannels = make(map[int]chan int)
+	for conf := range c.MTUConfList {
+		mtuOkChannels[conf] = make(chan int, 100)
+	}
+
+	//go handlePackets(icmpPacketsStage2, c.ApplicationID, mtuOkChannels)
+	go distributeMtuOkPackets(icmpPacketsStage2, mtuOkChannels)
+
+	for conf := range c.MTUConfList {
+		log.Println("------------------------- MTU Conf", conf, " -------------------------")
+		go Find(
+			c.MTUConfList[conf],
+			c.ApplicationID,
+			conf,
+			mtuOkChannels[conf])
 	}
 }
 
@@ -58,7 +58,10 @@ func FindAll() {
 //and smallest unsuccessful packet. This behaviour is continued until the size-difference between individual
 //packets is no larger then 1Byte. Once that happens the largest successful packet is reported as MTU.
 func Find(mtuConf config.MTUConfig, appID int, chanID int, mtuOK chan int) int {
-
+	if !initalized {
+		log.Println("Please make sure that the MTU package was configured with mtu.Init(.., ..)")
+		return 0
+	}
 	var rangeStart = mtuConf.MTURangeStart
 	var rangeEnd = mtuConf.MTURangeEnd
 	var itStep = ((rangeEnd - rangeStart) / 20)
@@ -134,6 +137,7 @@ func sendBatch(srcIP string, destIP string, rangeStart int, rangeEnd int, itStep
 	log.Println("Range:", rangeStart, "-", rangeEnd, "  itStep:", itStep, "  Timeout:", timeoutInSeconds)
 	log.Println("Largest successful packet:", largestSuccessfulPacket)
 	printResultMap(results)
+	log.Println()
 
 	return largestSuccessfulPacket
 }

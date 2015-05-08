@@ -22,7 +22,7 @@ type Config struct {
 	ApplicationID int
 	Debug         bool
 	SyslogServer  string //IP:Port
-    PcapSnapLen   int32
+	PcapSnapLen   int32
 
 	//MTU specific:
 	MTUConfList []MTUConfig

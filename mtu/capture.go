@@ -21,7 +21,7 @@ func handlePackets(icmpPacketsStage1 chan gopacket.Packet, icmpPacketsStage2 cha
 				//Check that packet is not from this application
 				//1337 is used to disable the id check for unit-tests. It can't be generated in production use.
 				if appID == remoteAppID && appID != 1337 {
-					//log.Println("Packet is from us.. ignoring.")
+					//log.Println("Packet is from us.. ignoring.", appID)
 				} else if arr[3] == "OK" {
 					select {
 					case icmpPacketsStage2 <- packet: // Put packet in channel unless full

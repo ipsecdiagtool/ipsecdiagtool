@@ -7,7 +7,7 @@ import (
 
 //Init a new config, write it to a file with a specific value,
 //read it again and check value.
-func TestReadWrite(t *testing.T){
+func TestReadWrite(t *testing.T) {
 	conf := initialize()
 	conf.ApplicationID = 1337
 	conf.Debug = true
