@@ -42,8 +42,7 @@ echo "Moving to program directory"
 cd src
 mkdir -p github.com/ipsecdiagtool/
 cd github.com/ipsecdiagtool
-git clone https://github.com/IPSecDiagTool/IPSecDiagTool.git
-mv IPSecDiagTool ipsecdiagtool
+git clone https://github.com/ipsecdiagtool/ipsecdiagtool.git
 cd ipsecdiagtool
 
 echo "Building IPSecDiagTool"
