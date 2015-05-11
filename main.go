@@ -117,7 +117,7 @@ func printHelp() {
 	fmt.Println("\n  Commands:")
 	fmt.Println("   + mtu: Discover the ideal MTU between two nodes.")
 	fmt.Println("   + packetloss: Passivly listen to incomming traffic and detect packet loss.")
-	fmt.Println("   + intall: Install this application as a service/daemon.")
+	fmt.Println("   + install: Install this application as a service/daemon.")
 	fmt.Println("   + uninstall: Uninstall this application's service/daemon.")
 	fmt.Println("   + about: Learn more about IPSecDiagTool")
 }
