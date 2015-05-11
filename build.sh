@@ -6,7 +6,7 @@
 #  Author: Jan Balmer, Theo Winter                          #
 #                                                           #
 #  This script can be used to build IPSecDiagTool in a      #
-#  Linux environment. Tested on Ubuntu Ubuntu 14.04.1 LTS   #
+#  Linux environment. Tested on Ubuntu 14.04.1 LTS.         #
 #                                                           #
 #  Dependencies:                                            #
 #   - libpcap0.8-dev                                        #
