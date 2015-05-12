@@ -13,7 +13,7 @@ import (
 
 //Debug is mainly used to determine whether to report a log message or not.
 var Debug = false
-var loadLocation = "no information"
+var configStatus = "no information"
 
 const configFile string = "config.json"
 const configVersion int = 11
@@ -96,21 +96,20 @@ func Write(conf Config) {
 func LoadConfig(location string) Config {
 	var conf Config
 	if _, err := os.Stat(location + "/" + configFile); err == nil {
-		log.Println("Existing config found in program directory.")
-		loadLocation = location + "/" + configFile
+		configStatus = "loaded from"+location + "/" + configFile
 		conf = Read()
 	} else if _, err := os.Stat(configFile); err == nil {
-		log.Println("Existing config found in current working directory.")
-		loadLocation = "working directory"
+		configStatus = "loaded from working directory"
 		conf = Read()
 	} else {
 		log.Println("No config found, running init.")
-		loadLocation = "no config found"
+		configStatus = "no config found -> new config created."
 		conf = initialize()
 	}
 	Debug = conf.Debug
 	if Debug {
 		log.Println("Debug-Mode enabled. Verbose reporting of status & errors.")
+		log.Println("Config-Status: "+configStatus)
 	}
 	return conf
 }
@@ -160,6 +159,6 @@ func (conf Config) ToString() string {
 		debugMessage + spac +
 		"Syslog-Server: " + conf.SyslogServer + spac +
 		"PcapSnapLen: " + strconv.Itoa(int(conf.PcapSnapLen)) + spac +
-		"Loaded Config Location: " + loadLocation
+		"Loaded Config Location: " + configStatus
 	return confDebugInfo
 }

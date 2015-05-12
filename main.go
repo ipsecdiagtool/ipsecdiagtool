@@ -18,7 +18,6 @@ var configuration config.Config
 var capQuit chan bool
 var icmpPackets = make(chan gopacket.Packet, 100)
 var ipsecPackets = make(chan gopacket.Packet, 100)
-var logger service.Logger
 
 // Program structures.
 //  Define Start and Stop methods.
@@ -32,9 +31,8 @@ func (p *program) Start(s service.Service) error {
 	logging.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
 
 	if service.Interactive() {
-		logger.Info("Running in terminal.")
-
 		if configuration.Debug {
+			log.Println("Running in terminal.")
 			//Code tested directly in the IDE belongs in here
 			mtu.Init(configuration, icmpPackets)
 			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
@@ -75,7 +73,9 @@ func (p *program) Start(s service.Service) error {
 			os.Exit(0)
 		}
 	} else {
-		logger.Info("Running under service manager.")
+		if config.Debug {
+			log.Println("Running under service manager.")
+		}
 		go p.run()
 	}
 	return nil
@@ -95,7 +95,9 @@ func handleInteractiveArg(arg string) {
 }
 
 func (p *program) run() error {
-	logger.Infof("I'm running %v.", service.Platform())
+	if configuration.Debug {
+		log.Println("Running Daemon via", service.Platform())
+	}
 	//TODO: Jan: packet loss function WITHOUT console output.
 	go packetloss.Detectnew(configuration, ipsecPackets)
 	mtu.Init(configuration, icmpPackets)
@@ -159,7 +161,7 @@ func printHelp() {
 
 func (p *program) Stop(s service.Service) error {
 	// Any work in Stop should be quick, usually a few seconds at most.
-	logger.Info("I'm Stopping!")
+	log.Println("Stopping IPSecDiagTool")
 	close(p.exit)
 	return nil
 }
@@ -186,7 +188,7 @@ func main() {
 		log.Fatal(err)
 	}
 	errs := make(chan error, 5)
-	logger, err = s.Logger(errs)
+	//logger, err = s.Logger(errs)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -211,6 +213,8 @@ func main() {
 
 	err = s.Run()
 	if err != nil {
-		logger.Error(err)
+		//TODO: check if we need a system logger rather then the panics we've been using so far.
+		//logger.Error(err)
+		panic(err)
 	}
 }

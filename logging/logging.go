@@ -17,9 +17,7 @@ var logging Logging
 func InitLoger(SyslogServer string, AlertCounter int, AlertTime int) {
 
 	//logwriter, e = syslog.New(syslog.LOG_NOTICE, "IpsecDiagTool")
-	fmt.Println("Logserver: ", SyslogServer)
 	logwriter, e := syslog.Dial("udp", SyslogServer, syslog.LOG_ERR, "IpsecDiagTool")
-	fmt.Println(logwriter)
 	if e == nil && logwriter != nil {
 		logwriter.Info("IpsecDiagTool started!")
 	}
