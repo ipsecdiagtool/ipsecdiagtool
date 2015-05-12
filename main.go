@@ -40,7 +40,9 @@ func (p *program) Start(s service.Service) error {
 			//Code tested directly in the IDE belongs in here
 			mtu.Init(configuration, icmpPackets)
 			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
-			go mtu.FindAll()
+			//go mtu.FindAll()
+
+			printHelp()
 		} else {
 			if len(os.Args) > 1 {
 				command := os.Args[1]
@@ -59,7 +61,7 @@ func (p *program) Start(s service.Service) error {
 					printAbout()
 				case "debug":
 					printDebug(configuration)
-				case "help":
+				case "help", "--help":
 					printHelp()
 				default:
 					fmt.Println("Argument not reconized. Run 'ipsecdiagtool help' to learn how to use this application.")
@@ -106,8 +108,9 @@ func uninstallService(s service.Service) {
 
 func printAbout() {
 	fmt.Print("IPSecDiagTool is being developed at HSR (Hoschschule für Technik Rapperswil)\n" +
-			    "as a semester/bachelor thesis. For more information please visit our repository on\n" +
-			    "Github: https://github.com/IPSecDiagTool/IPSecDiagTool\n")
+			  "as a semester/bachelor thesis. For more information please visit our repository on\n \n" +
+			  "Authors: Jan Balmer, Theo Winter \n" +
+			  "Github: https://github.com/IPSecDiagTool/IPSecDiagTool\n")
 }
 
 func printDebug(conf config.Config) {
@@ -116,14 +119,22 @@ func printDebug(conf config.Config) {
 }
 
 func printHelp() {
-	fmt.Println("IPSecDiagTool Help")
-	fmt.Println("==================")
-	fmt.Println("\n  Commands:")
-	fmt.Println("   + mtu: Discover the ideal MTU between two nodes.")
-	fmt.Println("   + packetloss: Passivly listen to incomming traffic and detect packet loss.")
-	fmt.Println("   + install: Install this application as a service/daemon.")
-	fmt.Println("   + uninstall: Uninstall this application's service/daemon.")
-	fmt.Println("   + about: Learn more about IPSecDiagTool")
+	var spac = "\n   "
+	var help = "Usage: ipsecdiagtool [OPTION ...]" + spac +
+	"IPSecDiagTool detects packet loss for all connected IPSec VPN tunnels. It can also discover the MTU for all configured connections. " +
+	"IPSecDiagTool is intended to be run as a daemon on both sides of a VPN tunnel." + spac +
+	"\n" +
+	"Daemon operation mode:" + spac +
+	"ipsecdiagtool install    #Install the daemon/service on your system." + spac +
+	"ipsecdiagtool uninstall  #Uninstall the daemon/service from system." + spac +
+	"\n" +
+	"Main operation mode:" + spac +
+	"ipsecdiagtool mtu          #Tell locally running daemon to start discoverying the MTU." + spac +
+	"ipsecdiagtool interactive  #Run ipsecdiagtool in a local demo-mode, without a daemon."+ spac +
+	"ipsecdiagtool debug        #Show debug information." + spac +
+	"ipsecdiagtool help         #Display this help menu." + spac +
+    "ipsecdiagtool about        #Who created this application."
+	fmt.Println(help)
 }
 
 //TODO: make better
