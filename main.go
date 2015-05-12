@@ -58,19 +58,24 @@ func (p *program) Start(s service.Service) error {
 					}
 				case "mtu-discovery", "mtu":
 					mtu.RequestDaemonMTU(configuration.ApplicationID)
+					os.Exit(0) //TODO: remove os.Exit find better solution.
 				case "about", "a":
 					printAbout()
+					os.Exit(0)
 				case "debug", "d":
 					printDebug(configuration)
+					os.Exit(0)
 				case "help", "--help", "h":
 					printHelp()
+					os.Exit(0)
 				default:
 					fmt.Println("Argument not reconized. Run 'ipsecdiagtool help' to learn how to use this application.")
+					os.Exit(0)
 				}
 			} else {
 				fmt.Println("Run 'ipsecdiagtool help' to learn how to use this application.")
+				os.Exit(0)
 			}
-			os.Exit(0)
 		}
 	} else {
 		if config.Debug {
@@ -84,13 +89,14 @@ func (p *program) Start(s service.Service) error {
 func handleInteractiveArg(arg string) {
 	switch arg {
 	case "mtu", "m":
-		mtu.FindAll()
+		go mtu.FindAll()
 	case "packetloss", "p":
 		//TODO: Jan: Packet loss function call WITH console output.
 		fmt.Println("not implemented - packetloss interactive mode.")
 	default:
 		fmt.Println("Command", arg, "not recognized")
 		fmt.Println("See 'ipsecdiagtool help' for additional information.")
+		os.Exit(0)
 	}
 }
 
