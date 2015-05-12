@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"code.google.com/p/gopacket"
 	"flag"
 	"fmt"
@@ -13,7 +12,6 @@ import (
 	"github.com/kardianos/service"
 	"log"
 	"os"
-	"strings"
 )
 
 var configuration config.Config
@@ -51,17 +49,22 @@ func (p *program) Start(s service.Service) error {
 					installService(s)
 				case "uninstall", "remove":
 					uninstallService(s)
-				case "interactive", "demo":
+				case "interactive", "i":
 					log.Println("Interactive testing")
 					go p.run()
-					interactiveMode()
+					if len(os.Args) > 2 {
+						handleInteractiveArg(os.Args[2])
+					} else {
+						fmt.Println("Please specify an additional argument when using 'ipsecdiagtool " + command + "'")
+						fmt.Println("Use 'ipsecdiagtool help' to get additional information.")
+					}
 				case "mtu-discovery", "mtu":
 					mtu.RequestDaemonMTU(configuration.ApplicationID)
-				case "about":
+				case "about", "a":
 					printAbout()
-				case "debug":
+				case "debug", "d":
 					printDebug(configuration)
-				case "help", "--help":
+				case "help", "--help", "h":
 					printHelp()
 				default:
 					fmt.Println("Argument not reconized. Run 'ipsecdiagtool help' to learn how to use this application.")
@@ -78,8 +81,22 @@ func (p *program) Start(s service.Service) error {
 	return nil
 }
 
+func handleInteractiveArg(arg string) {
+	switch arg {
+	case "mtu", "m":
+		mtu.FindAll()
+	case "packetloss", "p":
+		//TODO: Jan: Packet loss function call WITH console output.
+		fmt.Println("not implemented - packetloss interactive mode.")
+	default:
+		fmt.Println("Command", arg, "not recognized")
+		fmt.Println("See 'ipsecdiagtool help' for additional information.")
+	}
+}
+
 func (p *program) run() error {
 	logger.Infof("I'm running %v.", service.Platform())
+	//TODO: Jan: packet loss function WITHOUT console output.
 	go packetloss.Detectnew(configuration, ipsecPackets)
 	mtu.Init(configuration, icmpPackets)
 	capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
@@ -108,9 +125,9 @@ func uninstallService(s service.Service) {
 
 func printAbout() {
 	fmt.Print("IPSecDiagTool is being developed at HSR (Hoschschule für Technik Rapperswil)\n" +
-			  "as a semester/bachelor thesis. For more information please visit our repository on\n \n" +
-			  "Authors: Jan Balmer, Theo Winter \n" +
-			  "Github: https://github.com/IPSecDiagTool/IPSecDiagTool\n")
+		"as a semester/bachelor thesis. For more information please visit our repository on\n \n" +
+		"Authors: Jan Balmer, Theo Winter \n" +
+		"Github: https://github.com/IPSecDiagTool/IPSecDiagTool\n")
 }
 
 func printDebug(conf config.Config) {
@@ -121,42 +138,23 @@ func printDebug(conf config.Config) {
 func printHelp() {
 	var spac = "\n   "
 	var help = "Usage: ipsecdiagtool [OPTION ...]" + spac +
-	"IPSecDiagTool detects packet loss for all connected IPSec VPN tunnels. It can also discover the MTU for all configured connections. " +
-	"IPSecDiagTool is intended to be run as a daemon on both sides of a VPN tunnel." + spac +
-	"\n" +
-	"Daemon operation mode:" + spac +
-	"ipsecdiagtool install    #Install the daemon/service on your system." + spac +
-	"ipsecdiagtool uninstall  #Uninstall the daemon/service from system." + spac +
-	"\n" +
-	"Main operation mode:" + spac +
-	"ipsecdiagtool mtu          #Tell locally running daemon to start discoverying the MTU." + spac +
-	"ipsecdiagtool interactive  #Run ipsecdiagtool in a local demo-mode, without a daemon."+ spac +
-	"ipsecdiagtool debug        #Show debug information." + spac +
-	"ipsecdiagtool help         #Display this help menu." + spac +
-    "ipsecdiagtool about        #Who created this application."
+		"IPSecDiagTool detects packet loss for all connected IPSec VPN tunnels. It can also discover the MTU for all configured connections. " +
+		"IPSecDiagTool is intended to be run as a daemon on both sides of a VPN tunnel." + spac +
+		"\n" +
+		"Daemon operation mode:" + spac +
+		"ipsecdiagtool install    #Install the daemon/service on your system." + spac +
+		"ipsecdiagtool uninstall  #Uninstall the daemon/service from system." + spac +
+		"ipsecdiagtool mtu        #Tell locally running daemon to start discoverying the MTU." + spac +
+		"\n" +
+		"Interactive opertation mode:" + spac +
+		"ipsecdiagtool i mtu         #Run the mtu discovery locally, without a daemon." + spac +
+		"ipsecdiagtool i packetloss  #Run the packetloss detection locally, without a daemon." + spac +
+		"\n" +
+		"Information commands:" + spac +
+		"ipsecdiagtool debug        #Show debug information." + spac +
+		"ipsecdiagtool help         #Display this help menu." + spac +
+		"ipsecdiagtool about        #Who created this application."
 	fmt.Println(help)
-}
-
-//TODO: make better
-func interactiveMode() {
-	reader := bufio.NewReader(os.Stdin)
-	for {
-		printHelp()
-		fmt.Print("Enter a command: ")
-		input, _ := reader.ReadString('\n')
-		input = strings.TrimRight(input, "\n")
-		//TODO proper error handling
-		switch input {
-		case "mtu":
-			mtu.FindAll()
-		case "packetloss":
-			//TODO:
-		case "about":
-			printAbout()
-		default:
-			log.Println("Command", input, "not recognized")
-		}
-	}
 }
 
 func (p *program) Stop(s service.Service) error {

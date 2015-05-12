@@ -7,8 +7,8 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"time"
 	"strconv"
+	"time"
 )
 
 //Debug is mainly used to determine whether to report a log message or not.
@@ -149,17 +149,17 @@ func check(e error) {
 //ToString Returns a string containing debugging information from the config package.
 func (conf Config) ToString() string {
 	var debugMessage string
-	if(conf.Debug){
+	if conf.Debug {
 		debugMessage = "Debug mode enabled, application will log verbose."
 	} else {
 		debugMessage = "Debug mode isn't enabled. You will only receive critical errors."
 	}
 	var spac = "\n   "
 	var confDebugInfo = "Config:" + spac +
-    "ApplicationID: " + strconv.Itoa(conf.ApplicationID) + spac +
-	debugMessage + spac +
-	"Syslog-Server: " + conf.SyslogServer + spac +
-	"PcapSnapLen: " + strconv.Itoa(int(conf.PcapSnapLen)) + spac +
-	"Loaded Config Location: " + loadLocation
+		"ApplicationID: " + strconv.Itoa(conf.ApplicationID) + spac +
+		debugMessage + spac +
+		"Syslog-Server: " + conf.SyslogServer + spac +
+		"PcapSnapLen: " + strconv.Itoa(int(conf.PcapSnapLen)) + spac +
+		"Loaded Config Location: " + loadLocation
 	return confDebugInfo
 }

@@ -73,7 +73,7 @@ func capture(snaplen int32, quit chan bool, captureReady chan bool, pcapFile str
 
 func putChannel(packet gopacket.Packet, channel chan gopacket.Packet) error {
 	select {
-		// Put packets in channel unless full
+	// Put packets in channel unless full
 	case channel <- packet:
 	default:
 		msg := "Channel full, discarding packet."
