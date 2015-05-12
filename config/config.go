@@ -8,10 +8,12 @@ import (
 	"math/rand"
 	"os"
 	"time"
+	"strconv"
 )
 
 //Debug is mainly used to determine whether to report a log message or not.
 var Debug = false
+var loadLocation = "no information"
 
 const configFile string = "config.json"
 const configVersion int = 11
@@ -95,12 +97,15 @@ func LoadConfig(location string) Config {
 	var conf Config
 	if _, err := os.Stat(location + "/" + configFile); err == nil {
 		log.Println("Existing config found in program directory.")
+		loadLocation = location + "/" + configFile
 		conf = Read()
 	} else if _, err := os.Stat(configFile); err == nil {
 		log.Println("Existing config found in current working directory.")
+		loadLocation = "working directory"
 		conf = Read()
 	} else {
 		log.Println("No config found, running init.")
+		loadLocation = "no config found"
 		conf = initialize()
 	}
 	Debug = conf.Debug
@@ -139,4 +144,22 @@ func check(e error) {
 	if e != nil {
 		panic(e)
 	}
+}
+
+//ToString Returns a string containing debugging information from the config package.
+func (conf Config) ToString() string {
+	var debugMessage string
+	if(conf.Debug){
+		debugMessage = "Debug mode enabled, application will log verbose."
+	} else {
+		debugMessage = "Debug mode isn't enabled. You will only receive critical errors."
+	}
+	var spac = "\n   "
+	var confDebugInfo = "Config:" + spac +
+    "ApplicationID: " + strconv.Itoa(conf.ApplicationID) + spac +
+	debugMessage + spac +
+	"Syslog-Server: " + conf.SyslogServer + spac +
+	"PcapSnapLen: " + strconv.Itoa(int(conf.PcapSnapLen)) + spac +
+	"Loaded Config Location: " + loadLocation
+	return confDebugInfo
 }

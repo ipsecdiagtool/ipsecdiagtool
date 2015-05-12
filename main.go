@@ -41,9 +41,7 @@ func (p *program) Start(s service.Service) error {
 			mtu.Init(configuration, icmpPackets)
 			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
 			go mtu.FindAll()
-
 		} else {
-			//Initial Switch
 			if len(os.Args) > 1 {
 				command := os.Args[1]
 				switch command {
@@ -57,8 +55,10 @@ func (p *program) Start(s service.Service) error {
 					interactiveMode()
 				case "mtu-discovery", "mtu":
 					mtu.RequestDaemonMTU(configuration.ApplicationID)
-				case "about", "version":
+				case "about":
 					printAbout()
+				case "debug":
+					printDebug(configuration)
 				case "help":
 					printHelp()
 				default:
@@ -105,10 +105,14 @@ func uninstallService(s service.Service) {
 }
 
 func printAbout() {
-	//TODO: display version info
-	fmt.Println("IPSecDiagTool is being developed at HSR (Hoschschule für Technik Rapperswil)\n" +
-			"as a semester/bachelor thesis. For more information please visit our repository on\n" +
-			"Github: https://github.com/IPSecDiagTool/IPSecDiagTool\n")
+	fmt.Print("IPSecDiagTool is being developed at HSR (Hoschschule für Technik Rapperswil)\n" +
+			    "as a semester/bachelor thesis. For more information please visit our repository on\n" +
+			    "Github: https://github.com/IPSecDiagTool/IPSecDiagTool\n")
+}
+
+func printDebug(conf config.Config) {
+	fmt.Println("IPSecDiagTool Debug Information")
+	fmt.Println(conf.ToString())
 }
 
 func printHelp() {
