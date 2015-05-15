@@ -12,6 +12,7 @@ import (
 	"github.com/kardianos/service"
 	"log"
 	"os"
+	"time"
 )
 
 var configuration config.Config
@@ -36,6 +37,8 @@ func (p *program) Start(s service.Service) error {
 			//Code tested directly in the IDE belongs in here
 			mtu.Init(configuration, icmpPackets)
 			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
+			log.Println("Waiting 2seconds for partner. Can be disabled if partner is already running.")
+			time.Sleep(2*time.Second)
 			go mtu.FindAll()
 
 		} else {
@@ -55,6 +58,7 @@ func (p *program) Start(s service.Service) error {
 						fmt.Println("Please specify an additional argument when using 'ipsecdiagtool " + command + "'")
 						fmt.Println("Use 'ipsecdiagtool help' to get additional information.")
 					}
+					os.Exit(0)
 				case "mtu-discovery", "mtu":
 					mtu.RequestDaemonMTU(configuration.ApplicationID)
 					os.Exit(0) //TODO: remove os.Exit find better solution.
@@ -90,7 +94,7 @@ func handleInteractiveArg(arg string) {
 	switch arg {
 	case "mtu", "m":
 		go mtu.FindAll()
-	case "packetloss", "p":
+	case "packetloss", "p", "pl":
 		if len(os.Args) > 3 {
 			pcapPath := os.Args[3]
 			configuration.PcapFile = pcapPath
@@ -106,7 +110,6 @@ func handleInteractiveArg(arg string) {
 	default:
 		fmt.Println("Command", arg, "not recognized")
 		fmt.Println("See 'ipsecdiagtool help' for additional information.")
-		os.Exit(0)
 	}
 }
 
@@ -153,7 +156,7 @@ func printDebug(conf config.Config) {
 
 func printHelp() {
 	var spac = "\n   "
-	var help = "Usage: ipsecdiagtool [OPTION ...]" + spac +
+	var help = "Usage: ipsecdiagtool [OPTION ...] \n" +
 		"IPSecDiagTool detects packet loss for all connected IPSec VPN tunnels. It can also discover the MTU for all configured connections. " +
 		"IPSecDiagTool is intended to be run as a daemon on both sides of a VPN tunnel." + spac +
 		"\n" +
@@ -163,8 +166,9 @@ func printHelp() {
 		"ipsecdiagtool mtu        #Tell locally running daemon to start discoverying the MTU." + spac +
 		"\n" +
 		"Interactive opertation mode:" + spac +
-		"ipsecdiagtool i mtu         #Run the mtu discovery locally, without a daemon." + spac +
-		"ipsecdiagtool i packetloss  #Run the packetloss detection locally, without a daemon." + spac +
+		"ipsecdiagtool i mtu        #Run the mtu discovery locally, without a daemon." + spac +
+		"ipsecdiagtool i pl         #Run the packetloss detection locally, without a daemon." + spac +
+		"ipsecdiagtool i pl [path]  #Run the packetloss detection locally, reading pcap data from a file." + spac +
 		"\n" +
 		"Information commands:" + spac +
 		"ipsecdiagtool debug        #Show debug information." + spac +

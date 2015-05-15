@@ -134,10 +134,9 @@ func sendBatch(srcIP string, destIP string, rangeStart int, rangeEnd int, itStep
 	}
 
 	log.Println("---------------------------------------------------")
-	log.Println("Range:", rangeStart, "-", rangeEnd, "  itStep:", itStep, "  Timeout:", timeoutInSeconds)
+	log.Println("ChanID", chanID, "Range:", rangeStart, "-", rangeEnd, "  itStep:", itStep, "  Timeout:", timeoutInSeconds)
 	log.Println("Largest successful packet:", largestSuccessfulPacket)
 	printResultMap(results)
-	log.Println()
 
 	return largestSuccessfulPacket
 }
