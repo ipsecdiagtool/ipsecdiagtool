@@ -80,6 +80,7 @@ func (p *program) Start(s service.Service) error {
 		if config.Debug {
 			log.Println("Running under service manager.")
 		}
+		go packetloss.Detectnew(configuration, ipsecPackets, false)
 		go p.run()
 	}
 	return nil
@@ -93,11 +94,15 @@ func handleInteractiveArg(arg string) {
 		if len(os.Args) > 3 {
 			pcapPath := os.Args[3]
 			configuration.PcapFile = pcapPath
-			//TODO: with output
-			go packetloss.Detectnew(configuration, ipsecPackets)
+			log.Println("Reading packetloss test data from file.")
+			go packetloss.Detectnew(configuration, ipsecPackets, true)
 		}
-		//TODO: Jan: Packet loss function call WITH console output.
-		go packetloss.Detectnew(configuration, ipsecPackets)
+		if configuration.PcapFile =="" {
+			log.Println("Detecting packetloss from ethernet")
+		} else {
+			log.Println("Detecting packetloss from configured file:", configuration.PcapFile)
+		}
+		go packetloss.Detectnew(configuration, ipsecPackets, true)
 	default:
 		fmt.Println("Command", arg, "not recognized")
 		fmt.Println("See 'ipsecdiagtool help' for additional information.")
@@ -109,8 +114,6 @@ func (p *program) run() error {
 	if configuration.Debug {
 		log.Println("Running Daemon via", service.Platform())
 	}
-	//TODO: Jan: packet loss function WITHOUT console output.
-	go packetloss.Detectnew(configuration, ipsecPackets)
 	mtu.Init(configuration, icmpPackets)
 	capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
 

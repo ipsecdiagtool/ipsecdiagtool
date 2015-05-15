@@ -12,6 +12,7 @@ import (
 
 var espmap *EspMap
 
+//TODO: Dead code, remove
 func Detect(configuration config.Config) error {
 
 	espmap = NewEspMap(configuration.WindowSize)
@@ -37,6 +38,7 @@ func Detect(configuration config.Config) error {
 	return nil
 }
 
+//TODO: Dead code, remove
 func readIPSec(handle *pcap.Handle) {
 	src := gopacket.NewPacketSource(handle, handle.LinkType())
 	var counter uint32
@@ -61,7 +63,7 @@ func readIPSec(handle *pcap.Handle) {
 
 }
 
-func Detectnew(c config.Config, ipSecESP chan gopacket.Packet) {
+func Detectnew(c config.Config, ipSecESP chan gopacket.Packet, output bool) {
 	espmap = NewEspMap(c.WindowSize)
 	fmt.Println("detecting packetloss ...")
 	
@@ -71,8 +73,10 @@ func Detectnew(c config.Config, ipSecESP chan gopacket.Packet) {
 			netFlow := packet.NetworkLayer().NetworkFlow()
 			src, dst := netFlow.Endpoints()
 			ipsec := ipsecLayer.(*layers.IPSecESP)
-			log.Println("Source: ", src, "Destination: ", dst, "Seqnumber: ", ipsec.Seq)
 
+			if output {
+				log.Println("Source: ", src, "Destination: ", dst, "Seqnumber: ", ipsec.Seq)
+			}
 			espmap.MakeEntry(Connection{src.String(), dst.String(), ipsec.SPI}, ipsec.Seq)		
 		}
 	} 
