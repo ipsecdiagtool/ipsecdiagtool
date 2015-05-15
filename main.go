@@ -36,9 +36,8 @@ func (p *program) Start(s service.Service) error {
 			//Code tested directly in the IDE belongs in here
 			mtu.Init(configuration, icmpPackets)
 			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
-			//go mtu.FindAll()
+			go mtu.FindAll()
 
-			printHelp()
 		} else {
 			if len(os.Args) > 1 {
 				command := os.Args[1]
@@ -91,8 +90,14 @@ func handleInteractiveArg(arg string) {
 	case "mtu", "m":
 		go mtu.FindAll()
 	case "packetloss", "p":
+		if len(os.Args) > 3 {
+			pcapPath := os.Args[3]
+			configuration.PcapFile = pcapPath
+			//TODO: with output
+			go packetloss.Detectnew(configuration, ipsecPackets)
+		}
 		//TODO: Jan: Packet loss function call WITH console output.
-		fmt.Println("not implemented - packetloss interactive mode.")
+		go packetloss.Detectnew(configuration, ipsecPackets)
 	default:
 		fmt.Println("Command", arg, "not recognized")
 		fmt.Println("See 'ipsecdiagtool help' for additional information.")

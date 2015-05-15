@@ -16,7 +16,7 @@ var Debug = false
 var configStatus = "no information"
 
 const configFile string = "config.json"
-const configVersion int = 11
+const configVersion int = 12
 
 //Config contains the user configurable values for IPSecDiagTool.
 //It can hold multiple MTUConfig's to handle MTU detection for multiple tunnels.
@@ -47,11 +47,12 @@ type MTUConfig struct {
 	Timeout       time.Duration
 	MTURangeStart int
 	MTURangeEnd   int
+	ConcurrentPackets int
 }
 
 //initialize creates a new config with default values and writes it to disk.
 func initialize() Config {
-	mtuSample := MTUConfig{"127.0.0.1", "127.0.0.1", 10, 0, 2000}
+	mtuSample := MTUConfig{"127.0.0.1", "127.0.0.1", 10, 0, 2000, 20}
 	mtuList := []MTUConfig{mtuSample, mtuSample}
 	conf := Config{0, false, "localhost:514", 3000, mtuList, 32, "any", 60, 10, "", configVersion}
 	Write(conf)

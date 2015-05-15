@@ -64,7 +64,7 @@ func Find(mtuConf config.MTUConfig, appID int, chanID int, mtuOK chan int) int {
 	}
 	var rangeStart = mtuConf.MTURangeStart
 	var rangeEnd = mtuConf.MTURangeEnd
-	var itStep = ((rangeEnd - rangeStart) / 20)
+	var itStep = ((rangeEnd - rangeStart) / mtuConf.ConcurrentPackets)
 	var roughMTU = 0
 	var mtuDetected = false
 	var retries = 0
@@ -92,7 +92,7 @@ func Find(mtuConf config.MTUConfig, appID int, chanID int, mtuOK chan int) int {
 		} else {
 			rangeStart = roughMTU
 			rangeEnd = roughMTU + itStep
-			itStep = ((rangeEnd - rangeStart) / 20)
+			itStep = ((rangeEnd - rangeStart) / mtuConf.ConcurrentPackets)
 		}
 	}
 	log.Println("Exact MTU found", roughMTU)
