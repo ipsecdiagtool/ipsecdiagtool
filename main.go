@@ -9,6 +9,7 @@ import (
 	"github.com/ipsecdiagtool/ipsecdiagtool/logging"
 	"github.com/ipsecdiagtool/ipsecdiagtool/mtu"
 	"github.com/ipsecdiagtool/ipsecdiagtool/packetloss"
+	"github.com/kardianos/osext"
 	"github.com/kardianos/service"
 	"log"
 	"os"
@@ -28,7 +29,9 @@ type program struct {
 
 func (p *program) Start(s service.Service) error {
 	p.exit = make(chan struct{})
-	configuration = config.LoadConfig(os.Args[0])
+	path, err := osext.ExecutableFolder()
+	check(err)
+	configuration = config.LoadConfig(path)
 	logging.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
 
 	if service.Interactive() {
@@ -127,7 +130,7 @@ func (p *program) run() error {
 func installService(s service.Service) {
 	err := s.Install()
 	if err != nil {
-		log.Println(err)
+		panic(err)
 	} else {
 		log.Println("IPSecDiagTool Daemon successfully installed.")
 	}
@@ -136,7 +139,7 @@ func installService(s service.Service) {
 func uninstallService(s service.Service) {
 	err := s.Uninstall()
 	if err != nil {
-		log.Println(err)
+		panic(err)
 	} else {
 		log.Println("IPSecDiagTool Daemon successfully uninstalled.")
 	}
@@ -214,9 +217,7 @@ func main() {
 	go func() {
 		for {
 			err := <-errs
-			if err != nil {
-				log.Print(err)
-			}
+			check(err)
 		}
 	}()
 
@@ -230,9 +231,11 @@ func main() {
 	}
 
 	err = s.Run()
-	if err != nil {
-		//TODO: check if we need a system logger rather then the panics we've been using so far.
-		//logger.Error(err)
-		panic(err)
+	check(err)
+}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
 	}
 }

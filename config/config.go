@@ -15,8 +15,8 @@ import (
 var Debug = false
 var configStatus = "no information"
 
-const configFile string = "config.json"
-const configVersion int = 12
+const configName string = "ipsecdiagtool.conf"
+const configVersion int = 14
 
 //Config contains the user configurable values for IPSecDiagTool.
 //It can hold multiple MTUConfig's to handle MTU detection for multiple tunnels.
@@ -42,27 +42,27 @@ type Config struct {
 
 //MTUConfig contains all the necessary settings to detect the MTU of one tunnel.
 type MTUConfig struct {
-	SourceIP      string
-	DestinationIP string
-	Timeout       time.Duration
-	MTURangeStart int
-	MTURangeEnd   int
+	SourceIP          string
+	DestinationIP     string
+	Timeout           time.Duration
+	MTURangeStart     int
+	MTURangeEnd       int
 	ConcurrentPackets int
 }
 
 //initialize creates a new config with default values and writes it to disk.
-func initialize() Config {
+func initialize(location string) Config {
 	mtuSample := MTUConfig{"127.0.0.1", "127.0.0.1", 10, 0, 2000, 20}
 	mtuList := []MTUConfig{mtuSample, mtuSample}
 	conf := Config{0, false, "localhost:514", 3000, mtuList, 32, "any", 60, 10, "", configVersion}
-	Write(conf)
+	Write(conf, location)
 	conf.ApplicationID = setupAppID(conf.ApplicationID)
 	return conf
 }
 
 //Read an existing config file and return it.
-func Read() Config {
-	jsonConfig, err := ioutil.ReadFile(configFile)
+func Read(location string) Config {
+	jsonConfig, err := ioutil.ReadFile(location + configName)
 	check(err)
 
 	var conf Config
@@ -73,7 +73,7 @@ func Read() Config {
 	if configOutdated(conf) {
 		fmt.Println("Outdated configuration found, updating it now.")
 		conf.CfgVers = configVersion
-		Write(conf)
+		Write(conf, location)
 	}
 
 	conf.ApplicationID = setupAppID(conf.ApplicationID)
@@ -81,11 +81,13 @@ func Read() Config {
 }
 
 //Write a config to the disk
-func Write(conf Config) {
+func Write(conf Config, location string) {
 	jsonConfig, err := json.MarshalIndent(conf, "", "    ")
 	check(err)
+	err = os.MkdirAll(location, 0755)
+	check(err)
 
-	w, err := os.Create(configFile)
+	w, err := os.Create(location + configName)
 	check(err)
 
 	defer w.Close()
@@ -96,21 +98,21 @@ func Write(conf Config) {
 //directory second. If neither folder contains a config it will initialize a new config.
 func LoadConfig(location string) Config {
 	var conf Config
-	if _, err := os.Stat(location + "/" + configFile); err == nil {
-		configStatus = "loaded from"+location + "/" + configFile
-		conf = Read()
-	} else if _, err := os.Stat(configFile); err == nil {
+	if _, err := os.Stat(location + "etc/" + configName); err == nil {
+		configStatus = location + "etc/" + configName
+		conf = Read(location + "etc/")
+	} else if _, err := os.Stat(configName); err == nil {
 		configStatus = "loaded from working directory"
-		conf = Read()
+		conf = Read("")
 	} else {
-		log.Println("No config found, running init.")
-		configStatus = "no config found -> new config created."
-		conf = initialize()
+		log.Println("No config found, running init. Writing to " + location + "etc/" + configName)
+		configStatus = location + "etc/" + configName
+		conf = initialize(location + "etc/")
 	}
 	Debug = conf.Debug
 	if Debug {
 		log.Println("Debug-Mode enabled. Verbose reporting of status & errors.")
-		log.Println("Config-Status: "+configStatus)
+		log.Println("Config-Status: " + configStatus)
 	}
 	return conf
 }
@@ -160,6 +162,6 @@ func (conf Config) ToString() string {
 		debugMessage + spac +
 		"Syslog-Server: " + conf.SyslogServer + spac +
 		"PcapSnapLen: " + strconv.Itoa(int(conf.PcapSnapLen)) + spac +
-		"Loaded Config Location: " + configStatus
+		"Config Location: " + configStatus
 	return confDebugInfo
 }
