@@ -195,7 +195,7 @@ func main() {
 	flag.Parse()
 
 	svcConfig := &service.Config{
-		Name:        "IPSecDiagTool",
+		Name:        "ipsecdiagtool",
 		DisplayName: "A service for IPSecDiagTool",
 		Description: "Detects packet loss & periodically reports the MTU for all configured tunnels.",
 	}
