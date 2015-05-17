@@ -13,6 +13,7 @@ import (
 	"github.com/kardianos/service"
 	"log"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -50,8 +51,10 @@ func (p *program) Start(s service.Service) error {
 				switch command {
 				case "install":
 					installService(s)
+					os.Exit(0)
 				case "uninstall", "remove":
 					uninstallService(s)
+					os.Exit(0)
 				case "interactive", "i":
 					log.Println("Interactive testing")
 					go p.run()
@@ -127,7 +130,34 @@ func (p *program) run() error {
 	return nil
 }
 
+func chooseService(action string) {
+	fmt.Println("The following services are supported on this system:")
+	services := service.AvailableSystems()
+	var space = "  "
+	for serv := range services {
+		fmt.Println(space + strconv.Itoa(serv) + ". " + services[serv].String())
+	}
+	i := 0
+	for i==0 {
+		fmt.Println("Enter the number of the service you wish to "+action)
+		var input string
+		fmt.Scan(&input)
+		var err error
+		i, err = strconv.Atoi(input)
+		if err != nil {
+			fmt.Println("Please enter a valid integer.")
+		} else if i > (len(services) - 1) || i < 0 {
+			fmt.Println("The number you chose is out of range.")
+			i = 0
+		} else {
+			service.ChooseSystem(services[i])
+			log.Println("You have chosen", service.ChosenSystem())
+		}
+	}
+}
+
 func installService(s service.Service) {
+	chooseService("install")
 	err := s.Install()
 	if err != nil {
 		panic(err)
@@ -137,6 +167,7 @@ func installService(s service.Service) {
 }
 
 func uninstallService(s service.Service) {
+	chooseService("uninstall")
 	err := s.Uninstall()
 	if err != nil {
 		panic(err)
