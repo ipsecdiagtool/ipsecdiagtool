@@ -42,7 +42,8 @@ func FindAll() {
 	go distributeMtuOkPackets(icmpPacketsStage2, mtuOkChannels)
 
 	for conf := range c.MTUConfList {
-		log.Println("------------------------- MTU Conf", conf, " -------------------------")
+		logging.InfoLog("Starting MTU Discovery " + strconv.Itoa(conf+1) + "/" + strconv.Itoa(len(c.MTUConfList)) +
+			" between " + c.MTUConfList[conf].SourceIP + " and " + c.MTUConfList[conf].DestinationIP + ". Reported by AppID " + strconv.Itoa(c.ApplicationID) + ".")
 		go Find(
 			c.MTUConfList[conf],
 			c.ApplicationID,
@@ -95,8 +96,8 @@ func Find(mtuConf config.MTUConfig, appID int, chanID int, mtuOK chan int) int {
 			itStep = ((rangeEnd - rangeStart) / mtuConf.ConcurrentPackets)
 		}
 	}
-	log.Println("Exact MTU found", roughMTU)
-	logging.InfoLog("Exact MTU found " + strconv.Itoa(roughMTU))
+	report := "MTU between " + mtuConf.SourceIP + " and " + mtuConf.DestinationIP + " is " + strconv.Itoa(roughMTU) + ". Reported by AppID " + strconv.Itoa(conf.ApplicationID) + "."
+	logging.InfoLog(report)
 	return roughMTU
 }
 

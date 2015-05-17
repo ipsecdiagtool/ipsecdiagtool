@@ -38,7 +38,7 @@ func (p *program) Start(s service.Service) error {
 			mtu.Init(configuration, icmpPackets)
 			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
 			log.Println("Waiting 2seconds for partner. Can be disabled if partner is already running.")
-			time.Sleep(2*time.Second)
+			time.Sleep(2 * time.Second)
 			go mtu.FindAll()
 
 		} else {
@@ -101,7 +101,7 @@ func handleInteractiveArg(arg string) {
 			log.Println("Reading packetloss test data from file.")
 			go packetloss.Detectnew(configuration, ipsecPackets, true)
 		}
-		if configuration.PcapFile =="" {
+		if configuration.PcapFile == "" {
 			log.Println("Detecting packetloss from ethernet")
 		} else {
 			log.Println("Detecting packetloss from configured file:", configuration.PcapFile)
