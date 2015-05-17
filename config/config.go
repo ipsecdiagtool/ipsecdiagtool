@@ -15,7 +15,7 @@ import (
 var Debug = false
 var configStatus = "no information"
 
-const configName string = "ipsecdiagtool.conf"
+const configName string = "ipsecdiagtool.json"
 const configVersion int = 14
 
 //Config contains the user configurable values for IPSecDiagTool.
