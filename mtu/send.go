@@ -8,13 +8,13 @@ import (
 	"strconv"
 )
 
-func RequestDaemonMTU(appID int) {
-	sendPacket("127.0.0.1", "127.0.0.1", 200, "DaemonFindMTUPlz!!", appID, 99)
+func RequestDaemonMTU(appID int, sourceIP string, destinationIP string) {
+	sendPacket(sourceIP, destinationIP, 200, cmdDaemonFindMTU, appID, 99)
 }
 
 func sendOKResponse(packet gopacket.Packet, appID int, chanID int) {
 	srcIP, dstIP := getSrcDstIP(packet)
-	sendPacket(dstIP.String(), srcIP.String(), originalSize(packet), "OK", appID, chanID)
+	sendPacket(dstIP.String(), srcIP.String(), originalSize(packet), cmdOK, appID, chanID)
 }
 
 //sendPacket generates & sends a packet of arbitrary size to a specific destination.

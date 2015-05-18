@@ -121,7 +121,7 @@ func sendBatch(srcIP string, destIP string, rangeStart int, rangeEnd int, itStep
 	//1. Send a batch of packets
 	var results = make(map[int]bool)
 	for i := rangeStart; i < (rangeEnd + itStep); i += itStep {
-		sendPacket(srcIP, destIP, i, "MTU?", appID, chanID)
+		sendPacket(srcIP, destIP, i, cmdMTU, appID, chanID)
 		results[i] = false
 	}
 

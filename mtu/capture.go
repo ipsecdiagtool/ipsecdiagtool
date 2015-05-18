@@ -11,6 +11,11 @@ import (
 	"strings"
 )
 
+//Commands
+const cmdDaemonFindMTU string = "DaemonFindMTUPlz!!"
+const cmdOK string = "OK"
+const cmdMTU string = "MTU?"
+
 func handlePackets(icmpPacketsStage1 chan gopacket.Packet, icmpPacketsStage2 chan gopacket.Packet, appID int) {
 	for packet := range icmpPacketsStage1 {
 		s := string(packet.NetworkLayer().LayerPayload()[:])
@@ -23,7 +28,7 @@ func handlePackets(icmpPacketsStage1 chan gopacket.Packet, icmpPacketsStage2 cha
 				//1337 is used to disable the id check for unit-tests. It can't be generated in production use.
 				if appID == remoteAppID && appID != 1337 {
 					//log.Println("Packet is from us.. ignoring.", appID)
-				} else if arr[3] == "OK" {
+				} else if arr[3] == cmdOK {
 					select {
 					case icmpPacketsStage2 <- packet: // Put packet in channel unless full
 					default:
@@ -31,13 +36,11 @@ func handlePackets(icmpPacketsStage1 chan gopacket.Packet, icmpPacketsStage2 cha
 							log.Println("icmpPacketsStage2 is full or doesn't exist. Dropping OK-Information.")
 						}
 					}
-				} else if arr[3] == "MTU?" {
+				} else if arr[3] == cmdMTU {
 					//log.Println("Received MTU?-packet with length", packet.Metadata().Length, "bytes.")
 					sendOKResponse(packet, appID, chanID)
-				} else if arr[3] == "DaemonFindMTUPlz!!" {
+				} else if arr[3] == cmdDaemonFindMTU {
 					go FindAll()
-				} else {
-					//log.Println("Discarded packet because neither MTU? nor OK command were included.")
 				}
 			} else {
 				if config.Debug {

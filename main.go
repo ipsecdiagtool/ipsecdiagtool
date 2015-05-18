@@ -51,6 +51,7 @@ func (p *program) Start(s service.Service) error {
 		//TODO: Remove before release.
 		if configuration.Debug {
 			//Code tested directly in the IDE belongs in here
+			go mtu.FindAll()
 		}
 	}
 	return nil
@@ -152,20 +153,25 @@ func printHelp() {
 		"IPSecDiagTool detects packet loss for all connected IPSec VPN tunnels. It can also discover the MTU for all configured connections. " +
 		"IPSecDiagTool is intended to be run as a daemon on both sides of a VPN tunnel." + spac +
 		"\n" +
+		"Examples:" + spac +
+		"ipsecdiagtool i mtu  #Run the mtu discovery locally without a daemon." + spac +
+		"ipsecdiagtool debug  #Show debug information." + spac +
+		"\n" +
 		"Daemon operation mode:" + spac +
-		"ipsecdiagtool install    #Install the daemon/service on your system." + spac +
-		"ipsecdiagtool uninstall  #Uninstall the daemon/service from system." + spac +
-		"ipsecdiagtool mtu        #Tell a locally running daemon to start discoverying the MTU." + spac +
+		"install              #Install the daemon/service on your system." + spac +
+		"uninstall            #Uninstall the daemon/service from system." + spac +
+		"mtu                  #Tell a locally running daemon to start discoverying the MTU." + spac +
+		"mtu [srcIP] [dstIP]  #Tell a remotely running daemon to start discoverying the MTU." + spac +
 		"\n" +
 		"Interactive opertation mode:" + spac +
-		"ipsecdiagtool i mtu        #Run the mtu discovery locally, without a daemon." + spac +
-		"ipsecdiagtool i pl         #Run the packetloss detection locally, without a daemon." + spac +
-		"ipsecdiagtool i pl [path]  #Run the packetloss detection locally, reading pcap data from a file." + spac +
+		"i mtu        #Run the mtu discovery locally, without a daemon." + spac +
+		"i pl         #Run the packetloss detection locally, without a daemon." + spac +
+		"i pl [path]  #Run the packetloss detection locally, reading pcap data from a file." + spac +
 		"\n" +
 		"Information commands:" + spac +
-		"ipsecdiagtool debug        #Show debug information." + spac +
-		"ipsecdiagtool help         #Display this help menu." + spac +
-		"ipsecdiagtool about        #Who created this application."
+		"debug        #Show debug information." + spac +
+		"help         #Display this help menu." + spac +
+		"about        #Who created this application."
 	fmt.Println(help)
 }
 
@@ -204,7 +210,14 @@ func main() {
 			s := initService()
 			err = s.Run()
 		case "mtu-discovery", "mtu":
-			mtu.RequestDaemonMTU(configuration.ApplicationID)
+			var srcIP, dstIP string
+			if len(os.Args) > 3 {
+				srcIP = os.Args[2]
+				dstIP = os.Args[3]
+			} else {
+				srcIP, dstIP = "127.0.0.1", "127.0.0.1"
+			}
+			mtu.RequestDaemonMTU(configuration.ApplicationID, srcIP, dstIP)
 			log.Println("The daemon was triggered to start MTU Discovery for all configured tunnels.")
 		case "about", "a":
 			printAbout()
