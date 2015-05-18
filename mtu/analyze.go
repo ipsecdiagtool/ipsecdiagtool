@@ -86,19 +86,26 @@ func Find(mtuConf config.MTUConfig, appID int, chanID int, mtuOK chan int, wg *s
 		roughMTU = sendBatch(mtuConf.SourceIP, mtuConf.DestinationIP, rangeStart, rangeEnd, itStep, mtuConf.Timeout, appID, chanID, mtuOK)
 
 		if roughMTU == rangeEnd {
+			//If all packets are successful there's a chance that our range is too small. This could be because of packet loss
+			//in a earlier iteration or because the range in the configuration was chosen too small. So we double the
+			//range and reset mtuDetected to make sure it runs once more. We also recalculate the itStep to prevent
+			//a packet flood if the range is suddenly big and we had a small itstep before.
+			mtuDetected = false
 			rangeStart = rangeEnd
 			rangeEnd = 2 * rangeEnd
+			itStep = ((rangeEnd - rangeStart) / mtuConf.ConcurrentPackets)
 		} else if roughMTU == 0 {
-			//Retry
+			//If no packet is successful we run 1 retry.
 			if retries < 1 {
 				retries++
 				log.Println("ERROR: Reported 0.. trying again.")
-				roughMTU = sendBatch(mtuConf.SourceIP, mtuConf.DestinationIP, rangeStart, rangeEnd, itStep, mtuConf.Timeout, appID, chanID, mtuOK)
 			} else {
 				log.Println("ERROR: Reported MTU 0.. ")
 				mtuDetected = true
 			}
 		} else {
+			//This is the normal case. We had some successful and some unsuccessful packets. The range is set between
+			//the last successful and the first unsuccessful packet. Then the itStep is recalculated.
 			rangeStart = roughMTU
 			rangeEnd = roughMTU + itStep
 			itStep = ((rangeEnd - rangeStart) / mtuConf.ConcurrentPackets)
