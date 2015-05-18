@@ -14,6 +14,7 @@ func RequestDaemonMTU(appID int, sourceIP string, destinationIP string) {
 
 func sendOKResponse(packet gopacket.Packet, appID int, chanID int) {
 	srcIP, dstIP := getSrcDstIP(packet)
+	//Since we're **answering** a packet, we're changing src & dst here.
 	sendPacket(dstIP.String(), srcIP.String(), originalSize(packet), cmdOK, appID, chanID)
 }
 
@@ -23,7 +24,7 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string,
 
 	var payloadSize int
 	if size < 28 {
-		//log.Println("Unable to create a packet smaller then 28bytes.")
+		//Unable to create smaller packets.
 		payloadSize = 0
 	} else {
 		payloadSize = size - 28
@@ -56,7 +57,7 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string,
 		panic(err)
 	}
 
-	//Set Don't Fragment in Header
+	//Set "Don't Fragment"-Flag in Header
 	ipHeader, err := ipv4.ParseHeader(ipHeaderBuf.Bytes())
 	ipHeader.Flags |= ipv4.DontFragment
 	if err != nil {
@@ -87,7 +88,6 @@ func sendPacket(sourceIP string, destinationIP string, size int, message string,
 
 	err = rawConn.WriteTo(ipHeader, payloadBuf.Bytes(), nil)
 
-	//log.Println("Packet with length", (len(payloadBuf.Bytes()) + len(ipHeaderBuf.Bytes())), "sent.")
 	return append(ipHeaderBuf.Bytes(), payloadBuf.Bytes()...)
 }
 
