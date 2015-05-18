@@ -49,10 +49,16 @@ func (p *program) Start(s service.Service) error {
 	} else {
 		go packetloss.Detectnew(configuration, ipsecPackets, false)
 		go p.run()
+
+		//TODO: remove before release
 		if configuration.Debug {
 			//Code tested directly in the IDE belongs in here
 			log.Println("Waiting 2seconds for partner. Can be disabled if partner is already running.")
 			time.Sleep(2 * time.Second)
+			go mtu.FindAll()
+			time.Sleep(30 * time.Second)
+			go mtu.FindAll()
+			time.Sleep(30 * time.Second)
 			go mtu.FindAll()
 		}
 	}

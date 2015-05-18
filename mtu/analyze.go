@@ -7,6 +7,7 @@ import (
 	"log"
 	"sort"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -38,18 +39,25 @@ func FindAll() {
 		mtuOkChannels[conf] = make(chan int, 100)
 	}
 
-	//go handlePackets(icmpPacketsStage2, c.ApplicationID, mtuOkChannels)
-	go distributeMtuOkPackets(icmpPacketsStage2, mtuOkChannels)
+	var quitDistribute = make(chan bool)
+	go distributeMtuOkPackets(icmpPacketsStage2, mtuOkChannels, quitDistribute)
 
+	var wg sync.WaitGroup
 	for conf := range c.MTUConfList {
 		logging.InfoLog("Starting MTU Discovery " + strconv.Itoa(conf+1) + "/" + strconv.Itoa(len(c.MTUConfList)) +
 			" between " + c.MTUConfList[conf].SourceIP + " and " + c.MTUConfList[conf].DestinationIP + ". Reported by AppID " + strconv.Itoa(c.ApplicationID) + ".")
+		wg.Add(1)
 		go Find(
 			c.MTUConfList[conf],
 			c.ApplicationID,
 			conf,
-			mtuOkChannels[conf])
+			mtuOkChannels[conf],
+			&wg)
 	}
+
+	//Wait until all MTU's have been detected
+	wg.Wait()
+	quitDistribute <- true
 }
 
 //Find finds the ideal MTU between two nodes by sending batches of packets with varying sizes
@@ -58,7 +66,7 @@ func FindAll() {
 //went missing. In a next step FastMTU sends again a batch of packets with sizes between the largest successful
 //and smallest unsuccessful packet. This behaviour is continued until the size-difference between individual
 //packets is no larger then 1Byte. Once that happens the largest successful packet is reported as MTU.
-func Find(mtuConf config.MTUConfig, appID int, chanID int, mtuOK chan int) int {
+func Find(mtuConf config.MTUConfig, appID int, chanID int, mtuOK chan int, wg *sync.WaitGroup) int {
 	if !initalized {
 		log.Println("Please make sure that the MTU package was configured with mtu.Init(.., ..)")
 		return 0
@@ -98,6 +106,7 @@ func Find(mtuConf config.MTUConfig, appID int, chanID int, mtuOK chan int) int {
 	}
 	report := "MTU between " + mtuConf.SourceIP + " and " + mtuConf.DestinationIP + " is " + strconv.Itoa(roughMTU) + ". Reported by AppID " + strconv.Itoa(conf.ApplicationID) + "."
 	logging.InfoLog(report)
+	wg.Done()
 	return roughMTU
 }
 

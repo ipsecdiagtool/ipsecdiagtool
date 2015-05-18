@@ -3,6 +3,7 @@ package mtu
 import (
 	"code.google.com/p/gopacket"
 	"code.google.com/p/gopacket/layers"
+	"fmt"
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"log"
 	"net"
@@ -47,19 +48,27 @@ func handlePackets(icmpPacketsStage1 chan gopacket.Packet, icmpPacketsStage2 cha
 	}
 }
 
-func distributeMtuOkPackets(icmpPacketsStage2 chan gopacket.Packet, mtuOkChannels map[int]chan int) {
-	for packet := range icmpPacketsStage2 {
-		s := string(packet.NetworkLayer().LayerPayload()[:])
-		arr := strings.Split(s, ",")
-		chanID, err := strconv.Atoi(arr[2])
-		if err == nil {
-			select {
-			case mtuOkChannels[chanID] <- originalSize(packet): // Put packet in channel unless full
-			default:
-				if config.Debug {
-					log.Println("mtuOkChannels is full or doesn't exist. Dropping OK-Information.")
+func distributeMtuOkPackets(icmpPacketsStage2 chan gopacket.Packet, mtuOkChannels map[int]chan int, quit chan bool) {
+	for {
+		select {
+		case packet := <-icmpPacketsStage2:
+			s := string(packet.NetworkLayer().LayerPayload()[:])
+			arr := strings.Split(s, ",")
+			chanID, err := strconv.Atoi(arr[2])
+			if err == nil {
+				select {
+				case mtuOkChannels[chanID] <- originalSize(packet): // Put packet in channel unless full
+				default:
+					if config.Debug {
+						log.Println("mtuOkChannel is full or doesn't exist. Dropping OK-Information.")
+					}
 				}
 			}
+		case <-quit:
+			if config.Debug {
+				fmt.Println("Received quit message, stopping Distributor.")
+			}
+			return
 		}
 	}
 }
