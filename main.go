@@ -30,68 +30,31 @@ type program struct {
 
 func (p *program) Start(s service.Service) error {
 	p.exit = make(chan struct{})
-	path, err := osext.ExecutableFolder()
-	check(err)
-	configuration = config.LoadConfig(path)
 	logging.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
 
-	if service.Interactive() {
+	if len(os.Args) > 1 {
+		command := os.Args[1]
+		switch command {
+		case "interactive", "i":
+			log.Println("Interactive testing")
+			go p.run()
+			if len(os.Args) > 2 {
+				handleInteractiveArg(os.Args[2])
+			} else {
+				fmt.Println("Please specify an additional argument when using 'ipsecdiagtool " + command + "'")
+				fmt.Println("Use 'ipsecdiagtool help' to get additional information.")
+			}
+			os.Exit(0)
+		}
+	} else {
+		go packetloss.Detectnew(configuration, ipsecPackets, false)
+		go p.run()
 		if configuration.Debug {
-			log.Println("Running in terminal.")
 			//Code tested directly in the IDE belongs in here
-			mtu.Init(configuration, icmpPackets)
-			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
 			log.Println("Waiting 2seconds for partner. Can be disabled if partner is already running.")
 			time.Sleep(2 * time.Second)
 			go mtu.FindAll()
-
-		} else {
-			if len(os.Args) > 1 {
-				command := os.Args[1]
-				switch command {
-				case "install":
-					installService(s)
-					os.Exit(0)
-				case "uninstall", "remove":
-					uninstallService(s)
-					os.Exit(0)
-				case "interactive", "i":
-					log.Println("Interactive testing")
-					go p.run()
-					if len(os.Args) > 2 {
-						handleInteractiveArg(os.Args[2])
-					} else {
-						fmt.Println("Please specify an additional argument when using 'ipsecdiagtool " + command + "'")
-						fmt.Println("Use 'ipsecdiagtool help' to get additional information.")
-					}
-					os.Exit(0)
-				case "mtu-discovery", "mtu":
-					mtu.RequestDaemonMTU(configuration.ApplicationID)
-					os.Exit(0) //TODO: remove os.Exit find better solution.
-				case "about", "a":
-					printAbout()
-					os.Exit(0)
-				case "debug", "d":
-					printDebug(configuration)
-					os.Exit(0)
-				case "help", "--help", "h":
-					printHelp()
-					os.Exit(0)
-				default:
-					fmt.Println("Argument not reconized. Run 'ipsecdiagtool help' to learn how to use this application.")
-					os.Exit(0)
-				}
-			} else {
-				fmt.Println("Run 'ipsecdiagtool help' to learn how to use this application.")
-				os.Exit(0)
-			}
 		}
-	} else {
-		if config.Debug {
-			log.Println("Running under service manager.")
-		}
-		go packetloss.Detectnew(configuration, ipsecPackets, false)
-		go p.run()
 	}
 	return nil
 }
@@ -138,15 +101,15 @@ func chooseService(action string) {
 		fmt.Println(space + strconv.Itoa(serv) + ". " + services[serv].String())
 	}
 	i := 0
-	for i==0 {
-		fmt.Println("Enter the number of the service you wish to "+action)
+	for i == 0 {
+		fmt.Println("Enter the number of the service you wish to " + action)
 		var input string
 		fmt.Scan(&input)
 		var err error
 		i, err = strconv.Atoi(input)
 		if err != nil {
 			fmt.Println("Please enter a valid integer.")
-		} else if i > (len(services) - 1) || i < 0 {
+		} else if i > (len(services)-1) || i < 0 {
 			fmt.Println("The number you chose is out of range.")
 			i = 0
 		} else {
@@ -157,20 +120,18 @@ func chooseService(action string) {
 }
 
 func installService(s service.Service) {
-	chooseService("install")
 	err := s.Install()
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	} else {
 		log.Println("IPSecDiagTool Daemon successfully installed.")
 	}
 }
 
 func uninstallService(s service.Service) {
-	chooseService("uninstall")
 	err := s.Uninstall()
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	} else {
 		log.Println("IPSecDiagTool Daemon successfully uninstalled.")
 	}
@@ -197,7 +158,7 @@ func printHelp() {
 		"Daemon operation mode:" + spac +
 		"ipsecdiagtool install    #Install the daemon/service on your system." + spac +
 		"ipsecdiagtool uninstall  #Uninstall the daemon/service from system." + spac +
-		"ipsecdiagtool mtu        #Tell locally running daemon to start discoverying the MTU." + spac +
+		"ipsecdiagtool mtu        #Tell a locally running daemon to start discoverying the MTU." + spac +
 		"\n" +
 		"Interactive opertation mode:" + spac +
 		"ipsecdiagtool i mtu        #Run the mtu discovery locally, without a daemon." + spac +
@@ -225,6 +186,45 @@ func (p *program) Stop(s service.Service) error {
 //   Handle service controls (optional).
 //   Run the service.
 func main() {
+	//Load configuration
+	path, err := osext.ExecutableFolder()
+	check(err)
+	configuration = config.LoadConfig(path)
+
+	//Check args for installation, needs to be done before the service is started.
+	if len(os.Args) > 1 {
+		command := os.Args[1]
+		switch command {
+		case "install":
+			chooseService("install")
+			s := initService()
+			installService(s)
+		case "uninstall", "remove":
+			chooseService("uninstall")
+			s := initService()
+			uninstallService(s)
+		case "interactive", "i":
+			s := initService()
+			err = s.Run()
+		case "mtu-discovery", "mtu":
+			mtu.RequestDaemonMTU(configuration.ApplicationID)
+		case "about", "a":
+			printAbout()
+		case "debug", "d":
+			printDebug(configuration)
+		case "help", "--help", "h":
+			printHelp()
+		default:
+			fmt.Println("Argument not reconized. Run 'ipsecdiagtool help' to learn how to use this application.")
+		}
+	} else {
+		s := initService()
+		err = s.Run()
+	}
+	check(err)
+}
+
+func initService() service.Service {
 	svcFlag := flag.String("service", "", "Control the system service.")
 	flag.Parse()
 
@@ -258,11 +258,9 @@ func main() {
 			log.Printf("Valid actions: %q\n", service.ControlAction)
 			log.Fatal(err)
 		}
-		return
+		os.Exit(0)
 	}
-
-	err = s.Run()
-	check(err)
+	return s
 }
 
 func check(e error) {
