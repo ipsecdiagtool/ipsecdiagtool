@@ -44,7 +44,6 @@ func (p *program) Start(s service.Service) error {
 				fmt.Println("Please specify an additional argument when using 'ipsecdiagtool " + command + "'")
 				fmt.Println("Use 'ipsecdiagtool help' to get additional information.")
 			}
-			os.Exit(0)
 		}
 	} else {
 		go packetloss.Detectnew(configuration, ipsecPackets, false)
@@ -214,6 +213,7 @@ func main() {
 			err = s.Run()
 		case "mtu-discovery", "mtu":
 			mtu.RequestDaemonMTU(configuration.ApplicationID)
+			log.Println("The daemon was triggered to start MTU Discovery for all configured tunnels.")
 		case "about", "a":
 			printAbout()
 		case "debug", "d":
