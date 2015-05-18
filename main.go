@@ -154,19 +154,19 @@ func printHelp() {
 		"IPSecDiagTool is intended to be run as a daemon on both sides of a VPN tunnel." + spac +
 		"\n" +
 		"Examples:" + spac +
-		"ipsecdiagtool i mtu  #Run the mtu discovery locally without a daemon." + spac +
+		"ipsecdiagtool i mtu  #Run the mtu discovery interactive, without Daemon." + spac +
 		"ipsecdiagtool debug  #Show debug information." + spac +
 		"\n" +
 		"Daemon operation mode:" + spac +
 		"install              #Install the daemon/service on your system." + spac +
 		"uninstall            #Uninstall the daemon/service from system." + spac +
-		"mtu                  #Tell a locally running daemon to start discoverying the MTU." + spac +
-		"mtu [srcIP] [dstIP]  #Tell a remotely running daemon to start discoverying the MTU." + spac +
+		"mtu                  #Tell a local daemon to start discoverying the MTU." + spac +
+		"mtu [srcIP] [dstIP]  #Tell a remote daemon to start discoverying the MTU." + spac +
 		"\n" +
 		"Interactive opertation mode:" + spac +
-		"i mtu        #Run the mtu discovery locally, without a daemon." + spac +
-		"i pl         #Run the packetloss detection locally, without a daemon." + spac +
-		"i pl [path]  #Run the packetloss detection locally, reading pcap data from a file." + spac +
+		"i mtu        #Run the mtu discovery interactive, without Daemon." + spac +
+		"i pl         #Run the packet loss detection interactive." + spac +
+		"i pl [path]  #Interactive packet loss detection, reading a pcap file." + spac +
 		"\n" +
 		"Information commands:" + spac +
 		"debug        #Show debug information." + spac +
