@@ -56,7 +56,10 @@ func capture(snaplen int32, quit chan bool, captureReady chan bool, pcapFile str
 			select {
 			case packet := <-packetSource.Packets():
 				if packet != nil {
+					//TODO: remove
+					log.Println("handling packet")
 					if packet.Layer(layers.LayerTypeIPSecESP) != nil {
+						log.Println("detected ipsec packet")
 						putChannel(packet, ipSecChannel)
 					}
 					if packet.Layer(layers.LayerTypeICMPv4) != nil {
