@@ -43,7 +43,7 @@ func capture(snaplen int32, quit chan bool, captureReady chan bool, pcapFile str
 		log.Println("Reading packet loss data from pcap-file:", pcapFile)
 		handle, err = pcap.OpenOffline(pcapFile)
 	} else {
-		handle, err = pcap.OpenLive("any", snaplen, true, 100)
+		handle, err = pcap.OpenLive("any", 65000, true, 100)
 	}
 
 	if err != nil {
