@@ -45,23 +45,12 @@ func (p *program) Start(s service.Service) error {
 			}
 		}
 	} else {
-		//TODO: remove before release
+		go packetloss.Detectnew(configuration, ipsecPackets, false)
+		go p.run()
+
+		//TODO: Remove before release.
 		if configuration.Debug {
 			//Code tested directly in the IDE belongs in here
-			log.Println("DEBUG MODE TEST BEFORE PACKETLOSS")
-			capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
-			go packetloss.Detectnew(configuration, ipsecPackets, true)
-
-			//log.Println("Waiting 2seconds for partner. Can be disabled if partner is already running.")
-			/*time.Sleep(2 * time.Second)
-			go mtu.FindAll()
-			time.Sleep(30 * time.Second)
-			go mtu.FindAll()
-			time.Sleep(30 * time.Second)
-			go mtu.FindAll()*/
-		} else {
-			go packetloss.Detectnew(configuration, ipsecPackets, false)
-			go p.run()
 		}
 	}
 	return nil
