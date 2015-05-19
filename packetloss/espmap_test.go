@@ -35,7 +35,7 @@ func Test2(t *testing.T) {
 
 	lp := len(esp.elements[con].lostpackets)
 	mlp := len(esp.elements[con].maybelostpackets)
-	
+
 	if lp != 3 || mlp != 1 {
 		t.Error("Expected lostpackets 3 but it's: ", len(esp.elements[con].lostpackets), "and maybelostpackets 1 but it's:", len(esp.elements[con].maybelostpackets))
 	}
@@ -110,20 +110,20 @@ func Test6(t *testing.T) {
 	}
 }
 
-func Test7(t *testing.T){
+func Test7(t *testing.T) {
 	fmt.Println("**********Test6**********")
 	esp := NewEspMap(3)
 	con := Connection{"192.168.0.1", "192.168.0.1", 12345}
 	esp.MakeEntry(con, 1)
 	esp.MakeEntry(con, 20)
 	esp.MakeEntry(con, 50)
-	esp.MakeEntry(con,2)
-	esp.MakeEntry(con,3)
-	esp.MakeEntry(con,10)
+	esp.MakeEntry(con, 2)
+	esp.MakeEntry(con, 3)
+	esp.MakeEntry(con, 10)
 
 	lp := len(esp.elements[con].lostpackets)
 	mlp := len(esp.elements[con].maybelostpackets)
-	WriteLostFile(con,esp.elements[con].lostpackets)
+	WriteLostFile(con, esp.elements[con].lostpackets)
 	if lp != 45 || mlp != 2 {
 		t.Error("Expected lostpackets 3 but it's: ", len(esp.elements[con].lostpackets), "and maybelostpackets 1 but it's:", len(esp.elements[con].maybelostpackets))
 	}

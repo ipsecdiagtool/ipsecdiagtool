@@ -1,10 +1,10 @@
 package packetloss
 
 import (
+	"fmt"
 	"github.com/ipsecdiagtool/ipsecdiagtool/logging"
 	"strings"
 	"time"
-	"fmt"
 )
 
 //Datastructure for different ESP Connections
@@ -50,20 +50,21 @@ func (espm EspMap) MakeEntry(key Connection, value uint32) {
 			handleOldpacket(&packets, value, espm.windowsize)
 
 		}
-		
+
 		if time.Now().Local().Sub(packets.LastAlert).Seconds() > 10 && CheckLog(packets.lostpackets) {
 			s := []string{"Too much LostPackets in Connection: (SPI: ", string(key.SPI), " SRC: ", key.src, " DST: ", key.dst, ")"}
 			logging.AlertLog(strings.Join(s, ""))
+			WriteLostFile(key, packets.lostpackets)
 			packets.LastAlert = time.Now().Local()
 		}
 		espm.elements[key] = packets
 	} else {
-		 t1, e := time.Parse(time.RFC3339,"2012-11-01T22:08:41+00:00")
-		 if(e!=nil){
-		 	panic(e)
-		 }
-		 fmt.Println(t1.Format("2006-01-02T15:04:05.999999-07:00"))
-		espm.elements[key] = Packets{head: value, LastAlert:  t1}
+		t1, e := time.Parse(time.RFC3339, "2012-11-01T22:08:41+00:00")
+		if e != nil {
+			panic(e)
+		}
+		fmt.Println(t1.Format("2006-01-02T15:04:05.999999-07:00"))
+		espm.elements[key] = Packets{head: value, LastAlert: t1}
 
 	}
 }
