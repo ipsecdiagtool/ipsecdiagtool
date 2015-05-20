@@ -6,15 +6,25 @@ import (
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"github.com/ipsecdiagtool/ipsecdiagtool/logging"
 	"testing"
+	"sync"
 )
 
+/*
+ * These tests will only work if there's a IPSecDiagTool instance running that answers
+ * the "MTU?" requests. You can start a local instance of IPSecDiagTool via 'ipsecdiagtool install' -->
+ * 'service ipsecdiagtool start'.
+ * It's also possible to use a remote instance of IPSecDiagTool by changing the src & dstIP below.
+ */
+
+const srcIP string = "127.0.0.1"
+const dstIP string = "127.0.0.1"
+
 func testFind(simulatedMTU int, rangeStart int, rangeEnd int) int {
-	//Test Setup
-	mtu := config.MTUConfig{"127.0.0.1", "127.0.0.1", 12, rangeStart, rangeEnd}
+	mtu := config.MTUConfig{srcIP, dstIP, 5, rangeStart, rangeEnd, 20}
 	mtuList := []config.MTUConfig{mtu, mtu}
 
-	//AppID=1337 is allowed to answer it's own packets.
-	conf := config.Config{1337, false, "localhost:514", int32(simulatedMTU + 16), mtuList, 32, "any", 60, 10, "", 0}
+	//Experimental: AppID=1337 is allowed to answer it's own packets.
+	conf := config.Config{0, false, "localhost:514", int32(simulatedMTU + 16), mtuList, 32, "any", 60, 10, "", 0}
 	logging.InitLoger(conf.SyslogServer, conf.AlertCounter, conf.AlertTime)
 
 	icmpPackets := make(chan gopacket.Packet, 500)
@@ -28,10 +38,15 @@ func testFind(simulatedMTU int, rangeStart int, rangeEnd int) int {
 		mtuOkChannels[conf] = make(chan int, 100)
 	}
 
-	go distributeMtuOkPackets(icmpPacketsStage2, mtuOkChannels)
+	var quitDistribute = make(chan bool)
+	go distributeMtuOkPackets(icmpPacketsStage2, mtuOkChannels, quitDistribute)
 
 	//TEST
-	result := Find(mtu, conf.ApplicationID, 0, mtuOkChannels[0])
+	var wg sync.WaitGroup
+	wg.Add(1)
+	result := Find(mtu, conf.ApplicationID, 0, mtuOkChannels[0], &wg)
+	wg.Wait()
+	quitDistribute <- true
 	capQuit <- true
 	return result
 }
