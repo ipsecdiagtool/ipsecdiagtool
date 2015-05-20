@@ -11,8 +11,8 @@ import (
 //Writes a csv file.
 //The file provides information about lost packets
 func WriteLostFile(con Connection, lostpackets []LostPacket) {
-	s:=[]string{strconv.FormatUint(uint64(con.SPI), 10),".csv"}
-	f, err := os.Create(strings.Join(s,""))
+	s := []string{strconv.FormatUint(uint64(con.SPI), 10), ".csv"}
+	f, err := os.Create(strings.Join(s, ""))
 	check(err)
 
 	defer f.Close()

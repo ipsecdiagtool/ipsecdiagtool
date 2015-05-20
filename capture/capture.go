@@ -47,26 +47,27 @@ func capture(snaplen int32, quit chan bool, captureReady chan bool, pcapFile str
 	}
 
 	if err != nil {
+		log.Println("Error while start capturing packets", err)
 		return err
-	} else {
-		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-		captureReady <- true
+	}
 
-		for {
-			select {
-			case packet := <-packetSource.Packets():
-				if packet != nil {
-					if packet.Layer(layers.LayerTypeIPSecESP) != nil {
-						putChannel(packet, ipSecChannel)
-					}
-					if packet.Layer(layers.LayerTypeICMPv4) != nil {
-						putChannel(packet, icmpChannel)
-					}
+	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+	captureReady <- true
+
+	for {
+		select {
+		case packet := <-packetSource.Packets():
+			if packet != nil {
+				if packet.Layer(layers.LayerTypeIPSecESP) != nil {
+					putChannel(packet, ipSecChannel)
 				}
-			case <-quit:
-				log.Println("Received quit message, stopping Listener.")
-				return nil
+				if packet.Layer(layers.LayerTypeICMPv4) != nil {
+					putChannel(packet, icmpChannel)
+				}
 			}
+		case <-quit:
+			log.Println("Received quit message, stopping Listener.")
+			return nil
 		}
 	}
 }
@@ -77,10 +78,10 @@ func putChannel(packet gopacket.Packet, channel chan gopacket.Packet) error {
 	case channel <- packet:
 	default:
 		msg := "Channel full, discarding packet."
-		return errors.New(msg)
 		if config.Debug {
 			log.Println(msg)
 		}
+		return errors.New(msg)
 	}
 	return nil
 }

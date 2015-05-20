@@ -1,9 +1,9 @@
 package config
 
 import (
+	"github.com/kardianos/osext"
 	"os"
 	"testing"
-	"github.com/kardianos/osext"
 )
 
 //Init a new config, write it to a file with a specific value,

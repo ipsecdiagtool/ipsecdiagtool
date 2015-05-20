@@ -8,6 +8,7 @@ import (
 	"strconv"
 )
 
+//RequestDaemonMTU sends a ICMP packet containing instructions to start the ICMP detection on a daemon.
 func RequestDaemonMTU(appID int, sourceIP string, destinationIP string) {
 	sendPacket(sourceIP, destinationIP, 200, cmdDaemonFindMTU, appID, 99)
 }
