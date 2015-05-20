@@ -16,19 +16,26 @@ import (
  * It's also possible to use a remote instance of IPSecDiagTool by changing the src & dstIP below.
  */
 
+//Note: Thes unit test are partly broken. This doesn't influence the application, it's just very hard to test the analyze functionality
+//properly. These tests try to do too much and opening & closing the capture interface that accesses libpcap c library
+//has been a lot of trouble. I leave them as they are for now because I don't have time to fix them. Perhaps I'll
+//have some time next week to rewrite these tests into smaller units.
+
 const srcIP string = "127.0.0.1"
 const dstIP string = "127.0.0.1"
 
 func testFind(simulatedMTU int, rangeStart int, rangeEnd int) int {
-	mtu := config.MTUConfig{srcIP, dstIP, 5, rangeStart, rangeEnd, 20}
+	mtu := config.MTUConfig{srcIP, dstIP, 10, rangeStart, rangeEnd, 20}
 	mtuList := []config.MTUConfig{mtu, mtu}
 
+	config.Debug = true
+
 	//Experimental: AppID=1337 is allowed to answer it's own packets.
-	conf := config.Config{0, false, "localhost:514", int32(simulatedMTU + 16), mtuList, 32, "any", 60, 10, "", 0}
+	conf := config.Config{0, true, "localhost:514", int32(simulatedMTU + 16), mtuList, 32, "any", 60, 10, "", 0}
 	logging.InitLoger(conf.SyslogServer, conf.AlertCounter, conf.AlertTime)
 
-	icmpPackets := make(chan gopacket.Packet, 500)
-	ipsecPackets := make(chan gopacket.Packet, 500)
+	icmpPackets := make(chan gopacket.Packet, 100)
+	ipsecPackets := make(chan gopacket.Packet, 100)
 	Init(conf, icmpPackets)
 	var capQuit chan bool
 	capQuit = capture.Start(conf, icmpPackets, ipsecPackets)
@@ -51,6 +58,16 @@ func testFind(simulatedMTU int, rangeStart int, rangeEnd int) int {
 	return result
 }
 
+//Start with a range of 0-500 and detect the simulated MTU which is 1500.
+func TestDetectMTU1500withSmallRange(t *testing.T) {
+	tMTU := 1500
+	result := testFind(tMTU, 0, 500)
+
+	if result != (tMTU) {
+		t.Error("Expected", (tMTU), "got", result, "instead.")
+	}
+}
+
 //Start with a range of 0-2000 and detect the simulated MTU which is 500.
 func TestDetectMTU500(t *testing.T) {
 	tMTU := 500
@@ -65,16 +82,6 @@ func TestDetectMTU500(t *testing.T) {
 func TestDetectMTU1500(t *testing.T) {
 	tMTU := 1500
 	result := testFind(tMTU, 0, 2000)
-
-	if result != (tMTU) {
-		t.Error("Expected", (tMTU), "got", result, "instead.")
-	}
-}
-
-//Start with a range of 0-500 and detect the simulated MTU which is 1500.
-func TestDetectMTU1500withSmallRange(t *testing.T) {
-	tMTU := 1500
-	result := testFind(tMTU, 0, 500)
 
 	if result != (tMTU) {
 		t.Error("Expected", (tMTU), "got", result, "instead.")
