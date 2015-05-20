@@ -10,7 +10,7 @@ import (
 
 //Check that there's no deadlock when setting up and tearing down the capture-routine.
 func TestStartStopCapture(t *testing.T) {
-	mtuSample := config.MTUConfig{"127.0.0.1", "127.0.0.1", 10, 0, 2000}
+	mtuSample := config.MTUConfig{"127.0.0.1", "127.0.0.1", 10, 0, 2000, 20}
 	mtuList := []config.MTUConfig{mtuSample, mtuSample}
 	conf := config.Config{0, false, "localhost:514", 3000, mtuList, 32, "any", 60, 10, "", 0}
 
