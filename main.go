@@ -45,14 +45,14 @@ func (p *program) Start(s service.Service) error {
 			}
 		}
 	} else {
-		go packetloss.Detectnew(configuration, ipsecPackets, false)
+		go packetloss.Detect(configuration, ipsecPackets, false)
 		go p.run()
 
-		//TODO: Remove before release.
-		if configuration.Debug {
+		//Code tested in the IDE could be placed here
+		/*if configuration.Debug {
 			//Code tested directly in the IDE belongs in here
 			go mtu.FindAll()
-		}
+		}*/
 	}
 	return nil
 }
@@ -66,14 +66,14 @@ func handleInteractiveArg(arg string) {
 			pcapPath := os.Args[3]
 			configuration.PcapFile = pcapPath
 			log.Println("Reading packetloss test data from file.")
-			go packetloss.Detectnew(configuration, ipsecPackets, true)
+			go packetloss.Detect(configuration, ipsecPackets, true)
 		}
 		if configuration.PcapFile == "" {
 			log.Println("Detecting packetloss from ethernet")
 		} else {
 			log.Println("Detecting packetloss from configured file:", configuration.PcapFile)
 		}
-		go packetloss.Detectnew(configuration, ipsecPackets, true)
+		go packetloss.Detect(configuration, ipsecPackets, true)
 	default:
 		fmt.Println("Command", arg, "not recognized")
 		fmt.Println("See 'ipsecdiagtool help' for additional information.")
