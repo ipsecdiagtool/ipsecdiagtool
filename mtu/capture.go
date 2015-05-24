@@ -12,40 +12,34 @@ import (
 )
 
 //Commands
-const cmdDaemonFindMTU string = "DaemonFindMTUPlz!!"
-const cmdOK string = "OK"
-const cmdMTU string = "MTU?"
+const cmdDaemonFindMTU string = "IPSecDiagTool_Start"
+const cmdMTU string = "IPSecDiagTool_MTUDiscovery"
 
 func handlePackets(icmpPacketsStage1 chan gopacket.Packet, icmpPacketsStage2 chan gopacket.Packet, appID int) {
 	for packet := range icmpPacketsStage1 {
 		s := string(packet.NetworkLayer().LayerPayload()[:])
 		arr := strings.Split(s, ",")
 		if len(arr) > 3 {
-			remoteAppID, err1 := strconv.Atoi(arr[1])
-			chanID, err2 := strconv.Atoi(arr[2])
-			if (err1 == nil) && (err2 == nil) {
-				//Check that packet is not from this application
-				//1337 is used to disable the id check for unit-tests. It can't be generated in production use.
-				if appID == remoteAppID && appID != 1337 {
-					//log.Println("Packet is from us.. ignoring.", appID)
-				} else if arr[3] == cmdOK {
-					select {
-					case icmpPacketsStage2 <- packet: // Put packet in channel unless full
-					default:
-						if config.Debug {
-							log.Println("icmpPacketsStage2 is full or doesn't exist. Dropping OK-Information.")
-						}
+			packetAppID, err1 := strconv.Atoi(arr[1])
+			if err1 != nil && config.Debug {
+				log.Println("Bad AppID")
+			}
+			icmpLayer := packet.Layer(layers.LayerTypeICMPv4)
+			if arr[3] == cmdMTU && icmpLayer.LayerContents()[0] == 8 && appID == packetAppID {
+				//log.Println("HELLO", icmpLayer.LayerContents()[0])
+				select {
+				case icmpPacketsStage2 <- packet: // Put packet in channel unless full
+				default:
+					if config.Debug {
+						log.Println("icmpPacketsStage2 is full or doesn't exist. Dropping OK-Information.")
 					}
-				} else if arr[3] == cmdMTU {
-					//log.Println("Received MTU?-packet with length", packet.Metadata().Length, "bytes.")
-					sendOKResponse(packet, appID, chanID)
-				} else if arr[3] == cmdDaemonFindMTU {
-					go FindAll()
 				}
-			} else {
-				if config.Debug {
-					log.Println("ERROR: Cought a packet with an invalid app- or chan-ID. ", packet.NetworkLayer().LayerPayload())
-				}
+			} else if arr[3] == cmdDaemonFindMTU {
+				go FindAll()
+			}
+		} else {
+			if config.Debug {
+				log.Println("mtu.handlePackets: ICMP packet doesn't contain IPSecDiagTool data, dropping packet.")
 			}
 		}
 	}

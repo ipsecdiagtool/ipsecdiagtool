@@ -59,11 +59,13 @@ func (p *program) run() error {
 		go packetloss.Detect(configuration, ipsecPackets, false)
 		capture.Start(configuration, icmpPackets, ipsecPackets)
 
-		//Code tested in the IDE could be placed here
-		if configuration.Debug {
-			//Code tested directly in the IDE belongs in here
-			go mtu.FindAll()
-		}
+		/*
+			//Code tested in the IDE could be placed here
+			if configuration.Debug {
+				log.Println("WARNING DEBUG ENABLES IDE TEST CODE.")
+				//Code tested directly in the IDE belongs in here
+				go mtu.FindAll()
+			}*/
 	}
 
 	if configuration.Debug {

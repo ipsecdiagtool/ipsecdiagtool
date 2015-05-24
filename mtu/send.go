@@ -9,19 +9,13 @@ import (
 )
 
 const (
-	ICMPv4TypeEchoReply layers.ICMPv4TypeCode = 0x0
+	ICMPv4TypeEchoReply   layers.ICMPv4TypeCode = 0x0
 	ICMPv4TypeEchoRequest layers.ICMPv4TypeCode = 0x0800
 )
 
 //RequestDaemonMTU sends a ICMP packet containing instructions to start the ICMP detection on a daemon.
 func RequestDaemonMTU(appID int, sourceIP string, destinationIP string) {
 	sendPacket(sourceIP, destinationIP, 200, cmdDaemonFindMTU, appID, 99, ICMPv4TypeEchoRequest)
-}
-
-func sendOKResponse(packet gopacket.Packet, appID int, chanID int) {
-	srcIP, dstIP := getSrcDstIP(packet)
-	//Since we're **answering** a packet, we're changing src & dst here.
-	sendPacket(dstIP.String(), srcIP.String(), originalSize(packet), cmdOK, appID, chanID, ICMPv4TypeEchoReply)
 }
 
 //sendPacket generates & sends a packet of arbitrary size to a specific destination.
