@@ -18,6 +18,7 @@ var icmpPacketsStage2 chan gopacket.Packet
 
 //Init the MTU package so that you can call FindAll()
 func Init(config config.Config, icmpPackets chan gopacket.Packet) {
+	log.Println("MTU Discovery package initialized.")
 	conf = config
 	icmpPacketsStage1 = icmpPackets
 	icmpPacketsStage2 = make(chan gopacket.Packet, 100)

@@ -22,7 +22,7 @@ func Start(c config.Config, icmpPackets chan gopacket.Packet, ipsecESP chan gopa
 	go capture(c.PcapSnapLen, quit, captureReady, c.PcapFile)
 	<-captureReady
 	if c.Debug {
-		log.Println("Capture Goroutine Ready")
+		log.Println("Capture Goroutine Ready.")
 	}
 	return quit
 }
@@ -36,14 +36,16 @@ func initChannels(icmpPackets chan gopacket.Packet, ipsecESP chan gopacket.Packe
 //startCapture captures all packets on any interface for an unlimited duration.
 //Packets can be filtered by a BPF filter string. (E.g. tcp port 22)
 func capture(snaplen int32, quit chan bool, captureReady chan bool, pcapFile string) error {
-	log.Println("Waiting for MTU-Analyzer packet")
 	var handle *pcap.Handle
 	var err error
 	if pcapFile != "" {
 		log.Println("Reading packet loss data from pcap-file:", pcapFile)
 		handle, err = pcap.OpenOffline(pcapFile)
 	} else {
-		handle, err = pcap.OpenLive("any", snaplen, true, 100)
+		//https://godoc.org/code.google.com/p/gopacket/pcap
+		//This might have been the culprit
+		//Alternative to try: 250*time.Millisecond
+		handle, err = pcap.OpenLive("any", snaplen, true, pcap.BlockForever)
 	}
 
 	if err != nil {

@@ -17,7 +17,6 @@ import (
 )
 
 var configuration config.Config
-var capQuit chan bool
 var icmpPackets = make(chan gopacket.Packet, 100)
 var ipsecPackets = make(chan gopacket.Packet, 100)
 
@@ -30,13 +29,25 @@ type program struct {
 func (p *program) Start(s service.Service) error {
 	p.exit = make(chan struct{})
 	logging.InitLoger(configuration.SyslogServer, configuration.AlertCounter, configuration.AlertTime)
+	go p.run()
+	return nil
+}
+
+func (p *program) Stop(s service.Service) error {
+	//Any work in Stop should be quick
+	log.Println("Stopping IPSecDiagTool")
+	close(p.exit)
+	return nil
+}
+
+func (p *program) run() error {
+	mtu.Init(configuration, icmpPackets)
 
 	if len(os.Args) > 1 {
 		command := os.Args[1]
 		switch command {
 		case "interactive", "i":
 			log.Println("Interactive testing")
-			go p.run()
 			if len(os.Args) > 2 {
 				handleInteractiveArg(os.Args[2])
 			} else {
@@ -46,27 +57,32 @@ func (p *program) Start(s service.Service) error {
 		}
 	} else {
 		go packetloss.Detect(configuration, ipsecPackets, false)
-		go p.run()
+		capture.Start(configuration, icmpPackets, ipsecPackets)
 
 		//Code tested in the IDE could be placed here
-		/*if configuration.Debug {
+		if configuration.Debug {
 			//Code tested directly in the IDE belongs in here
 			go mtu.FindAll()
-		}*/
+		}
 	}
+
+	if configuration.Debug {
+		log.Println("Running Daemon via", service.Platform())
+	}
+	<-p.exit
 	return nil
 }
 
 func handleInteractiveArg(arg string) {
 	switch arg {
 	case "mtu", "m":
+		capture.Start(configuration, icmpPackets, ipsecPackets)
 		go mtu.FindAll()
 	case "packetloss", "p", "pl":
 		if len(os.Args) > 3 {
 			pcapPath := os.Args[3]
 			configuration.PcapFile = pcapPath
 			log.Println("Reading packetloss test data from file.")
-			go packetloss.Detect(configuration, ipsecPackets, true)
 		}
 		if configuration.PcapFile == "" {
 			log.Println("Detecting packetloss from ethernet")
@@ -74,21 +90,11 @@ func handleInteractiveArg(arg string) {
 			log.Println("Detecting packetloss from configured file:", configuration.PcapFile)
 		}
 		go packetloss.Detect(configuration, ipsecPackets, true)
+		capture.Start(configuration, icmpPackets, ipsecPackets)
 	default:
 		fmt.Println("Command", arg, "not recognized")
 		fmt.Println("See 'ipsecdiagtool help' for additional information.")
 	}
-}
-
-func (p *program) run() error {
-	if configuration.Debug {
-		log.Println("Running Daemon via", service.Platform())
-	}
-	mtu.Init(configuration, icmpPackets)
-	capQuit = capture.Start(configuration, icmpPackets, ipsecPackets)
-
-	<-p.exit
-	return nil
 }
 
 func chooseService(action string) {
@@ -173,13 +179,6 @@ func printHelp() {
 		"help         #Display this help menu." + spac +
 		"about        #Who created this application."
 	fmt.Println(help)
-}
-
-func (p *program) Stop(s service.Service) error {
-	// Any work in Stop should be quick, usually a few seconds at most.
-	log.Println("Stopping IPSecDiagTool")
-	close(p.exit)
-	return nil
 }
 
 // Service setup.

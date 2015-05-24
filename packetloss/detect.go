@@ -12,7 +12,7 @@ var espmap *EspMap
 //Detect starts the packet loss detection processs.
 func Detect(c config.Config, ipSecESP chan gopacket.Packet, output bool) {
 	espmap = NewEspMap(c.WindowSize)
-	log.Println("Packet loss detection started..")
+	log.Println("Packetloss Goroutine ready.")
 
 	for packet := range ipSecESP {
 		ipsecLayer := packet.Layer(layers.LayerTypeIPSecESP)
