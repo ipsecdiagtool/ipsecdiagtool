@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"log"
+	"time"
 )
 
 var ipSecChannel chan gopacket.Packet
@@ -45,7 +46,7 @@ func capture(snaplen int32, quit chan bool, captureReady chan bool, pcapFile str
 		//https://godoc.org/code.google.com/p/gopacket/pcap
 		//This might have been the culprit
 		//Alternative to try: 250*time.Millisecond
-		handle, err = pcap.OpenLive("any", snaplen, true, pcap.BlockForever)
+		handle, err = pcap.OpenLive("any", snaplen, true, 250*time.Millisecond)
 	}
 
 	if err != nil {

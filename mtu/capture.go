@@ -12,8 +12,8 @@ import (
 )
 
 //Commands
-const cmdDaemonFindMTU string = "IPSecDiagTool_Start"
-const cmdMTU string = "IPSecDiagTool_MTUDiscovery"
+const cmdDaemonFindMTU string = "START"
+const cmdMTU string = "MTU"
 
 func handlePackets(icmpPacketsStage1 chan gopacket.Packet, icmpPacketsStage2 chan gopacket.Packet, appID int) {
 	for packet := range icmpPacketsStage1 {
