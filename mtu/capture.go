@@ -40,6 +40,8 @@ func handlePackets(icmpPacketsStage1 chan gopacket.Packet, icmpPacketsStage2 cha
 				if config.Debug{
 					log.Println(arr)
 					log.Println("TypeCode", icmpLayer.LayerContents())
+					log.Println(icmpLayer)
+					log.Println(packet.Dump())
 				}
 			}
 		} else {
