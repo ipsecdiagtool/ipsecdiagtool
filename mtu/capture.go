@@ -36,13 +36,6 @@ func handlePackets(icmpPacketsStage1 chan gopacket.Packet, icmpPacketsStage2 cha
 				}
 			} else if arr[3] == cmdDaemonFindMTU {
 				go FindAll()
-			} else {
-				if config.Debug{
-					log.Println(arr)
-					log.Println("TypeCode", icmpLayer.LayerContents())
-					log.Println(icmpLayer)
-					log.Println(packet.Dump())
-				}
 			}
 		} else {
 			if config.Debug {

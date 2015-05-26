@@ -63,15 +63,9 @@ func capture(snaplen int32, quit chan bool, captureReady chan bool, pcapFile str
 			if packet != nil {
 				if packet.Layer(layers.LayerTypeIPSecESP) != nil {
 					putChannel(packet, ipSecChannel)
-					if config.Debug{
-						log.Println("ESP Packet in channel")
-					}
 				}
 				if packet.Layer(layers.LayerTypeICMPv4) != nil {
 					putChannel(packet, icmpChannel)
-					if config.Debug{
-						log.Println("ICMP Packet in channel")
-					}
 				}
 			}
 		case <-quit:

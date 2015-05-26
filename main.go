@@ -100,7 +100,7 @@ func handleInteractiveArg(arg string) {
 }
 
 func chooseService(action string) {
-	fmt.Println("The following services are supported on this system:")
+	fmt.Println("Please choose one of the following init-systems:")
 	services := service.AvailableSystems()
 	var space = "  "
 	for serv := range services {
