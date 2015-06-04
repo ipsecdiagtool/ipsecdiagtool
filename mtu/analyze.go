@@ -48,7 +48,7 @@ func FindAll() {
 		logging.InfoLog("Starting MTU Discovery " + strconv.Itoa(conf+1) + "/" + strconv.Itoa(len(c.MTUConfList)) +
 			" between " + c.MTUConfList[conf].SourceIP + " and " + c.MTUConfList[conf].DestinationIP + ". Reported by AppID " + strconv.Itoa(c.ApplicationID) + ".")
 		wg.Add(1)
-		go Find(
+		go find(
 			c.MTUConfList[conf],
 			c.ApplicationID,
 			conf,
@@ -61,13 +61,13 @@ func FindAll() {
 	quitDistribute <- true
 }
 
-//Find finds the ideal MTU between two nodes by sending batches of packets with varying sizes
+//find finds the ideal MTU between two nodes by sending batches of packets with varying sizes
 //to a remote node. The remote nodes is requires to respond to those packets if it received them.
 //so it can determine the largest packet that was received on the remote node and the smallest packet that
 //went missing. In a next step FastMTU sends again a batch of packets with sizes between the largest successful
 //and smallest unsuccessful packet. This behaviour is continued until the size-difference between individual
 //packets is no larger then 1Byte. Once that happens the largest successful packet is reported as MTU.
-func Find(mtuConf config.MTUConfig, appID int, chanID int, mtuOK chan int, wg *sync.WaitGroup) int {
+func find(mtuConf config.MTUConfig, appID int, chanID int, mtuOK chan int, wg *sync.WaitGroup) int {
 	if !initalized {
 		log.Println("Please make sure that the MTU package was configured with mtu.Init(.., ..)")
 		return 0
