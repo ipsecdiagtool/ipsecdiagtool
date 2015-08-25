@@ -1,7 +1,7 @@
 package main
 
 import (
-	"code.google.com/p/gopacket"
+	"github.com/google/gopacket"
 	"flag"
 	"fmt"
 	"github.com/ipsecdiagtool/ipsecdiagtool/capture"

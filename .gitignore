@@ -89,7 +89,7 @@ local.properties
 
 ### GO template
 pkg/
-src/code.google.com/p/gopacket
+src/github.com/google/gopacket
 send/send.go
 config.json
 ipsecdiagtool

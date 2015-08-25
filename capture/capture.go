@@ -1,9 +1,9 @@
 package capture
 
 import (
-	"code.google.com/p/gopacket"
-	"code.google.com/p/gopacket/layers"
-	"code.google.com/p/gopacket/pcap"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket/pcap"
 	"errors"
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"log"
