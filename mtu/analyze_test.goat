@@ -1,7 +1,7 @@
 package mtu
 
 import (
-	"code.google.com/p/gopacket"
+	"github.com/google/gopacket"
 	"github.com/ipsecdiagtool/ipsecdiagtool/capture"
 	"github.com/ipsecdiagtool/ipsecdiagtool/config"
 	"github.com/ipsecdiagtool/ipsecdiagtool/logging"
