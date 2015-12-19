@@ -1,11 +1,8 @@
 # IPSecDiagTool
 
 [![GoDoc](https://godoc.org/github.com/IPSecDiagTool/IPSecDiagTool?status.svg)](https://godoc.org/github.com/IPSecDiagTool/IPSecDiagTool)
-[![Build Status](http://152.96.56.53:40000/job/IPSecDiagTool%20-%20Application/badge/icon)](http://152.96.56.53:40000/job/IPSecDiagTool%20-%20Application/)
 
 **Go Code Quality:** http://goreportcard.com/report/IPSecDiagTool/IPSecDiagTool
-
-**YouTrack-Server:** http://sinv-56053.edu.hsr.ch
 
 ##About
 IPSecDiagTool is a diagnosis tool for the continuous monitoring of [IPSec](http://en.wikipedia.org/wiki/IPsec) VPN tunnels.
