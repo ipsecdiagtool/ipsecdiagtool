@@ -4,7 +4,7 @@
 
 **Go Code Quality:** http://goreportcard.com/report/IPSecDiagTool/IPSecDiagTool
 
-##About
+## About
 IPSecDiagTool is a diagnosis tool for the continuous monitoring of [IPSec](http://en.wikipedia.org/wiki/IPsec) VPN tunnels.
 It has two main features. Firstly it's capable of passively detecting packet loss occurring within the IPSec tunnels. If
 the packet loss exceeds a specified threshold a Syslog warning is automatically dispatched. Secondly IPSecDiagTool can
@@ -12,14 +12,14 @@ actively determine the exact MTU within a tunnel. This is useful when you're dea
 block regular ICMP messages outside of the tunnel. IPSecDiagTool is designed to run as a daemon/service, but for testing
 purposes it also has a interactive mode.
 
-##Main features
+## Main features
 + Passive detection of IPSec packet loss by capturing arriving ESP packets and gathering their sequence numbers.
 + Active diagnosis of IPSec fragmentation problems and discovery of the ideal MTU (Maximum Transmission Unit).
 + Daemon/service that can bee kept running indefinitely.
 + Machine and human readable JSON configuration.
 + Optimized for minimal performance impact.
 
-##Usage
+## Usage
 
 | Command       | Alt.    | Explanation                                                                                                  |
 |---------------|---------|--------------------------------------------------------------------------------------------------------------|
@@ -30,7 +30,7 @@ purposes it also has a interactive mode.
 | about         | version | General information about IPSecDiagTool.                                                                     |
 | help          |         | A list of commands and how to use them.
 
-##Project structure
+## Project structure
 
     YOUR_GO_WORKSPACE
         bin/
@@ -56,12 +56,12 @@ purposes it also has a interactive mode.
                 packetloss/
                     detect.go                    # Detect packet loss and report to a Syslog server
 
-##Golang
+## Golang
 IPSecDiagTool is being programmed in Golang. You can pull our code into your own application by
 running `go get github.com/ipsecdiagtool/ipsecdiagtool/`. Our code is also documented on 
 [Godoc](https://godoc.org/github.com/IPSecDiagTool/IPSecDiagTool).
 
-##License
+## License
 The MIT License (MIT)
 
 Copyright (c) 2015 Theo Winter, Jan Balmer
